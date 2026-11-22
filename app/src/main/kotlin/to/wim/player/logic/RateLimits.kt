@@ -71,10 +71,22 @@ object SpotifyLimits {
     }
 }
 
-/** Rate limits of MusicBrainz and ListenBrainz: one call a second, 429 or 503 when exceeded. */
+/** Rate limits of MusicBrainz and ListenBrainz, 429 or 503 when exceeded. */
 object BrainzLimits {
-    /** Both services ask every client to stay at one call a second. */
-    const val CALLS_PER_SECOND = 1.0
+    /**
+     * MusicBrainz asks for at most one call a second on average; a little below that, because
+     * calls that arrive closer together than a second on their side get a 503 and a wait.
+     */
+    const val MUSICBRAINZ_CALLS_PER_SECOND = 0.9
+
+    /**
+     * ListenBrainz allows 30 calls per 10 seconds (its `X-RateLimit-Limit` headers); two a second
+     * stays well inside that. A set needs about two ListenBrainz calls per artist.
+     */
+    const val LISTENBRAINZ_CALLS_PER_SECOND = 2.0
+
+    fun callsPerSecond(service: Service): Double =
+        if (service == Service.LISTENBRAINZ) LISTENBRAINZ_CALLS_PER_SECOND else MUSICBRAINZ_CALLS_PER_SECOND
 
     /** The longest wait the app accepts inside one call; longer limits fail the call. */
     const val MAX_WAIT_MILLIS = 60_000L

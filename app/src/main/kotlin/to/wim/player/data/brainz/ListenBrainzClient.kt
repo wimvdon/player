@@ -81,6 +81,18 @@ class ListenBrainzClient(private val http: BrainzHttp) : ListenBrainzSource {
         return if (answer.hasData) ListenBrainzJson.tagRecordings(answer.body) else emptyList()
     }
 
+    override suspend fun artistRadioRecordings(artistMbid: String, count: Int): List<RadioRecording> {
+        val url = "$API/lb-radio/artist/$artistMbid".toHttpUrl().newBuilder()
+            .addQueryParameter("mode", "easy")
+            .addQueryParameter("max_similar_artists", "0")
+            .addQueryParameter("max_recordings_per_artist", "$count")
+            .addQueryParameter("pop_begin", "0")
+            .addQueryParameter("pop_end", "100")
+            .build()
+        val answer = http.get(url, "GET /1/lb-radio/artist")
+        return if (answer.hasData) ListenBrainzJson.artistRadio(answer.body, artistMbid) else emptyList()
+    }
+
     override suspend fun recordingMetadata(recordingMbids: List<String>): List<BrainzRecording> {
         if (recordingMbids.isEmpty()) return emptyList()
         val url = "$API/metadata/recording/".toHttpUrl().newBuilder()

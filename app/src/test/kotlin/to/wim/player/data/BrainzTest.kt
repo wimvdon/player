@@ -13,7 +13,10 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import to.wim.player.data.brainz.BrainzHttp
+import to.wim.player.data.brainz.BrainzAuthRequiredException
 import to.wim.player.data.brainz.BrainzMusic
+import to.wim.player.data.brainz.BrainzRecording
+import to.wim.player.data.brainz.TagRecording
 import to.wim.player.data.brainz.ListenBrainzJson
 import to.wim.player.data.brainz.MusicBrainzJson
 import to.wim.player.logic.BrainzLimits
@@ -87,8 +90,33 @@ class ListenBrainzJsonTest {
                 ListenBrainzJson.tagRecordings(fixture("lb_tagradio")),
                 ListenBrainzJson.recordingMetadata(fixture("lb_recordingmetadata")),
             )
-        assertEquals(listOf("Slowdive", "Ride", "The Smashing Pumpkins"), ranked.map { it.name })
-        assertEquals(listOf("mb-slowdive", "mb-ride", "mb-pumpkins"), ranked.map { it.mbid })
+        // Ride has the most votes on one recording (6), Slowdive 5, the Pumpkins 1.
+        assertEquals(listOf("Ride", "Slowdive", "The Smashing Pumpkins"), ranked.map { it.name })
+        assertEquals(listOf("mb-ride", "mb-slowdive", "mb-pumpkins"), ranked.map { it.mbid })
+    }
+
+    @Test
+    fun `many weakly tagged recordings rank below one strongly tagged album`() {
+        val tagged = (1..10).map { TagRecording("big$it", 2, 100.0) } + TagRecording("core", 20, 50.0)
+        val metadata =
+            (1..10).map { BrainzRecording("Song $it", "Big Band", "big$it", listOf("mb-big")) } +
+                BrainzRecording("Core Song", "Core Band", "core", listOf("mb-core"))
+        assertEquals(listOf("Core Band", "Big Band"), BrainzMusic.rankGenreArtists(tagged, metadata).map { it.name })
+    }
+
+    @Test
+    fun `artist radio keeps only that artist, most listened first`() {
+        val radio = ListenBrainzJson.artistRadio(fixture("lb_artistradio"), "mb-ride")
+        assertEquals(listOf("r-vapour", "r-leave", "r-obscure"), radio.map { it.recordingMbid })
+        assertEquals(45734L, radio.first().listens)
+        assertTrue(ListenBrainzJson.artistRadio("{}", "mb-ride").isEmpty())
+    }
+
+    @Test
+    fun `listeners are estimated from listens`() {
+        assertEquals(1000L, BrainzMusic.listenersFromListens(8000))
+        assertEquals(1L, BrainzMusic.listenersFromListens(3))
+        assertNull(BrainzMusic.listenersFromListens(0))
     }
 
     @Test
@@ -245,7 +273,7 @@ class BrainzHttpTest {
         }
     }
 
-    @Test(expected = IOException::class)
+    @Test(expected = BrainzAuthRequiredException::class)
     fun `401 fails at once`() {
         runBlocking {
             client(Scripted(mutableListOf(401 to "")), CallLog(), ArrayList()).get(url, "GET x")

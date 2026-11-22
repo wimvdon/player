@@ -2,6 +2,23 @@
 
 Newest first. Add an entry for every notable choice: what was decided, why, and what was rejected.
 
+## 2026-11-22: Top tracks come from ListenBrainz's artist radio, which needs no token
+
+The genre fix above still gave 18 tracks from 3 artists on the phone. Running the real set-building
+code against the live services showed why: ListenBrainz's `/1/popularity/top-recordings-for-artist`
+now answers 401 ("you need to provide an Auth token for this endpoint", because of AI scrapers) for
+most artists; only answers it still has cached, for very popular artists, come back. Every other
+artist gave no tracks, whatever the genre or seeds. The app now reads, after the first 401, a sample
+of 200 of the artist's recordings from `/1/lb-radio/artist/{mbid}` (no token), keeps the most
+listened, and names them with `/1/metadata/recording`; listener counts are estimated as listens / 8.
+That is two calls per artist instead of one, so ListenBrainz runs at 2 calls a second (it allows 30
+per 10 seconds) and MusicBrainz mood tags are read alongside instead of afterwards. Genre artists are
+now ranked by the most votes on one recording instead of the sum, so a big band with many lightly
+tagged songs no longer comes first. Live check: shoegaze, 100 tracks, gave 100 tracks from 34 artists
+in 82 seconds; one seed artist, 250 tracks, gave 250 tracks in 169 seconds.
+Rejected: asking every user for a ListenBrainz token (an extra setup step; can be added later to
+use the one-call endpoint again).
+
 ## 2026-11-22: Genre artists come from ListenBrainz tag radio; sets reach their length
 
 A "calm shoegaze" set of 100 tracks came back with 12 tracks from 4 artists, none of them really
@@ -110,8 +127,8 @@ The owner chose to drop Last.fm. History, taste and similar artists will come fr
 plays keep arriving), artist IDs and genres from **MusicBrainz**, and sound from **ReccoBeats**
 (already used for tempo and energy). Spotify keeps the library, top items and recent plays.
 
-- Both MusicBrainz and ListenBrainz allow **one call a second** per client, so they share
-  `BrainzHttp` with a 1-per-second `TokenBucket`, wait on 429/503 (`X-RateLimit-Reset-In`,
+- MusicBrainz allows **one call a second** per client and ListenBrainz 30 per 10 seconds, so they
+  share `BrainzHttp` with a `TokenBucket` each (0.9 and 2 a second since the artist-radio change), wait on 429/503 (`X-RateLimit-Reset-In`,
   `Retry-After`) and send `Player/<version> ( https://github.com/wimvdon/player )` as User-Agent,
   which both ask for. A repository link instead of an email, so no personal address is in the app.
 - Reading ListenBrainz needs only a username. A user token is optional (higher rate limits).

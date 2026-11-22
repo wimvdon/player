@@ -110,6 +110,15 @@ object ListenBrainzJson {
             Recommendation(item.string("recording_mbid") ?: return@mapNotNull null, item.double("score") ?: 0.0)
         }
 
+    /**
+     * `GET /1/lb-radio/artist/{mbid}`: an object of artist MBID to recordings. Only [artistMbid]'s
+     * own recordings are kept, most listened first.
+     */
+    fun artistRadio(text: String, artistMbid: String): List<RadioRecording> =
+        ((parseJson(text) as? JsonObject)?.get(artistMbid)).objects().mapNotNull { item ->
+            RadioRecording(item.string("recording_mbid") ?: return@mapNotNull null, item.long("total_listen_count") ?: 0)
+        }.distinctBy { it.recordingMbid }.sortedByDescending { it.listens }
+
     /** `GET /1/lb-radio/tags`: a plain list, most tag votes first. Entries without an MBID are skipped. */
     fun tagRecordings(text: String): List<TagRecording> =
         parseJson(text).objects().mapNotNull { item ->

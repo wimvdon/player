@@ -51,7 +51,7 @@ class BrainzMusic(
      * mostly finds little-known artists with one vote, whose tracks ListenBrainz doesn't know.
      */
     override suspend fun genreArtists(genre: String, limit: Int): List<String> =
-        cached(caches.artistLists, "genre2:${TrackText.normalize(genre)}:$limit") {
+        cached(caches.artistLists, "genre3:${TrackText.normalize(genre)}:$limit") {
             val fromRadio = radioArtists(genre)
             val result = LinkedHashMap<String, String>()
             for (artist in fromRadio) {
@@ -76,14 +76,52 @@ class BrainzMusic(
         return rankGenreArtists(tagged, metadata)
     }
 
+    /**
+     * ListenBrainz's top recordings need a user token since 2026 (only answers it still has
+     * cached come without one), so after the first refusal every artist is read from its artist
+     * radio instead. Kept for as long as the app runs.
+     */
+    @Volatile
+    private var topNeedsToken = false
+
+    /**
+     * The artist's most listened tracks. Every track carries the asked-for name: ListenBrainz
+     * credits vary ("A feat. B", "Smashing Pumpkins" next to "The Smashing Pumpkins"), and one
+     * artist should show under one name and count once for the per-artist rule.
+     */
     override suspend fun artistTopTracks(artist: String, limit: Int): List<PoolTrack> =
         cached(caches.tracks, "top:${TrackText.artistKey(artist)}:$limit") {
             val id = artistId(artist) ?: return@cached emptyList()
-            // Every track carries the asked-for name: ListenBrainz credits vary ("A feat. B",
-            // "Smashing Pumpkins" next to "The Smashing Pumpkins"), and one artist should show
-            // under one name and count once for the per-artist rule.
-            listenBrainz.topRecordings(id, limit).map { recording -> PoolTrack(recording.title, artist, recording.listeners) }
+            val top =
+                if (topNeedsToken) {
+                    null
+                } else {
+                    try {
+                        listenBrainz.topRecordings(id, limit)
+                    } catch (e: BrainzAuthRequiredException) {
+                        topNeedsToken = true
+                        null
+                    }
+                }
+            top?.map { PoolTrack(it.title, artist, it.listeners) } ?: radioTopTracks(id, artist, limit)
         }
+
+    /**
+     * The most listened of a large sample of the artist's recordings (artist radio, no token
+     * needed), named with one metadata lookup. Live, remix and similar versions are left out.
+     */
+    private suspend fun radioTopTracks(id: String, artist: String, limit: Int): List<PoolTrack> {
+        val sample = listenBrainz.artistRadioRecordings(id, RADIO_SAMPLE).take(METADATA_BATCH)
+        if (sample.isEmpty()) return emptyList()
+        val named = listenBrainz.recordingMetadata(sample.map { it.recordingMbid }).associateBy { it.recordingMbid }
+        return sample.mapNotNull { recording ->
+            val title = named[recording.recordingMbid]?.title ?: return@mapNotNull null
+            PoolTrack(title, artist, listenersFromListens(recording.listens))
+        }
+            .filterNot { TrackText.isAlternateVersion(it.title) }
+            .distinctBy { TrackText.baseTitle(it.title) }
+            .take(limit)
+    }
 
     override suspend fun artistTags(artist: String): List<WeightedTag> =
         cached(caches.tags, TrackText.artistKey(artist)) {
@@ -138,21 +176,36 @@ class BrainzMusic(
         /** Tag radio recordings read per genre: four metadata lookups. */
         const val RADIO_RECORDINGS = 200
 
+        /** Recordings read from an artist's radio to find its most listened ones. */
+        const val RADIO_SAMPLE = 200
+
+        /** ListenBrainz users play a track about this often each, to turn listens into listeners. */
+        const val LISTENS_PER_LISTENER = 8
+
+        /** An estimated listener count from total listens; null when there were none. */
+        fun listenersFromListens(listens: Long): Long? = if (listens <= 0) null else maxOf(1, listens / LISTENS_PER_LISTENER)
+
         /**
          * Orders the main artists of tag-radio recordings by how strongly they carry the tag: the
-         * sum of the tag votes over their recordings. Ties keep the order ListenBrainz gave.
+         * most votes the tag has on any of their recordings, albums or on the artist, then how
+         * many of their recordings have it. An artist with one album tagged by many people ranks
+         * above a big artist with many songs and a few votes. Ties keep ListenBrainz's order.
          */
         fun rankGenreArtists(tagged: List<TagRecording>, metadata: List<BrainzRecording>): List<MbArtist> {
             val byRecording = metadata.associateBy { it.recordingMbid }
-            val scores = LinkedHashMap<String, Int>()
+            val best = LinkedHashMap<String, Int>()
+            val count = HashMap<String, Int>()
             val names = HashMap<String, String>()
             for (recording in tagged) {
                 val found = byRecording[recording.recordingMbid] ?: continue
                 val mbid = found.artistMbids.firstOrNull() ?: continue
                 names.putIfAbsent(mbid, found.artist)
-                scores[mbid] = (scores[mbid] ?: 0) + maxOf(recording.tagCount, 1)
+                best[mbid] = maxOf(best[mbid] ?: 0, recording.tagCount)
+                count[mbid] = (count[mbid] ?: 0) + 1
             }
-            return scores.entries.sortedByDescending { it.value }.map { MbArtist(it.key, names.getValue(it.key)) }
+            return best.keys
+                .sortedWith(compareByDescending<String> { best.getValue(it) }.thenByDescending { count.getValue(it) })
+                .map { MbArtist(it, names.getValue(it)) }
         }
 
         private const val MAX_TAGS = 10
