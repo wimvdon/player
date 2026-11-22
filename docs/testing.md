@@ -57,15 +57,19 @@ description. In addition, check every now and then (always before a release):
 - [ ] **Setup:** with no keys, the start screen asks to connect. Settings → Spotify → the steps show
       the redirect URI, package name and SHA-1 with copy buttons. Connect Spotify signs in and shows
       "Signed in as …".
-- [ ] **Generate:** pick 2 artists and 1 genre, 250 tracks. The progress bar runs; with an empty
-      cache the preview appears in under a minute, the second time (same input) in seconds.
+- [ ] **Look:** a fresh install starts dark, with the "player" wordmark and the cookie in the app
+      bar. Settings › Appearance › Light switches to the light colours.
+- [ ] **Generate:** pick 2 artists and 1 genre, 250 tracks (the + and − buttons step by 50 above
+      100, by 10 below). The generating screen shows the morphing shape, the wavy bar and the
+      steps ticking off; with an empty cache the preview appears in a few minutes, the second time
+      (same input) in seconds. Cancel goes back to the generator.
 - [ ] **Preview:** swipe a track left, it disappears; Undo brings it back. Regenerate gives a
       different set.
-- [ ] **Playlist:** Send to Spotify. The dialog suggests a name such as "Upbeat Indie & Jazz · 22 Nov";
-      change it. Start. The notification reads "Finding tracks on Spotify: x of 250", then a new
+- [ ] **Playlist:** Send to Spotify. The sheet suggests a name such as "Upbeat Indie & Jazz · 22 Nov";
+      the dice and the chips offer other names; change it. Send. The notification reads "Finding tracks on Spotify: x of 250", then a new
       private playlist with your name appears in Spotify with every track at once and starts
       playing (or opens in Spotify to press play).
-- [ ] **Empty name:** clear the name field. Start is greyed out until you type something.
+- [ ] **Empty name:** clear the name field. Send is greyed out until you type something.
 - [ ] **A second set** makes a second playlist; the first one keeps its tracks.
 - [ ] **Debug:** Settings → API calls and cache lists the calls; Spotify searches only appear as
       tracks get added.

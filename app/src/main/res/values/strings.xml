@@ -9,7 +9,6 @@
     <string name="problem_playlist_rejected">Spotify didn\'t accept the playlist change. Try again.</string>
     <string name="playlist_press_play">Open it in Spotify and press play.</string>
     <string name="playlist_playing">Playing on Spotify.</string>
-    <string name="playlist_card_label">Spotify playlist</string>
     <string name="playlist_description">Made by Player</string>
     <string name="action_open_in_spotify">Open in Spotify</string>
     <string name="app_name">Player</string>
@@ -34,7 +33,6 @@
     <string name="action_resume_spotify">Resume now</string>
     <string name="action_retry">Retry</string>
     <string name="action_sign_out">Sign out</string>
-    <string name="action_start">Start</string>
     <string name="action_start_queue">Send to Spotify</string>
     <string name="action_stop">Stop</string>
     <string name="action_undo">Undo</string>
@@ -73,8 +71,6 @@
     <string name="genres_search">Search or add a genre</string>
     <string name="genres_title">Genres</string>
     <string name="genres_use">Use “%1$s”</string>
-    <string name="length_label">Tracks</string>
-    <string name="length_range">%1$d to %2$d</string>
     <string name="length_title">Length</string>
     <string name="meter_mood">Mood</string>
     <string name="meter_new">New</string>
@@ -186,4 +182,23 @@
         <item quantity="one">Player makes a new private playlist in your Spotify account with %d track.</item>
         <item quantity="other">Player makes a new private playlist in your Spotify account with all %d tracks.</item>
     </plurals>
+    <string name="generator_headline">What\'s the %1$s today?</string>
+    <string name="generator_headline_word">vibe</string>
+    <!-- The word under the number on the length stepper (always 10 or more). -->
+    <string name="length_unit">tracks</string>
+    <plurals name="length_tracks">
+        <item quantity="one">%d track</item>
+        <item quantity="other">%d tracks</item>
+    </plurals>
+    <string name="action_more_tracks">More tracks</string>
+    <string name="action_fewer_tracks">Fewer tracks</string>
+    <string name="generating_title">Digging through crates…</string>
+    <string name="preview_curve_title">Mood across the set</string>
+    <string name="preview_curve_peak">Peak at track %1$d</string>
+    <string name="preview_curve_description">Mood starts at %1$d%%, peaks at track %2$d and ends at %3$d%%.</string>
+    <string name="start_dialog_dice">Suggest another name</string>
+    <string name="action_send">Send</string>
+    <string name="step_artists_short">Finding similar artists</string>
+    <string name="step_tracks_short">Collecting tracks</string>
+    <string name="step_moods_short">Reading tags</string>
 </resources>

@@ -63,6 +63,44 @@ object PlaylistName {
         return clean(templates.dated.format(named, day), templates.fallback)
     }
 
+    /**
+     * Names for the dice on the send sheet: [suggest] first, then the same without the date, then
+     * names from the other picks (artists when genres were picked, single genres or artists).
+     * Never empty, no duplicates.
+     */
+    fun alternatives(
+        genres: List<String>,
+        artists: List<String>,
+        mood: Double,
+        date: LocalDate,
+        locale: Locale,
+        templates: Templates,
+    ): List<String> {
+        val day = date.format(DateTimeFormatter.ofPattern("d MMM", locale)).trimEnd('.')
+        val topics =
+            buildList {
+                add(topic(genres, artists) ?: templates.fallback)
+                if (genres.isNotEmpty()) topic(emptyList(), artists)?.let(::add)
+                genres.forEach { add(capitalize(it)) }
+                artists.forEach { add(it.trim()) }
+            }.filter(String::isNotBlank)
+        val names =
+            buildList {
+                add(suggest(genres, artists, mood, date, locale, templates))
+                topics.forEach { topic ->
+                    val named =
+                        when (vibe(mood)) {
+                            Vibe.CALM -> templates.calm.format(topic)
+                            Vibe.UPBEAT -> templates.upbeat.format(topic)
+                            Vibe.NEUTRAL -> topic
+                        }
+                    add(named)
+                    add(templates.dated.format(topic, day))
+                }
+            }
+        return names.map { clean(it, templates.fallback) }.distinct()
+    }
+
     /** The name to send: spaces tidied and at most [MAX_LENGTH] characters, or [fallback] when empty. */
     fun clean(input: String, fallback: String): String {
         val tidy = input.trim().replace(Regex("\\s+"), " ").take(MAX_LENGTH).trim()

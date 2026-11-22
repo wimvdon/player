@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -20,42 +21,46 @@ import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Stop
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import java.util.Date
 import to.wim.player.R
 import to.wim.player.engine.QueueProblem
 import to.wim.player.engine.QueueState
 import to.wim.player.engine.QueueStatus
 import to.wim.player.ui.MainViewModel
-import to.wim.player.ui.theme.AppShapes
+import to.wim.player.ui.common.SpinningRecord
+import to.wim.player.ui.common.WavyProgress
 import to.wim.player.ui.theme.EmptyState
 import to.wim.player.ui.theme.readableWidth
-import java.util.Date
 
 /** The playlist while it fills: open it in Spotify, how far it is, and Stop. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -93,6 +98,7 @@ fun RunningScreen(
             Column(
                 Modifier.readableWidth().fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 PlaylistCard(state)
                 Progress(state)
@@ -114,30 +120,41 @@ private fun PlaylistCard(state: QueueState) {
             openPlaylist(context, id)
         }
     }
-    Card(
-        shape = AppShapes.Group,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-        modifier = Modifier.fillMaxWidth(),
+    Column(
+        Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(stringResource(R.string.playlist_card_label), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-            Text(state.name, style = MaterialTheme.typography.headlineSmall)
-            Text(
-                stringResource(
-                    when {
-                        id == null -> R.string.playlist_waiting
-                        state.playbackStarted == true -> R.string.playlist_playing
-                        else -> R.string.playlist_press_play
-                    },
-                ),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            if (id != null) {
-                Button(onClick = { openPlaylist(context, id) }) {
-                    Text(stringResource(R.string.action_open_in_spotify))
-                    Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null, modifier = Modifier.padding(start = 8.dp))
-                }
+        SpinningRecord(spinning = state.active, size = 184.dp)
+        Text(
+            state.name,
+            style = MaterialTheme.typography.headlineLarge,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.semantics { heading() },
+        )
+        Text(
+            stringResource(
+                when {
+                    id == null -> R.string.playlist_waiting
+                    state.playbackStarted == true -> R.string.playlist_playing
+                    else -> R.string.playlist_press_play
+                },
+            ),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        if (id != null) {
+            Button(
+                onClick = { openPlaylist(context, id) },
+                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+            ) {
+                Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null)
+                Text(
+                    stringResource(R.string.action_open_in_spotify),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(start = 10.dp),
+                )
             }
         }
     }
@@ -158,8 +175,20 @@ private fun openPlaylist(
 
 @Composable
 private fun Progress(state: QueueState) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         val matching = state.playlistId == null
+        val done = if (matching) state.processed else state.queued
+        val of = if (matching) state.total else state.found
+        Text(
+            buildAnnotatedString {
+                append("$done")
+                withStyle(SpanStyle(fontSize = MaterialTheme.typography.headlineSmall.fontSize, color = MaterialTheme.colorScheme.onSurfaceVariant)) {
+                    append(" / $of")
+                }
+            },
+            style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
+            modifier = Modifier.clearAndSetSemantics {},
+        )
         Text(
             if (matching) {
                 stringResource(R.string.queue_progress_matching, state.processed, state.total)
@@ -169,15 +198,7 @@ private fun Progress(state: QueueState) {
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
         )
-        LinearProgressIndicator(
-            progress = {
-                when {
-                    matching -> if (state.total == 0) 0f else state.processed.toFloat() / state.total
-                    else -> if (state.found == 0) 0f else state.queued.toFloat() / state.found
-                }
-            },
-            modifier = Modifier.fillMaxWidth(),
-        )
+        WavyProgress(progress = if (of == 0) 0f else done.toFloat() / of)
         if (state.skipped > 0) {
             Text(
                 pluralStringResource(R.plurals.queue_skipped, state.skipped, state.skipped),
