@@ -11,3 +11,8 @@
 # Keep line numbers in stack traces, but hide the original source file names.
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
+
+# Spotify App Remote (app/libs AAR): it can map messages with Jackson, but the app uses its
+# default Gson mapper, so Jackson isn't included. Its @NotNull annotation isn't shipped either.
+-dontwarn com.fasterxml.jackson.**
+-dontwarn com.spotify.base.annotations.**
