@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -34,6 +35,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -51,6 +53,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -62,15 +65,16 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import to.wim.player.R
-import to.wim.player.data.model.QueueMode
 import to.wim.player.logic.Candidate
-import to.wim.player.logic.Setup
+import to.wim.player.logic.PlaylistName
 import to.wim.player.ui.MainViewModel
 import to.wim.player.ui.common.CoverArt
 import to.wim.player.ui.common.ScoreMeter
@@ -90,17 +94,17 @@ fun PreviewScreen(
 ) {
     val result by viewModel.preview.collectAsStateWithLifecycle()
     val ui by viewModel.ui.collectAsStateWithLifecycle()
-    val settings by viewModel.settings.collectAsStateWithLifecycle()
     val secrets by viewModel.secrets.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     var confirmStart by remember { mutableStateOf(false) }
+    var playlistName by rememberSaveable { mutableStateOf("") }
 
     val notifications =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
-            // The queue runs either way; without the permission the notification is just hidden.
-            if (viewModel.startQueue()) onQueueStarted()
+            // The playlist is made either way; without the permission the notification is just hidden.
+            if (viewModel.startQueue(playlistName)) onQueueStarted()
         }
 
     fun start() {
@@ -109,7 +113,7 @@ fun PreviewScreen(
                 ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         if (needsAsk) {
             notifications.launch(Manifest.permission.POST_NOTIFICATIONS)
-        } else if (viewModel.startQueue()) {
+        } else if (viewModel.startQueue(playlistName)) {
             onQueueStarted()
         }
     }
@@ -171,6 +175,7 @@ fun PreviewScreen(
                                         }
                                     }
                                 } else {
+                                    playlistName = viewModel.suggestPlaylistName()
                                     confirmStart = true
                                 }
                             },
@@ -238,27 +243,33 @@ fun PreviewScreen(
     }
 
     if (confirmStart) {
-        val mode = settings?.queueMode ?: QueueMode.ROLLING
+        val nameOk = playlistName.isNotBlank()
         AlertDialog(
             onDismissRequest = { confirmStart = false },
             title = { Text(stringResource(R.string.start_dialog_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(stringResource(R.string.start_dialog_playlist, Setup.PLAYLIST_NAME))
-                    Text(
-                        if (mode == QueueMode.ROLLING) {
-                            stringResource(R.string.start_dialog_rolling)
-                        } else {
-                            pluralStringResource(R.plurals.start_dialog_all, tracks.size, tracks.size)
-                        },
+                    Text(pluralStringResource(R.plurals.start_dialog_new_playlist, tracks.size, tracks.size))
+                    OutlinedTextField(
+                        value = playlistName,
+                        onValueChange = { playlistName = it.take(PlaylistName.MAX_LENGTH) },
+                        label = { Text(stringResource(R.string.start_dialog_name_label)) },
+                        supportingText = { if (!nameOk) Text(stringResource(R.string.start_dialog_name_empty)) },
+                        isError = !nameOk,
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done),
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
             },
             confirmButton = {
-                TextButton(onClick = {
-                    confirmStart = false
-                    start()
-                }) { Text(stringResource(R.string.action_start)) }
+                TextButton(
+                    onClick = {
+                        confirmStart = false
+                        start()
+                    },
+                    enabled = nameOk,
+                ) { Text(stringResource(R.string.action_start)) }
             },
             dismissButton = {
                 TextButton(onClick = { confirmStart = false }) { Text(stringResource(R.string.action_cancel)) }

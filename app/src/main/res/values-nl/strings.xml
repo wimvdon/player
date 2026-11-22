@@ -3,10 +3,8 @@
     <string name="problem_playlist_rejected">Spotify nam de wijziging aan de afspeellijst niet aan. Probeer opnieuw.</string>
     <string name="playlist_press_play">Open hem in Spotify en druk op afspelen.</string>
     <string name="playlist_playing">Speelt af op Spotify.</string>
-    <string name="playlist_preparing">Afspeellijst maken…</string>
     <string name="playlist_card_label">Spotify-afspeellijst</string>
     <string name="playlist_description">Gemaakt door Player</string>
-    <string name="start_dialog_playlist">De nummers komen in je privé-afspeellijst ‘%1$s’ op Spotify. Wat Player er eerder in zette, wordt vervangen.</string>
     <string name="action_open_in_spotify">Openen in Spotify</string>
     <string name="app_name">Player</string>
     <string name="loading">Laden…</string>
@@ -86,7 +84,6 @@
     <string name="mood_low">Rustig</string>
     <string name="mood_high">Opzwepend</string>
     <string name="notification_channel">Afspeellijst</string>
-    <string name="notification_queueing">Toevoegen aan afspeellijst %1$d / %2$d</string>
     <string name="order_best">Beste match</string>
     <string name="order_curve">Sfeercurve</string>
     <string name="order_shuffle">Shuffle</string>
@@ -102,18 +99,9 @@
     <string name="problem_network">Kon Spotify niet bereiken. Controleer je verbinding.</string>
     <string name="problem_quota">De Spotify-limiet voor deze app is op. Player roept Spotify niet aan tot %1$s.</string>
     <string name="problem_signed_out">Spotify vraagt je opnieuw te koppelen. Open de instellingen en tik op Spotify koppelen.</string>
-    <string name="queue_banner_title">Afspeellijst vullen</string>
-    <string name="queue_connecting">Afspeellijst maken…</string>
     <string name="queue_empty_title">Nog geen afspeellijst</string>
     <string name="queue_empty_body">Maak een set en stuur hem vanuit het voorbeeld naar Spotify.</string>
     <string name="queue_finished">Alle nummers staan in de afspeellijst.</string>
-    <string name="queue_mode_all">Alles tegelijk</string>
-    <string name="queue_mode_rolling">Doorlopend</string>
-    <string name="queue_mode_all_help">Voegt alle nummers nu toe. Gebruikt meer Spotify-zoekopdrachten tegelijk.</string>
-    <string name="queue_mode_rolling_help">Voegt telkens een paar nummers toe, ongeveer 40 minuten vooruit, zodat Spotify-zoekopdrachten gespreid worden.</string>
-    <string name="queue_progress">%1$d van %2$d nummers klaar</string>
-    <string name="queue_stop_note">Toegevoegde nummers blijven in de afspeellijst.</string>
-    <string name="queue_stopped">Gestopt. De afspeellijst houdt de nummers die er al in staan.</string>
     <string name="queue_title">Afspeellijst</string>
     <string name="settings_appearance">Weergave</string>
     <string name="settings_client_id">Client ID</string>
@@ -129,7 +117,6 @@
     <string name="settings_lastfm_username_help">Optioneel. Nummers die je scrobbelde, tellen als bekend.</string>
     <string name="settings_order">Volgorde</string>
     <string name="settings_queue">Afspeellijst</string>
-    <string name="settings_queue_mode">Afspeellijst vullen</string>
     <string name="settings_reccobeats">Tempo en energie van ReccoBeats</string>
     <string name="settings_reccobeats_help">Stuurt Spotify-nummer-ID\'s naar ReccoBeats voor een preciezere sfeer.</string>
     <string name="settings_signed_in_as">Ingelogd als %1$s</string>
@@ -151,7 +138,6 @@
     <string name="spotify_step_android">4. Voeg een Android-pakket toe met deze pakketnaam en SHA-1-vingerafdruk:</string>
     <string name="spotify_step_client_id">5. Kopieer de Client ID naar het veld hierboven en tik op Spotify koppelen.</string>
     <string name="start_dialog_title">Naar Spotify sturen?</string>
-    <string name="start_dialog_rolling">Terwijl je luistert, komen er telkens een paar nummers bij, ongeveer 40 minuten vooruit.</string>
     <string name="step_seeds">Je bibliotheek lezen…</string>
     <string name="step_artists">Vergelijkbare artiesten zoeken (%1$d van %2$d)</string>
     <string name="step_tracks">Nummers verzamelen (%1$d van %2$d)</string>
@@ -161,10 +147,6 @@
     <string name="theme_light">Licht</string>
     <string name="theme_dark">Donker</string>
     <string name="track_description">%1$d. %2$s van %3$s. Sfeer %4$d%%, nieuw %5$d%%</string>
-    <plurals name="playlist_minutes_ahead">
-        <item quantity="one">Ongeveer %d minuut muziek klaar</item>
-        <item quantity="other">Ongeveer %d minuten muziek klaar</item>
-    </plurals>
     <plurals name="listeners">
         <item quantity="one">%s luisteraar</item>
         <item quantity="other">%s luisteraars</item>
@@ -177,8 +159,22 @@
         <item quantity="one">%d nummer stond niet op Spotify en is overgeslagen</item>
         <item quantity="other">%d nummers stonden niet op Spotify en zijn overgeslagen</item>
     </plurals>
-    <plurals name="start_dialog_all">
-        <item quantity="one">%d nummer wordt nu toegevoegd.</item>
-        <item quantity="other">Alle %d nummers worden nu toegevoegd.</item>
+    <string name="queue_banner_title">Je afspeellijst wordt gemaakt</string>
+    <string name="queue_stop_note">Als je nu stopt, komt er geen afspeellijst.</string>
+    <string name="queue_stopped">Gestopt. Tik op Doorgaan om de afspeellijst af te maken.</string>
+    <string name="playlist_waiting">De afspeellijst verschijnt in Spotify zodra elk nummer is opgezocht.</string>
+    <string name="queue_progress_matching">Nummers zoeken op Spotify: %1$d van %2$d</string>
+    <string name="queue_progress_adding">Toevoegen aan de afspeellijst: %1$d van %2$d</string>
+    <string name="queue_matching">Elk nummer opzoeken op Spotify…</string>
+    <string name="queue_saving">Afspeellijst maken…</string>
+    <string name="problem_nothing_found">Geen van deze nummers staat op Spotify, dus er is geen afspeellijst gemaakt.</string>
+    <string name="start_dialog_name_label">Naam van de afspeellijst</string>
+    <string name="start_dialog_name_empty">Geef de afspeellijst een naam.</string>
+    <string name="playlist_name_calm">Rustige %1$s</string>
+    <string name="playlist_name_upbeat">Energieke %1$s</string>
+    <string name="playlist_name_dated">%1$s · %2$s</string>
+    <plurals name="start_dialog_new_playlist">
+        <item quantity="one">Player maakt een nieuwe privé-afspeellijst in je Spotify-account met %d nummer.</item>
+        <item quantity="other">Player maakt een nieuwe privé-afspeellijst in je Spotify-account met alle %d nummers.</item>
     </plurals>
 </resources>

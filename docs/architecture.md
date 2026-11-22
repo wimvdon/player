@@ -3,12 +3,12 @@
 ## This app
 
 Player builds a set of tracks from a few controls (mood, familiarity, genres, seed artists,
-length) using Last.fm, and plays it through Spotify in one private playlist called "Player",
-whose contents each new set replaces. Each user enters their own Spotify Client ID and Last.fm
+length) using Last.fm, and plays it through Spotify in a new private playlist for each set,
+with a name Player suggests and the user can change. Each user enters their own Spotify Client ID and Last.fm
 API key (see `docs/decisions.md`, 2026-11-22).
 
 **Screens** (`ui/`): Generator (start), Preview (swipe to remove, Regenerate, Send to Spotify),
-Playlist (open in Spotify, progress, Stop), Settings (keys and setup steps, queue options, appearance) and
+Playlist (open in Spotify, progress, Stop), Settings (keys and setup steps, playlist order, appearance) and
 "API calls and cache" (debug). `ui/AppNavigation.kt` keeps them as a small back stack.
 
 **How a set is made** (`engine/GenerationEngine.kt`, no Spotify searches):
@@ -26,12 +26,13 @@ Playlist (open in Spotify, progress, Stop), Settings (keys and setup steps, queu
    "known"), orders them (mood curve, best match or shuffle) and keeps the same artist apart.
 
 **Filling the playlist** (`engine/QueueController.kt`, while `service/QueueService.kt` shows a
-notification): a track is matched on Spotify (`engine/TrackResolver.kt`, one search, cached
-forever, misses too) only when it's about to be added. The first 15 replace the playlist's
-contents (or go into a new playlist when the saved one is gone), then Player starts it on the
-active device or opens it in the Spotify app. *Rolling* adds 10 more whenever less than 40 minutes
-are left, counted from the start (`logic/PlaylistPlan`); *all at once* adds the rest in calls of
-100. See `docs/decisions.md` for why this replaced App Remote's play queue.
+notification): first every track is matched on Spotify (`engine/TrackResolver.kt`, one search
+per track, cached forever, misses too). Only then is a new private playlist made, with the name
+from the start dialog (`logic/PlaylistName.kt` suggests one from the genres or artists, the mood
+and the date), and every match goes in straight away, in calls of 100 (Spotify's limit,
+`logic/PlaylistPlan`). Then Player starts it on the active device or opens it in the Spotify app.
+After a problem, Continue picks up where it stopped without making a second playlist. See
+`docs/decisions.md` for why.
 
 **Moving off Last.fm** (see `docs/decisions.md`): `data/brainz/` holds MusicBrainz and
 ListenBrainz clients (`MusicBrainzSource`, `ListenBrainzSource`), one call a second each through
@@ -39,7 +40,7 @@ ListenBrainz clients (`MusicBrainzSource`, `ListenBrainzSource`), one call a sec
 
 **Services** sit behind interfaces in `data/Sources.kt` (`LastFmSource`, `MusicBrainzSource`,
 `ListenBrainzSource`, `SpotifyCatalog`,
-`PlaylistTarget`, `PlaylistMemory`, `AudioFeatureSource`) so the engine is tested with fakes.
+`PlaylistTarget`, `AudioFeatureSource`) so the engine is tested with fakes.
 
 **Spotify's quota:** Development Mode apps have a small, unpublished quota. Every call is logged
 (`logic/CallLog.kt`, shown on the debug screen). A 429 with `QUOTA_EXCEEDED` pauses all Web API
@@ -48,10 +49,10 @@ that are gone for new apps (recommendations, audio features, related artists, ar
 browse, batch track lookups) and the `popularity` field are not used. Search uses `limit=5`.
 
 **Where data lives:**
-- `backed_up_settings` DataStore (`data/store/Stores.kt`, `SettingsStore`): theme, queue options,
+- `backed_up_settings` DataStore (`data/store/Stores.kt`, `SettingsStore`): theme, playlist order,
   Last.fm username, the generator's last input.
 - `device_secrets` DataStore (`SecretStore`): Client ID, Last.fm key, Spotify tokens and their
-  scopes, the playlist's ID and the quota pause, each value encrypted with an Android Keystore AES key. Not backed up.
+  scopes and the quota pause, each value encrypted with an Android Keystore AES key. Not backed up.
 - `noBackupFilesDir/cache/*.json` (`data/cache/Caches.kt`): Last.fm answers (30 days), the user's
   library and charts (1 day), Spotify matches and audio features (forever).
 

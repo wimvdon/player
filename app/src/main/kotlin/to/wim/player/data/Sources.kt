@@ -84,24 +84,14 @@ interface AudioFeatureSource {
     suspend fun fetch(spotifyIds: List<String>)
 }
 
-/** The Spotify playlist Player fills (Web API). */
+/** The Spotify playlists Player makes (Web API). */
 interface PlaylistTarget {
     /** Creates a private playlist in the user's account and returns its ID. */
     suspend fun createPlaylist(name: String, description: String): String
-
-    /** Replaces everything in the playlist with [uris] (at most 100). */
-    suspend fun replaceItems(playlistId: String, uris: List<String>)
 
     /** Adds [uris] (at most 100) at the end of the playlist. */
     suspend fun addItems(playlistId: String, uris: List<String>)
 
     /** Starts the playlist on the active Spotify device; false when there is none. */
     suspend fun play(playlistId: String): Boolean
-}
-
-/** Remembers which playlist Player reuses, so each set doesn't make a new one. */
-interface PlaylistMemory {
-    suspend fun playlistId(): String
-
-    suspend fun savePlaylistId(id: String)
 }

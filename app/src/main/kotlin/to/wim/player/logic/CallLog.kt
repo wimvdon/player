@@ -30,26 +30,8 @@ class CallLog(private val capacity: Int = 300) {
     }
 }
 
-/** How the playlist is filled while you listen. */
+/** How the playlist is filled. */
 object PlaylistPlan {
-    /** Tracks in the playlist when it starts. */
-    const val FIRST_BATCH = 15
-
-    /** Tracks added each time the rolling fill tops up. */
-    const val ROLLING_BATCH = 10
-
     /** Spotify takes at most 100 tracks per call. */
     const val MAX_PER_CALL = 100
-
-    /** Rolling mode keeps about this much unheard music in the playlist. */
-    const val AHEAD_MILLIS = 40L * 60 * 1000
-
-    /** Used for a track whose length Spotify didn't give. */
-    const val TYPICAL_TRACK_MILLIS = 3L * 60 * 1000 + 30 * 1000
-
-    /**
-     * True when more tracks should go in: [aheadMillis] is the playlist's total length minus the
-     * time since it started, so what's left to hear if the user has been listening all along.
-     */
-    fun needsMore(aheadMillis: Long): Boolean = aheadMillis < AHEAD_MILLIS
 }

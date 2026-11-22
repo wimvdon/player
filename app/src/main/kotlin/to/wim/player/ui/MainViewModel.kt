@@ -27,8 +27,10 @@ import to.wim.player.engine.GenerationStep
 import to.wim.player.engine.NoSeedsException
 import to.wim.player.logic.Candidate
 import to.wim.player.logic.Generator
+import to.wim.player.logic.PlaylistName
 import to.wim.player.logic.Setup
 import to.wim.player.logic.TrackText
+import java.time.LocalDate
 import kotlin.coroutines.cancellation.CancellationException
 
 /** Why a generation failed, for the message. */
@@ -243,12 +245,27 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** The cover for a track, when it was matched on Spotify before (no search is made for it). */
     fun coverOf(track: Candidate): String? = graph.resolver.cached(track.artist, track.title)?.imageUrl
 
-    fun startQueue(): Boolean {
+    /** A name for the new playlist, from the picked genres or artists, the mood and today's date. */
+    fun suggestPlaylistName(): String {
+        val app = getApplication<Application>()
+        val state = _ui.value
+        val templates =
+            PlaylistName.Templates(
+                calm = app.getString(R.string.playlist_name_calm),
+                upbeat = app.getString(R.string.playlist_name_upbeat),
+                dated = app.getString(R.string.playlist_name_dated),
+                fallback = Setup.PLAYLIST_NAME,
+            )
+        val locale = app.resources.configuration.locales[0]
+        return PlaylistName.suggest(state.genres, state.artists, state.mood.toDouble(), LocalDate.now(), locale, templates)
+    }
+
+    /** Makes a new playlist called [name] with every track of the preview. */
+    fun startQueue(name: String): Boolean {
         val tracks = graph.preview.value?.tracks.orEmpty()
         if (tracks.isEmpty()) return false
-        val mode = settings.value?.queueMode ?: return false
         val description = getApplication<Application>().getString(R.string.playlist_description)
-        graph.queue.start(tracks, mode, Setup.PLAYLIST_NAME, description)
+        graph.queue.start(tracks, PlaylistName.clean(name, Setup.PLAYLIST_NAME), description)
         return true
     }
 

@@ -2,6 +2,23 @@
 
 Newest first. Add an entry for every notable choice: what was decided, why, and what was rejected.
 
+## 2026-11-22: A new, named playlist for every set, filled in one go
+
+The owner wants every run to make a new playlist instead of replacing "Player", with all tracks at
+once, and to choose its name. This replaces the "one reused playlist" and "rolling" choices below.
+
+- **One new private playlist per set.** The saved playlist ID and `PlaylistMemory` are gone. The
+  start dialog suggests a name (`logic/PlaylistName.kt`: up to two genres, or else artists, a word
+  for a calm or upbeat mood, and the date) that the user can edit; an empty name can't be sent.
+- **All at once, no batches.** The batches existed so Spotify searches (one per track) would be
+  spread over the listening session to go easy on the Development Mode quota. Now every track is
+  looked up first, and only then is the playlist made and filled, in calls of 100 because that is
+  Spotify's limit per call, so it appears complete. The cost: a 250-track set does up to 250
+  searches before playback starts (cached matches cost none). The "Fill the playlist" setting is
+  removed.
+- Rejected: making the playlist first and filling it while searching (it would show up half
+  empty in Spotify).
+
 ## 2026-11-22: Player moves from Last.fm to ListenBrainz, MusicBrainz and ReccoBeats
 
 The owner chose to drop Last.fm. History, taste and similar artists will come from

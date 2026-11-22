@@ -445,7 +445,11 @@ private fun QueueBanner(
             Column(Modifier.weight(1f)) {
                 Text(stringResource(R.string.queue_banner_title), style = MaterialTheme.typography.titleMedium)
                 Text(
-                    stringResource(R.string.queue_progress, queue.processed, queue.total),
+                    if (queue.playlistId == null) {
+                        stringResource(R.string.queue_progress_matching, queue.processed, queue.total)
+                    } else {
+                        stringResource(R.string.queue_progress_adding, queue.queued, queue.found)
+                    },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

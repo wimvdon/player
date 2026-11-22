@@ -9,10 +9,8 @@
     <string name="problem_playlist_rejected">Spotify didn\'t accept the playlist change. Try again.</string>
     <string name="playlist_press_play">Open it in Spotify and press play.</string>
     <string name="playlist_playing">Playing on Spotify.</string>
-    <string name="playlist_preparing">Making the playlist…</string>
     <string name="playlist_card_label">Spotify playlist</string>
     <string name="playlist_description">Made by Player</string>
-    <string name="start_dialog_playlist">The tracks go into your private Spotify playlist “%1$s”. What Player put there before is replaced.</string>
     <string name="action_open_in_spotify">Open in Spotify</string>
     <string name="app_name">Player</string>
     <string name="loading">Loading…</string>
@@ -92,7 +90,6 @@
     <string name="mood_low">Downtempo</string>
     <string name="mood_high">Upbeat</string>
     <string name="notification_channel">Playlist</string>
-    <string name="notification_queueing">Adding to playlist %1$d / %2$d</string>
     <string name="order_best">Best match</string>
     <string name="order_curve">Mood curve</string>
     <string name="order_shuffle">Shuffle</string>
@@ -108,18 +105,9 @@
     <string name="problem_network">Couldn\'t reach Spotify. Check your connection.</string>
     <string name="problem_quota">Spotify\'s limit for this app is used up. Player won\'t call Spotify until %1$s.</string>
     <string name="problem_signed_out">Spotify needs you to connect again. Open the settings and tap Connect Spotify.</string>
-    <string name="queue_banner_title">Filling the playlist</string>
-    <string name="queue_connecting">Making the playlist…</string>
     <string name="queue_empty_title">No playlist yet</string>
     <string name="queue_empty_body">Generate a set and send it to Spotify from its preview.</string>
     <string name="queue_finished">All tracks are in the playlist.</string>
-    <string name="queue_mode_all">All at once</string>
-    <string name="queue_mode_rolling">Rolling</string>
-    <string name="queue_mode_all_help">Adds every track now. Uses more Spotify searches at once.</string>
-    <string name="queue_mode_rolling_help">Adds tracks a few at a time, about 40 minutes ahead, so Spotify searches are spread out.</string>
-    <string name="queue_progress">%1$d of %2$d tracks done</string>
-    <string name="queue_stop_note">Tracks already added stay in the playlist.</string>
-    <string name="queue_stopped">Stopped. The playlist keeps the tracks added so far.</string>
     <string name="queue_title">Playlist</string>
     <string name="settings_appearance">Appearance</string>
     <string name="settings_client_id">Client ID</string>
@@ -135,7 +123,6 @@
     <string name="settings_lastfm_username_help">Optional. Tracks you scrobbled count as known.</string>
     <string name="settings_order">Order</string>
     <string name="settings_queue">Playlist</string>
-    <string name="settings_queue_mode">Fill the playlist</string>
     <string name="settings_reccobeats">Tempo and energy from ReccoBeats</string>
     <string name="settings_reccobeats_help">Sends Spotify track IDs to ReccoBeats for a more precise mood.</string>
     <string name="settings_signed_in_as">Signed in as %1$s</string>
@@ -157,7 +144,6 @@
     <string name="spotify_step_android">4. Add an Android package with this package name and SHA-1 fingerprint:</string>
     <string name="spotify_step_client_id">5. Copy the Client ID into the field above, then tap Connect Spotify.</string>
     <string name="start_dialog_title">Send to Spotify?</string>
-    <string name="start_dialog_rolling">Tracks are added a few at a time while you listen, about 40 minutes ahead.</string>
     <string name="step_seeds">Reading your library…</string>
     <string name="step_artists">Finding similar artists (%1$d of %2$d)</string>
     <string name="step_tracks">Collecting tracks (%1$d of %2$d)</string>
@@ -167,10 +153,6 @@
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <string name="track_description">%1$d. %2$s by %3$s. Mood %4$d%%, new %5$d%%</string>
-    <plurals name="playlist_minutes_ahead">
-        <item quantity="one">About %d minute of music ready</item>
-        <item quantity="other">About %d minutes of music ready</item>
-    </plurals>
     <plurals name="listeners">
         <item quantity="one">%s listener</item>
         <item quantity="other">%s listeners</item>
@@ -183,8 +165,22 @@
         <item quantity="one">%d track wasn\'t on Spotify and was skipped</item>
         <item quantity="other">%d tracks weren\'t on Spotify and were skipped</item>
     </plurals>
-    <plurals name="start_dialog_all">
-        <item quantity="one">%d track is added now.</item>
-        <item quantity="other">All %d tracks are added now.</item>
+    <string name="queue_banner_title">Making your playlist</string>
+    <string name="queue_stop_note">If you stop now, no playlist is made.</string>
+    <string name="queue_stopped">Stopped. Tap Continue to finish the playlist.</string>
+    <string name="playlist_waiting">The playlist appears in Spotify once every track has been looked up.</string>
+    <string name="queue_progress_matching">Finding tracks on Spotify: %1$d of %2$d</string>
+    <string name="queue_progress_adding">Adding to the playlist: %1$d of %2$d</string>
+    <string name="queue_matching">Looking up every track on Spotify…</string>
+    <string name="queue_saving">Making the playlist…</string>
+    <string name="problem_nothing_found">None of these tracks is on Spotify, so no playlist was made.</string>
+    <string name="start_dialog_name_label">Playlist name</string>
+    <string name="start_dialog_name_empty">Give the playlist a name.</string>
+    <string name="playlist_name_calm">Calm %1$s</string>
+    <string name="playlist_name_upbeat">Upbeat %1$s</string>
+    <string name="playlist_name_dated">%1$s · %2$s</string>
+    <plurals name="start_dialog_new_playlist">
+        <item quantity="one">Player makes a new private playlist in your Spotify account with %d track.</item>
+        <item quantity="other">Player makes a new private playlist in your Spotify account with all %d tracks.</item>
     </plurals>
 </resources>
