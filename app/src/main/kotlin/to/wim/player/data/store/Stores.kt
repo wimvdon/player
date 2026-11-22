@@ -123,6 +123,7 @@ class SecretStore(context: Context) : SpotifyAccount {
         val userName = stringPreferencesKey("spotify_user")
         val pausedUntil = stringPreferencesKey("spotify_paused_until")
         val scopes = stringPreferencesKey("spotify_scopes")
+        val listenBrainzToken = stringPreferencesKey("listenbrainz_token")
     }
 
     val secrets: Flow<Secrets> =
@@ -135,6 +136,7 @@ class SecretStore(context: Context) : SpotifyAccount {
                 spotifyUserName = read(prefs, Keys.userName),
                 spotifyPausedUntilMillis = read(prefs, Keys.pausedUntil).toLongOrNull() ?: 0,
                 spotifyScopes = read(prefs, Keys.scopes),
+                listenBrainzToken = read(prefs, Keys.listenBrainzToken),
             )
         }
 
@@ -164,6 +166,8 @@ class SecretStore(context: Context) : SpotifyAccount {
     suspend fun removeLastFm() = store.edit { it.remove(Keys.oldLastFmKey) }
 
     suspend fun setSpotifyUserName(name: String) = write(Keys.userName gets name)
+
+    suspend fun setListenBrainzToken(token: String) = write(Keys.listenBrainzToken gets token.trim())
 
     /** Saved with a new sign-in: the scopes it was asked for. */
     suspend fun setSpotifyScopes(scopes: String) = write(Keys.scopes gets scopes)

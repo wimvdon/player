@@ -75,6 +75,8 @@ data class Secrets(
     val spotifyPausedUntilMillis: Long = 0,
     /** The scopes the saved sign-in was granted (space separated). */
     val spotifyScopes: String = "",
+    /** The user's ListenBrainz token (optional): lets the app use endpoints that want one. */
+    val listenBrainzToken: String = "",
 ) {
     /** Signed in with the scopes this version needs (version 0.1.0 didn't ask for playlists). */
     val spotifySignedIn: Boolean

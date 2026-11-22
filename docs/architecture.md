@@ -5,7 +5,7 @@
 Player builds a set of tracks from a few controls (mood, familiarity, genres, seed artists,
 length) using MusicBrainz and ListenBrainz, and plays it through Spotify in a new private playlist
 for each set, with a name Player suggests and the user can change. Each user enters their own
-Spotify Client ID and, optionally, their ListenBrainz username (see `docs/decisions.md`, 2026-11-22).
+Spotify Client ID and, optionally, their ListenBrainz username and token (see `docs/decisions.md`, 2026-11-22).
 
 **Screens** (`ui/`): Generator (start), Preview (swipe to remove, Regenerate, Send to Spotify),
 Playlist (open in Spotify, progress, Stop), Settings (keys and setup steps, playlist order, appearance) and
@@ -20,8 +20,8 @@ Playlist (open in Spotify, progress, Stop), Settings (keys and setup steps, play
    (`artistBudget`: 100 for 250 tracks, 40 to 170). When that's too few, the similar artists of
    up to 12 candidates are added.
 3. Tracks: ListenBrainz's most listened recordings per artist (15, or 20 with fewer than 50
-   artists). Its top-recordings endpoint wants a user token for most artists, so after the first
-   refusal the app reads a sample of 200 recordings from the artist radio (`/1/lb-radio/artist`),
+   artists). Its top-recordings endpoint wants a user token for most artists, so without a token
+   in Settings, after the first refusal, the app reads a sample of 200 recordings from the artist radio (`/1/lb-radio/artist`),
    keeps the most listened and names them with one metadata lookup. Artists without known tracks
    are replaced by the next candidates. Each artist's MusicBrainz tags (for mood) are read as soon
    as its tracks are in, alongside the ListenBrainz calls.
@@ -63,7 +63,8 @@ browse, batch track lookups) and the `popularity` field are not used. Search use
 - `backed_up_settings` DataStore (`data/store/Stores.kt`, `SettingsStore`): theme, playlist order,
   ListenBrainz username, the generator's last input.
 - `device_secrets` DataStore (`SecretStore`): Client ID, Spotify tokens and their
-  scopes and the quota pause, each value encrypted with an Android Keystore AES key. Not backed up.
+  scopes, the quota pause and the ListenBrainz token (sent only to ListenBrainz; Settings checks it
+  with `/1/validate-token`), each value encrypted with an Android Keystore AES key. Not backed up.
 - `noBackupFilesDir/cache/*.json` (`data/cache/Caches.kt`): MusicBrainz and ListenBrainz answers (artist IDs 180 days, the rest 30 days), the user's
   library and charts (1 day), Spotify matches and audio features (forever).
 - `noBackupFilesDir/listen_history.json` (`data/brainz/ListenHistory.kt`): every track in the

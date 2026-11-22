@@ -14,7 +14,9 @@ directly to the services below, using **your own** Spotify developer key.
   artists and the genres you pick, to get similar artists, artists with a genre and their most
   played tracks, and (if you enter it) your
   ListenBrainz username, to read your most played artists and tracks and your full list of plays
-  (so every song you've played counts as known). No key is sent; a ListenBrainz profile is public.
+  (so every song you've played counts as known). A ListenBrainz profile is public. If you enter your
+  ListenBrainz token, it is sent with these requests (and once to check it), so ListenBrainz gives
+  an artist's most played tracks in one request; it is never sent anywhere else.
 - **Spotify** (`api.spotify.com`, `accounts.spotify.com`): sign-in, searches for the tracks
   being added, your top tracks, top artists and saved tracks (to spot songs you know), and a new
   private playlist for each set, with the name you confirm, which Player creates, fills and starts.
@@ -26,7 +28,7 @@ directly to the services below, using **your own** Spotify developer key.
 
 ## What stays on your phone
 
-- **Encrypted, never backed up:** your Spotify Client ID and Spotify sign-in.
+- **Encrypted, never backed up:** your Spotify Client ID, Spotify sign-in and ListenBrainz token.
   They are encrypted with a key from the Android Keystore.
 - **Not backed up:** a cache of MusicBrainz and ListenBrainz answers (kept 30 days,
   artist IDs 180 days), your Spotify library and charts

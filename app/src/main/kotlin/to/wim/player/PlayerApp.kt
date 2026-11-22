@@ -117,10 +117,14 @@ class AppGraph(app: Application) {
 
     private val userAgent = BrainzHttp.userAgent(runCatching { app.packageManager.getPackageInfo(app.packageName, 0).versionName }.getOrNull() ?: "dev")
 
-    private fun brainzHttp(service: Service) =
-        BrainzHttp(http, service, userAgent, TokenBucket(BrainzLimits.callsPerSecond(service), 1.0, now, ::sleep), callLog, now = now)
+    private fun brainzHttp(service: Service, token: suspend () -> String = { "" }) =
+        BrainzHttp(http, service, userAgent, TokenBucket(BrainzLimits.callsPerSecond(service), 1.0, now, ::sleep), callLog, token, now = now)
 
-    private val listenBrainz = ListenBrainzClient(brainzHttp(Service.LISTENBRAINZ))
+    /** ListenBrainz gets the user's token when there is one; MusicBrainz never does. */
+    private val listenBrainz = ListenBrainzClient(brainzHttp(Service.LISTENBRAINZ) { secrets.current().listenBrainzToken })
+
+    /** The ListenBrainz user name [token] belongs to, or null when ListenBrainz refuses it. Throws when offline. */
+    suspend fun checkListenBrainzToken(token: String): String? = listenBrainz.validateToken(token)
 
     /** Every track the user played on ListenBrainz, on this phone only (`noBackupFilesDir`). */
     val history = ListenHistory(listenBrainz, JsonListenHistoryFile(File(app.noBackupFilesDir, "listen_history.json")), now)
@@ -178,6 +182,10 @@ class AppGraph(app: Application) {
                 delay(HISTORY_TYPING_DELAY_MILLIS)
                 withContext(Dispatchers.IO) { runCatching { history.sync(name) } }
             }
+        }
+        // A new ListenBrainz token may open endpoints that refused the app before.
+        scope.launch {
+            secrets.secrets.map { it.listenBrainzToken }.distinctUntilChanged().collect { music.tokenChanged() }
         }
         // Save caches now and then while the app runs (queueing adds Spotify matches).
         scope.launch {

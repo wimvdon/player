@@ -138,6 +138,14 @@
     <string name="settings_listenbrainz_help">Opcional. Tus artistas más escuchados inician una selección si no eliges ninguno, y las canciones que ya escuchaste cuentan como conocidas.</string>
     <string name="settings_listenbrainz_import">Para usar tu historial de Last.fm o Spotify (el ZIP del historial de reproducción ampliado de Spotify), impórtalo en ListenBrainz (Ajustes, Importar).</string>
     <string name="action_open_listenbrainz">Abrir ListenBrainz</string>
+    <string name="settings_listenbrainz_token">Token</string>
+    <string name="settings_listenbrainz_token_help">Opcional. Hace las listas más rápidas: con él, ListenBrainz da las canciones principales de un artista en una sola petición. Se queda cifrado en este teléfono.</string>
+    <string name="settings_listenbrainz_token_checking">Comprobando el token…</string>
+    <string name="settings_listenbrainz_token_valid">El token funciona.</string>
+    <string name="settings_listenbrainz_token_valid_for">El token funciona (%1$s).</string>
+    <string name="settings_listenbrainz_token_invalid">ListenBrainz no acepta este token. Cópialo de nuevo desde tus ajustes de ListenBrainz.</string>
+    <string name="settings_listenbrainz_token_unchecked">No se pudo contactar con ListenBrainz para comprobar el token. Se ha guardado y se usa igualmente.</string>
+    <string name="action_open_listenbrainz_token">Obtener tu token</string>
     <plurals name="settings_listenbrainz_history_reading">
         <item quantity="one">Leyendo tu historial de escucha de ListenBrainz: %1$s canción por ahora…</item>
         <item quantity="many">Leyendo tu historial de escucha de ListenBrainz: %1$s canciones por ahora…</item>

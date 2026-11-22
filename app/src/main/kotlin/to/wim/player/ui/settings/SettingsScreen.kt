@@ -40,6 +40,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -71,6 +73,7 @@ fun SettingsScreen(
     val secrets by viewModel.secrets.collectAsStateWithLifecycle()
     val signInProblem by viewModel.signInProblem.collectAsStateWithLifecycle()
     val history by viewModel.history.collectAsStateWithLifecycle()
+    val tokenStatus by viewModel.tokenStatus.collectAsStateWithLifecycle()
     val currentSettings = settings ?: return
     val currentSecrets = secrets ?: return
     val activity = LocalActivity.current
@@ -88,7 +91,11 @@ fun SettingsScreen(
 
     var clientId by rememberSaveable { mutableStateOf(currentSecrets.spotifyClientId) }
     var username by rememberSaveable { mutableStateOf(currentSettings.listenBrainzUsername) }
-    LaunchedEffect(Unit) { viewModel.clearSignInProblem() }
+    var token by rememberSaveable { mutableStateOf(currentSecrets.listenBrainzToken) }
+    LaunchedEffect(Unit) {
+        viewModel.clearSignInProblem()
+        viewModel.checkSavedToken()
+    }
 
     SettingsScaffold(
         title = stringResource(R.string.settings_title),
@@ -197,6 +204,48 @@ fun SettingsScreen(
                     Step(stringResource(R.string.settings_listenbrainz_import))
                     OutlinedButton(onClick = { uriHandler.openUri(LISTENBRAINZ) }) {
                         Text(stringResource(R.string.action_open_listenbrainz))
+                        Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null, modifier = Modifier.padding(start = 8.dp))
+                    }
+                }
+                SettingsBlock {
+                    OutlinedTextField(
+                        value = token,
+                        onValueChange = {
+                            token = it
+                            viewModel.setListenBrainzToken(it)
+                        },
+                        label = { Text(stringResource(R.string.settings_listenbrainz_token)) },
+                        supportingText = {
+                            val status = tokenStatus
+                            Text(
+                                when (status) {
+                                    TokenStatus.None -> stringResource(R.string.settings_listenbrainz_token_help)
+                                    TokenStatus.Checking -> stringResource(R.string.settings_listenbrainz_token_checking)
+                                    is TokenStatus.Valid ->
+                                        if (status.userName.isBlank()) {
+                                            stringResource(R.string.settings_listenbrainz_token_valid)
+                                        } else {
+                                            stringResource(R.string.settings_listenbrainz_token_valid_for, status.userName)
+                                        }
+                                    TokenStatus.Invalid -> stringResource(R.string.settings_listenbrainz_token_invalid)
+                                    TokenStatus.Unchecked -> stringResource(R.string.settings_listenbrainz_token_unchecked)
+                                },
+                            )
+                        },
+                        isError = tokenStatus == TokenStatus.Invalid,
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions =
+                            KeyboardOptions(
+                                capitalization = KeyboardCapitalization.None,
+                                autoCorrectEnabled = false,
+                                keyboardType = KeyboardType.Password,
+                                imeAction = ImeAction.Done,
+                            ),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    OutlinedButton(onClick = { uriHandler.openUri(LISTENBRAINZ_SETTINGS) }) {
+                        Text(stringResource(R.string.action_open_listenbrainz_token))
                         Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null, modifier = Modifier.padding(start = 8.dp))
                     }
                 }
@@ -315,3 +364,4 @@ private fun CopyValue(
 
 private const val SPOTIFY_DASHBOARD = "https://developer.spotify.com/dashboard"
 private const val LISTENBRAINZ = "https://listenbrainz.org/"
+private const val LISTENBRAINZ_SETTINGS = "https://listenbrainz.org/settings/"

@@ -38,13 +38,14 @@ class BrainzHttp(
     private val now: () -> Long = System::currentTimeMillis,
     private val sleep: suspend (Long) -> Unit = { delay(it) },
 ) {
-    suspend fun get(url: HttpUrl, endpoint: String): BrainzAnswer {
+    /** [withToken] is sent instead of the saved token, to check a token before it is saved. */
+    suspend fun get(url: HttpUrl, endpoint: String, withToken: String? = null): BrainzAnswer {
         var attempt = 0
         while (true) {
             bucket.acquire()
             val request =
                 Request.Builder().url(url).header("User-Agent", userAgent).header("Accept", "application/json").apply {
-                    val key = runCatching { token() }.getOrDefault("").trim()
+                    val key = (withToken ?: runCatching { token() }.getOrDefault("")).trim()
                     if (key.isNotEmpty()) header("Authorization", "Token $key")
                 }.build()
             val result =

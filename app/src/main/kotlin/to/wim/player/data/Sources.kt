@@ -100,6 +100,9 @@ interface ListenBrainzSource {
 
     /** Title and artists of each recording (at most [METADATA_BATCH] at a time). */
     suspend fun recordingMetadata(recordingMbids: List<String>): List<BrainzRecording> = emptyList()
+
+    /** The user name [token] belongs to, or null when ListenBrainz doesn't accept it. Throws when unreachable. */
+    suspend fun validateToken(token: String): String? = null
 }
 
 /** The most recordings one ListenBrainz metadata lookup asks for, so the address stays short. */

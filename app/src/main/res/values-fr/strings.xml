@@ -138,6 +138,14 @@
     <string name="settings_listenbrainz_help">Facultatif. Vos artistes favoris lancent une sélection si vous n’en choisissez aucun, et les titres déjà écoutés comptent comme connus.</string>
     <string name="settings_listenbrainz_import">Pour utiliser votre historique Last.fm ou Spotify (le ZIP de l\'historique de streaming étendu de Spotify), importez-le sur ListenBrainz (Paramètres, Importer).</string>
     <string name="action_open_listenbrainz">Ouvrir ListenBrainz</string>
+    <string name="settings_listenbrainz_token">Jeton</string>
+    <string name="settings_listenbrainz_token_help">Facultatif. Rend les sélections plus rapides : avec lui, ListenBrainz donne les titres phares d\'un artiste en une seule requête. Reste chiffré sur ce téléphone.</string>
+    <string name="settings_listenbrainz_token_checking">Vérification du jeton…</string>
+    <string name="settings_listenbrainz_token_valid">Le jeton fonctionne.</string>
+    <string name="settings_listenbrainz_token_valid_for">Le jeton fonctionne (%1$s).</string>
+    <string name="settings_listenbrainz_token_invalid">ListenBrainz n\'accepte pas ce jeton. Copiez-le à nouveau depuis vos paramètres ListenBrainz.</string>
+    <string name="settings_listenbrainz_token_unchecked">Impossible de joindre ListenBrainz pour vérifier le jeton. Il est enregistré et utilisé quand même.</string>
+    <string name="action_open_listenbrainz_token">Obtenir votre jeton</string>
     <plurals name="settings_listenbrainz_history_reading">
         <item quantity="one">Lecture de votre historique d\'écoute sur ListenBrainz : %1$s titre pour l\'instant…</item>
         <item quantity="many">Lecture de votre historique d\'écoute sur ListenBrainz : %1$s titres pour l\'instant…</item>

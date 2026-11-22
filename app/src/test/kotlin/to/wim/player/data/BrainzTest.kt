@@ -249,6 +249,21 @@ class BrainzHttpTest {
         }
 
     @Test
+    fun `a token to check is sent instead of the saved one`() =
+        runBlocking {
+            val script = Scripted(mutableListOf(200 to "{}"))
+            client(script, CallLog(), ArrayList(), token = "saved").get(url, "GET x", withToken = "new")
+            assertEquals("Token new", script.requests.first().header("Authorization"))
+        }
+
+    @Test
+    fun `reads whether ListenBrainz accepts a token`() {
+        assertEquals("someone", ListenBrainzJson.tokenUser("""{"code":200,"message":"Token valid.","valid":true,"user_name":"someone"}"""))
+        assertNull(ListenBrainzJson.tokenUser("""{"code":200,"message":"Token invalid.","valid":false}"""))
+        assertNull(ListenBrainzJson.tokenUser("not json"))
+    }
+
+    @Test
     fun `adds the token when there is one`() =
         runBlocking {
             val script = Scripted(mutableListOf(200 to "{}"))

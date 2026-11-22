@@ -2,6 +2,17 @@
 
 Newest first. Add an entry for every notable choice: what was decided, why, and what was rejected.
 
+## 2026-11-22: An optional ListenBrainz token in Settings
+
+The owner offered his own ListenBrainz token. Settings now has an optional token field (shown as
+dots, stored encrypted in `device_secrets`, never backed up). With a token, every ListenBrainz call
+carries it, so `/1/popularity/top-recordings-for-artist` answers again and an artist's tracks take
+one call instead of two (artist radio plus metadata). Without one, or when ListenBrainz refuses it,
+the app falls back to the artist radio as before, so nothing breaks for users without a token.
+Settings checks the token with `/1/validate-token` after typing stops and says whose it is.
+Tracks already cached from the artist radio stay until their 30 days run out.
+Rejected: requiring a token (an extra setup step for every user).
+
 ## 2026-11-22: Top tracks come from ListenBrainz's artist radio, which needs no token
 
 The genre fix above still gave 18 tracks from 3 artists on the phone. Running the real set-building
