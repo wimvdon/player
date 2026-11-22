@@ -1,0 +1,105 @@
+package to.wim.player.ui.settings
+
+import android.app.Application
+import android.content.pm.PackageManager
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.spotify.sdk.android.auth.AuthorizationResponse
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import to.wim.player.PlayerApp
+import to.wim.player.data.model.AppSettings
+import to.wim.player.data.model.QueueMode
+import to.wim.player.data.model.Secrets
+import to.wim.player.data.model.ThemeMode
+import to.wim.player.data.spotify.TokenGrant
+import to.wim.player.logic.Ordering
+import to.wim.player.logic.Setup
+import java.security.MessageDigest
+
+/** What happened with the last Spotify sign-in. */
+enum class SignInProblem { CANCELLED, REFUSED, FAILED }
+
+class SettingsViewModel(app: Application) : AndroidViewModel(app) {
+    private val graph = (app as PlayerApp).graph
+
+    val settings: StateFlow<AppSettings?> = graph.settings.settings.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    val secrets: StateFlow<Secrets?> = graph.secrets.secrets.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    private val _signInProblem = MutableStateFlow<SignInProblem?>(null)
+    val signInProblem: StateFlow<SignInProblem?> = _signInProblem.asStateFlow()
+
+    val packageName: String = app.packageName
+    val redirectUri: String = graph.redirectUri
+
+    /** The SHA-1 fingerprint of this APK's signing key, as Spotify's dashboard asks for it. */
+    val fingerprint: String = signingFingerprint(app)
+
+    fun setClientId(id: String) = viewModelScope.launch { graph.secrets.setSpotifyClientId(id) }
+
+    fun setLastFmKey(key: String) = viewModelScope.launch { graph.secrets.setLastFmKey(key) }
+
+    fun setLastFmUsername(name: String) = viewModelScope.launch { graph.settings.setLastFmUsername(name) }
+
+    fun setQueueMode(mode: QueueMode) = viewModelScope.launch { graph.settings.setQueueMode(mode) }
+
+    fun setOrdering(ordering: Ordering) = viewModelScope.launch { graph.settings.setOrdering(ordering) }
+
+    fun setReccoBeats(on: Boolean) = viewModelScope.launch { graph.settings.setReccoBeats(on) }
+
+    fun setTheme(mode: ThemeMode) = viewModelScope.launch { graph.settings.setTheme(mode) }
+
+    fun setDynamicColor(on: Boolean) = viewModelScope.launch { graph.settings.setDynamicColor(on) }
+
+    fun signOut() =
+        viewModelScope.launch {
+            graph.queue.stop()
+            graph.secrets.signOut()
+            graph.spotifyDailyCache.clear()
+        }
+
+    fun clearSignInProblem() {
+        _signInProblem.value = null
+    }
+
+    /** Handles the answer of Spotify's sign-in screen. */
+    fun onSignInResult(response: AuthorizationResponse) {
+        when (response.type) {
+            AuthorizationResponse.Type.TOKEN -> {
+                val access = response.accessToken
+                if (access.isNullOrEmpty()) {
+                    _signInProblem.value = SignInProblem.FAILED
+                    return
+                }
+                _signInProblem.value = null
+                viewModelScope.launch {
+                    graph.secrets.saveGrant(TokenGrant(access, response.refreshToken, response.expiresIn.toLong()), System.currentTimeMillis())
+                    graph.secrets.clearPause()
+                    val name = runCatching { graph.webApi.displayName() }.getOrNull()
+                    graph.secrets.setSpotifyUserName(name.orEmpty())
+                }
+            }
+            AuthorizationResponse.Type.ERROR -> _signInProblem.value = SignInProblem.REFUSED
+            AuthorizationResponse.Type.CANCELLED -> _signInProblem.value = SignInProblem.CANCELLED
+            else -> _signInProblem.value = SignInProblem.FAILED
+        }
+    }
+
+    /** Empties every cache (Spotify matches included); the next generation reads everything again. */
+    fun clearCaches() =
+        viewModelScope.launch(Dispatchers.IO) {
+            graph.caches.forEach { (_, cache) -> cache.clear() }
+        }
+
+    private fun signingFingerprint(app: Application): String =
+        runCatching {
+            val info = app.packageManager.getPackageInfo(app.packageName, PackageManager.GET_SIGNING_CERTIFICATES)
+            val signer = info.signingInfo?.apkContentsSigners?.firstOrNull() ?: return ""
+            Setup.fingerprint(MessageDigest.getInstance("SHA-1").digest(signer.toByteArray()))
+        }.getOrDefault("")
+}

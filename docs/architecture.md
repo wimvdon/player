@@ -1,18 +1,65 @@
 # Architecture
 
-> Template skeleton. Fill in the "This app" section for each app and keep it up to date.
-
 ## This app
-_What the app does, its screens, and where its data lives. (Placeholder: one home screen with a tap counter. No stored data.)_
+
+Player builds a set of tracks from a few controls (mood, familiarity, genres, seed artists,
+length) using Last.fm, and plays it through Spotify by adding the tracks to Spotify's play queue.
+It never creates or changes playlists. Each user enters their own Spotify Client ID and Last.fm
+API key (see `docs/decisions.md`, 2026-11-22).
+
+**Screens** (`ui/`): Generator (start), Preview (swipe to remove, Regenerate, Start queue), Queue
+(now playing, progress, Stop), Settings (keys and setup steps, queue options, appearance) and
+"API calls and cache" (debug). `ui/AppNavigation.kt` keeps them as a small back stack.
+
+**How a set is made** (`engine/GenerationEngine.kt`, no Spotify searches):
+1. Seeds: the picked artists and genres, or the user's top artists (Spotify, then Last.fm).
+2. Candidate artists: `artist.getSimilar` per seed and `tag.getTopArtists` per genre, shared out
+   round-robin, at most 100.
+3. Tracks: `artist.getTopTracks` per artist (15, or 20 with fewer than 50 artists) and
+   `tag.getTopTracks` per genre.
+4. Mood (0 calm … 1 upbeat): cached ReccoBeats tempo and energy when known, otherwise the artist's
+   Last.fm tags weighted by `MoodModel.TagWeights` (`logic/Scores.kt`, one editable map).
+5. Familiarity (0 known … 1 new): known when in the user's Spotify top or saved tracks or Last.fm
+   top tracks; otherwise from the Last.fm listener count on a log scale.
+6. `logic/Generator.kt` picks the closest tracks to both sliders (with a little randomness), at
+   most 3 per artist, at least half from artists the user didn't pick (unless familiarity is fully
+   "known"), orders them (mood curve, best match or shuffle) and keeps the same artist apart.
+
+**Queueing** (`engine/QueueController.kt`, while `service/QueueService.kt` shows a notification):
+a track is matched on Spotify (`engine/TrackResolver.kt`, one search, cached forever, misses too)
+only when it's about to be queued. *Rolling* keeps 15 queued ahead of the playing track, watching
+App Remote's player state; *all at once* queues in batches of 25. Queueing uses App Remote (the
+Spotify app, no Web API quota); the Web API queue endpoint is the fallback.
+
+**Services** sit behind interfaces in `data/Sources.kt` (`LastFmSource`, `SpotifyCatalog`,
+`SpotifyPlayer`, `AudioFeatureSource`) so the engine is tested with fakes.
+
+**Spotify's quota:** Development Mode apps have a small, unpublished quota. Every call is logged
+(`logic/CallLog.kt`, shown on the debug screen). A 429 with `QUOTA_EXCEEDED` pauses all Web API
+calls for 6 hours (stored, so it survives a restart); other 429s wait for `Retry-After`. Endpoints
+that are gone for new apps (recommendations, audio features, related artists, artist top tracks,
+browse, batch track lookups) and the `popularity` field are not used. Search uses `limit=5`.
+
+**Where data lives:**
+- `backed_up_settings` DataStore (`data/store/Stores.kt`, `SettingsStore`): theme, queue options,
+  Last.fm username, the generator's last input.
+- `device_secrets` DataStore (`SecretStore`): Client ID, Last.fm key, Spotify tokens and the quota
+  pause, each value encrypted with an Android Keystore AES key. Not backed up.
+- `noBackupFilesDir/cache/*.json` (`data/cache/Caches.kt`): Last.fm answers (30 days), the user's
+  library and charts (1 day), Spotify matches and audio features (forever).
 
 ## Structure
 ```
 app/src/main/kotlin/<package>/
-  MainActivity.kt          Entry point. Only sets up the theme and the first screen.
-  ui/theme/Theme.kt        Material 3 theme (light/dark, dynamic colour).
-  ui/<feature>/            One folder per screen/feature:
-    <Feature>Screen.kt       Composables: display state, forward clicks. No logic.
-    <Feature>….kt            Plain Kotlin logic (no Android types) → unit tested.
+  PlayerApp.kt             Creates the single instances (AppGraph); no DI library.
+  MainActivity.kt          Entry point: theme and navigation.
+  logic/                   Pure Kotlin rules (generator, scores, matching, rate limits) → unit tested.
+  engine/                  Generation and queueing over the data interfaces → unit tested.
+  data/                    Last.fm, Spotify (Web API + App Remote), ReccoBeats, stores and caches.
+  service/QueueService.kt  Foreground service with the queue notification.
+  ui/theme/                Material 3 theme and the shared design kit (see DESIGN.md).
+  ui/<screen>/             Composables: display state, forward clicks. No logic.
+app/libs/                  Spotify App Remote AAR (only published on GitHub, not in Maven).
 app/src/main/res/
   values/strings.xml       All user-visible text (English, the default).
   values-xx/strings.xml    Dutch, French, German, Spanish and Italian. Every string must exist in every language.
@@ -24,11 +71,11 @@ scripts/                   Release helpers (Python/Java) with their own tests.
 ## Conventions
 - **Single `app` module.** Split into modules only if the app grows large; record it in `decisions.md`.
 - **Logic in plain Kotlin classes** with no `Context`, `View` or Compose types, so it can be
-  tested on the JVM. Example: `ui/home/TapCounter.kt` (immutable; methods return a new value).
+  tested on the JVM. Example: `logic/Generator.kt`.
 - **UI state**: small screens use `rememberSaveable`. When a screen gets real logic or data,
   add a `ViewModel` (`androidx.lifecycle:lifecycle-viewmodel-compose`) that exposes a
   `StateFlow<UiState>` and calls into the plain-Kotlin logic. Record it in `decisions.md`.
-- **Navigation**: one screen today. With several screens, use Navigation Compose.
+- **Navigation**: five screens in a small back stack (`ui/AppNavigation.kt`), no navigation library.
 - **Persistence**: Jetpack DataStore (version already in the catalog). Wrap it behind a small
   repository interface so logic tests can use a fake. Decide per value whether it is backed up
   (see "Backup" below).

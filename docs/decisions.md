@@ -2,6 +2,32 @@
 
 Newest first. Add an entry for every notable choice: what was decided, why, and what was rejected.
 
+## 2026-11-22: Player: libraries, storage and how the brief was adapted
+
+The owner approved network access, the notification and foreground-service permissions, and the
+libraries the brief needs. Choices made while building:
+
+- **Libraries:** OkHttp, kotlinx.serialization, Coil (covers), Material icons, lifecycle
+  ViewModel/service, DataStore, Spotify Auth (Maven Central) and Spotify App Remote 0.8.0 (an AAR
+  in `app/libs`: Spotify only publishes it on GitHub) with Gson, which App Remote needs. Same set
+  as Noter where possible. Rejected: **Hilt** (a hand-written `AppGraph` is enough at this size),
+  **Retrofit** (a few hand-written calls on OkHttp), **Room** (caches are small JSON files in
+  `noBackupFilesDir`; Room would add KSP and a schema for key-value data) and
+  **EncryptedSharedPreferences** (deprecated; values are encrypted with an Android Keystore key
+  and kept in a DataStore that isn't backed up).
+- **minSdk stays 31**, not the brief's 26 (see the template baseline).
+- **Spotify searches happen while queueing**, not while generating: a 250-track preview costs no
+  Spotify calls, and rolling mode spreads the searches over the listening session. Covers show in
+  the preview only for tracks matched earlier.
+- **"Known" from Last.fm uses `user.getTopTracks`** (up to 3 000 tracks, cached a day) instead of
+  `track.getInfo` per track, which would be hundreds of calls per set.
+- **Quota pause:** after `QUOTA_EXCEEDED` all Web API calls stop for 6 hours (Spotify doesn't say
+  how long); the debug screen can lift it early.
+- **Foreground service type `specialUse`**: the app doesn't play audio itself, it keeps another
+  app's queue filled, which fits no other type.
+- **Colours:** Last.fm red as seed, fidelity primary roles with neutral surfaces (see DESIGN.md,
+  "This app").
+
 ## 2026-11-22: Player: app identity, shared debug key, bring-your-own API keys
 
 The app is **Player**, application ID `to.wim.player` (debug builds: `to.wim.player.debug`).
