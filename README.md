@@ -9,9 +9,21 @@ Built from the Android app template: Kotlin, Jetpack Compose, Material 3, Androi
 on every pull request and one-click signed releases. Rules for Claude Code sessions are in
 [`CLAUDE.md`](CLAUDE.md).
 
-> **New app from this template?** Start with [Using this template](#using-this-template).
-
 ---
+
+## First use
+
+You need Spotify Premium, the Spotify app on your phone, and two free developer keys. The app's
+settings walk you through it, with copy buttons for every value:
+
+1. **Last.fm API key:** create one at https://www.last.fm/api/account/create and paste the API
+   key into Settings → Last.fm. Optionally add your Last.fm username, so tracks you scrobbled
+   count as known.
+2. **Spotify app:** at https://developer.spotify.com/dashboard create an app with the redirect URI,
+   the Android package name and the SHA-1 fingerprint shown in Settings → Spotify, and tick
+   Android and Web API. Paste its Client ID into the settings and tap **Connect Spotify**.
+
+Then pick a mood, genres and artists, tap **Generate**, check the preview and tap **Start queue**.
 
 ## Installing the app on your phone
 

@@ -21,7 +21,10 @@ python3 -m unittest discover -s scripts/tests
 
 ### Writing unit tests
 - Every logic change gets a test. Put logic in plain Kotlin classes (no Android types) and test
-  them with JUnit in `app/src/test/kotlin/`, mirroring the package. See `TapCounterTest`.
+  them with JUnit in `app/src/test/kotlin/`, mirroring the package. See `GeneratorTest`.
+- Services are faked behind their interfaces (`FakeLastFm`, `FakeCatalog`, `FakePlayer` in the
+  tests), so generation and queueing run without network. Last.fm parsing reads trimmed real
+  answers from `app/src/test/resources/fixtures/`.
 - Test names describe behaviour in words: `` fun `tap stops at the maximum`() ``.
 - No device tests (instrumented/UI tests) are set up: they need an emulator, which makes CI slow and
   flaky. Add them only if a decision in `decisions.md` says so.
@@ -34,7 +37,7 @@ description. In addition, check every now and then (always before a release):
 
 - [ ] The app starts, and the changed screen looks right.
 - [ ] **Dark mode**: switch the phone's dark theme on/off. Text stays readable.
-- [ ] **Rotation** (if auto-rotate is on): the screen still works and keeps its state (e.g. the tap count).
+- [ ] **Rotation** (if auto-rotate is on): the screen still works and keeps its state (sliders, picked genres).
 - [ ] **Language**: Settings → System → Languages → App languages → this app → Nederlands.
       All text is translated.
 - [ ] **Large text**: Settings → Display → Font size at maximum. Nothing is cut off.
@@ -43,6 +46,23 @@ description. In addition, check every now and then (always before a release):
       losing data.
 - [ ] **Backup** (once the app stores settings): change a setting, Settings → search "Backup" →
       Back up now, uninstall, install the same APK again. The setting is back.
+
+## Player on the phone (needs Spotify Premium and the Spotify app)
+
+- [ ] **Setup:** with no keys, the start screen asks to connect. Settings → Spotify → the steps show
+      the redirect URI, package name and SHA-1 with copy buttons. Connect Spotify signs in and shows
+      "Signed in as …".
+- [ ] **Generate:** pick 2 artists and 1 genre, 250 tracks. The progress bar runs; with an empty
+      cache the preview appears in under a minute, the second time (same input) in seconds.
+- [ ] **Preview:** swipe a track left, it disappears; Undo brings it back. Regenerate gives a
+      different set.
+- [ ] **Queue:** Start queue → the warning → Start. Spotify starts playing (if it was idle) and its
+      queue shows the next 15 tracks. The notification reads "Queueing x / 250" with Stop.
+- [ ] **Rolling for an hour:** lock the phone and listen. Spotify's queue keeps about 15 tracks
+      ahead the whole time.
+- [ ] **Debug:** Settings → API calls and cache lists the calls; Spotify searches only appear as
+      tracks get queued.
+- [ ] **No Spotify app / not logged in:** the queue screen says so instead of hanging.
 
 ## Reading a crash from a release build
 Release builds are minified, so stack traces show short names like `a.b.c`. Download
