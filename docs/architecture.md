@@ -33,7 +33,12 @@ active device or opens it in the Spotify app. *Rolling* adds 10 more whenever le
 are left, counted from the start (`logic/PlaylistPlan`); *all at once* adds the rest in calls of
 100. See `docs/decisions.md` for why this replaced App Remote's play queue.
 
-**Services** sit behind interfaces in `data/Sources.kt` (`LastFmSource`, `SpotifyCatalog`,
+**Moving off Last.fm** (see `docs/decisions.md`): `data/brainz/` holds MusicBrainz and
+ListenBrainz clients (`MusicBrainzSource`, `ListenBrainzSource`), one call a second each through
+`BrainzHttp`. They are tested but not used by the engine yet.
+
+**Services** sit behind interfaces in `data/Sources.kt` (`LastFmSource`, `MusicBrainzSource`,
+`ListenBrainzSource`, `SpotifyCatalog`,
 `PlaylistTarget`, `PlaylistMemory`, `AudioFeatureSource`) so the engine is tested with fakes.
 
 **Spotify's quota:** Development Mode apps have a small, unpublished quota. Every call is logged

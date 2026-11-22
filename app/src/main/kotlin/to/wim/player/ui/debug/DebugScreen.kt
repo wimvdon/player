@@ -205,6 +205,8 @@ private fun CallRow(
             Service.SPOTIFY -> stringResource(R.string.service_spotify)
             Service.LAST_FM -> stringResource(R.string.service_lastfm)
             Service.RECCOBEATS -> stringResource(R.string.service_reccobeats)
+            Service.MUSICBRAINZ -> stringResource(R.string.service_musicbrainz)
+            Service.LISTENBRAINZ -> stringResource(R.string.service_listenbrainz)
         }
     ListItem(
         overlineContent = { Text(stringResource(R.string.debug_call_overline, time, service)) },
