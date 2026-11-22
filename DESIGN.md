@@ -230,9 +230,11 @@ app apart from their package (and `R` import) lines. Copy a change to the other 
 playlist. It is the playful one of the family: Material 3 Expressive ideas (bold type, shapes that
 react, a morphing loader, a wavy progress bar), dark by default like Spotify.
 
-- **Icon:** a nine-lobed "cookie" with a white play triangle. Gradient `#FF8A5C` → `#FF5A47` →
-  `#C0182A`. The same cookie is the wordmark's logo and the first shape of the loading animation
-  (`logic/Blob.kt`). (Player isn't in the shared icon table above yet; adding it means copying the
+- **Icon:** four rounded bars lying on their side, of uneven length like a level meter (and a
+  playlist's rows). Gradient `#FFA23A` → `#F0243A` → `#A0105E` (orange, red, magenta), on a soft
+  red plate (`#FCE9E8` → `#F9D3D1`) instead of white. The themed icon is the same four bars. The
+  wordmark's logo and the loading animation still use the nine-lobed "cookie" (`logic/Blob.kt`),
+  which was the icon until 2026-11-22. (Player isn't in the shared icon table above yet; adding it means copying the
   table to every app's `DESIGN.md`.)
 - **Theme:** Dark is the default (`ThemeMode.DARK`); System and Light stay in Settings ›
   Appearance. The window background is the dark surface, so the default start has no flash.
