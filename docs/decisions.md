@@ -18,6 +18,7 @@ once, and to choose its name. This replaces the "one reused playlist" and "rolli
   removed.
 - Rejected: making the playlist first and filling it while searching (it would show up half
   empty in Spotify).
+
 ## 2026-11-22: Player moves from Last.fm to ListenBrainz, MusicBrainz and ReccoBeats
 
 The owner chose to drop Last.fm. History, taste and similar artists will come from
