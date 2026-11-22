@@ -148,6 +148,18 @@
     <string name="settings_listenbrainz_help">Optional. Your top artists start a set when you pick none, and tracks you\'ve played count as known.</string>
     <string name="settings_listenbrainz_import">To use your Last.fm or Spotify history (Spotify\'s extended streaming history ZIP), import it on ListenBrainz (Settings, Import).</string>
     <string name="action_open_listenbrainz">Open ListenBrainz</string>
+    <plurals name="settings_listenbrainz_history_reading">
+        <item quantity="one">Reading your play history from ListenBrainz: %1$s track so far…</item>
+        <item quantity="other">Reading your play history from ListenBrainz: %1$s tracks so far…</item>
+    </plurals>
+    <plurals name="settings_listenbrainz_history_done">
+        <item quantity="one">%1$s track from your play history counts as known.</item>
+        <item quantity="other">%1$s tracks from your play history count as known.</item>
+    </plurals>
+    <plurals name="settings_listenbrainz_history_partial">
+        <item quantity="one">%1$s track read from your play history so far. Player reads the rest later.</item>
+        <item quantity="other">%1$s tracks read from your play history so far. Player reads the rest later.</item>
+    </plurals>
     <plurals name="preview_summary">
         <item quantity="one">%1$d track from %2$d artists</item>
         <item quantity="other">%1$d tracks from %2$d artists</item>

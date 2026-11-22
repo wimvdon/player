@@ -142,6 +142,21 @@
     <string name="settings_listenbrainz_help">Facultatif. Vos artistes favoris lancent une sélection si vous n’en choisissez aucun, et les titres déjà écoutés comptent comme connus.</string>
     <string name="settings_listenbrainz_import">Pour utiliser votre historique Last.fm ou Spotify (le ZIP de l\'historique de streaming étendu de Spotify), importez-le sur ListenBrainz (Paramètres, Importer).</string>
     <string name="action_open_listenbrainz">Ouvrir ListenBrainz</string>
+    <plurals name="settings_listenbrainz_history_reading">
+        <item quantity="one">Lecture de votre historique d\'écoute sur ListenBrainz : %1$s titre pour l\'instant…</item>
+        <item quantity="many">Lecture de votre historique d\'écoute sur ListenBrainz : %1$s titres pour l\'instant…</item>
+        <item quantity="other">Lecture de votre historique d\'écoute sur ListenBrainz : %1$s titres pour l\'instant…</item>
+    </plurals>
+    <plurals name="settings_listenbrainz_history_done">
+        <item quantity="one">%1$s titre de votre historique d\'écoute compte comme connu.</item>
+        <item quantity="many">%1$s titres de votre historique d\'écoute comptent comme connus.</item>
+        <item quantity="other">%1$s titres de votre historique d\'écoute comptent comme connus.</item>
+    </plurals>
+    <plurals name="settings_listenbrainz_history_partial">
+        <item quantity="one">%1$s titre de votre historique d\'écoute lu pour l\'instant. Player lira le reste plus tard.</item>
+        <item quantity="many">%1$s titres de votre historique d\'écoute lus pour l\'instant. Player lira le reste plus tard.</item>
+        <item quantity="other">%1$s titres de votre historique d\'écoute lus pour l\'instant. Player lira le reste plus tard.</item>
+    </plurals>
     <plurals name="preview_summary">
         <item quantity="one">%1$d titre de %2$d artistes</item>
         <item quantity="many">%1$d titres de %2$d artistes</item>

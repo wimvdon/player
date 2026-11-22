@@ -34,6 +34,8 @@ class BrainzMusic(
     private val musicBrainz: MusicBrainzSource,
     private val listenBrainz: ListenBrainzSource,
     private val caches: BrainzCaches,
+    /** The user's whole play history, when it has been read; adds to the top recordings. */
+    private val history: ListenHistory? = null,
 ) : MusicSource {
     override suspend fun similarArtists(artist: String, limit: Int): List<String> =
         cached(caches.artistLists, "similar:${TrackText.artistKey(artist)}:$limit") {
@@ -72,10 +74,14 @@ class BrainzMusic(
 
     override fun pin(artist: ArtistHit) = caches.artistIds.put(TrackText.artistKey(artist.name), artist.mbid)
 
-    override suspend fun userTopTrackKeys(username: String): Set<String> =
-        cached(caches.user, "tracks:${username.trim().lowercase()}") {
-            listenBrainz.userTopRecordings(username).map { TrackText.key(it.artist, it.title) }.distinct()
-        }.toSet()
+    override suspend fun userKnownTrackKeys(username: String): Set<String> {
+        val top =
+            cached(caches.user, "tracks:${username.trim().lowercase()}") {
+                listenBrainz.userTopRecordings(username).map { TrackText.key(it.artist, it.title) }.distinct()
+            }
+        val played = history?.keys(username).orEmpty()
+        return if (played.isEmpty()) top.toSet() else played + top
+    }
 
     override suspend fun userTopArtists(username: String, limit: Int): List<String> =
         cached(caches.user, "artists:${username.trim().lowercase()}:$limit") {
