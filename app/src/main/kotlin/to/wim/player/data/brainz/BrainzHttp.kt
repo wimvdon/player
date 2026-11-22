@@ -19,6 +19,12 @@ data class BrainzAnswer(val status: Int, val body: String) {
 }
 
 /**
+ * The service wants a user token for this endpoint. ListenBrainz asks this for some endpoints
+ * (artist top recordings) since 2026, except for answers it still has cached.
+ */
+class BrainzAuthRequiredException(service: String) : IOException("$service wants a user token for this call")
+
+/**
  * HTTP for MusicBrainz and ListenBrainz: one call a second ([bucket]), the User-Agent both ask
  * for, and waiting and retrying when they say to slow down. Every call goes into the [log].
  */
@@ -64,6 +70,7 @@ class BrainzHttp(
                     attempt++
                     sleep(BrainzLimits.waitMillis(headers.first, headers.second, attempt))
                 }
+                status == 401 -> throw BrainzAuthRequiredException(service.name)
                 else -> throw IOException("${service.name} answered $status")
             }
         }

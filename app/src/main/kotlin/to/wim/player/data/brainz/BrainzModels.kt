@@ -62,3 +62,9 @@ data class TagRecording(
     val tagCount: Int,
     val popularity: Double,
 )
+
+/** One of an artist's recordings from ListenBrainz's artist radio, with its total listens. */
+data class RadioRecording(
+    val recordingMbid: String,
+    val listens: Long,
+)

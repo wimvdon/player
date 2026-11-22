@@ -67,4 +67,11 @@ class CallLogTest {
         assertEquals(2, log.counts.value[Service.SPOTIFY])
         assertEquals(1, log.counts.value[Service.MUSICBRAINZ])
     }
+
+    @Test
+    fun `ListenBrainz may be called faster than MusicBrainz, both within their limits`() {
+        assertTrue(BrainzLimits.callsPerSecond(Service.MUSICBRAINZ) < 1.0)
+        assertTrue(BrainzLimits.callsPerSecond(Service.LISTENBRAINZ) <= 3.0)
+        assertTrue(BrainzLimits.callsPerSecond(Service.LISTENBRAINZ) > BrainzLimits.callsPerSecond(Service.MUSICBRAINZ))
+    }
 }

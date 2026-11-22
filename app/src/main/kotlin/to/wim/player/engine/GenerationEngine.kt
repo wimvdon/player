@@ -1,5 +1,6 @@
 package to.wim.player.engine
 
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -16,6 +17,8 @@ import to.wim.player.logic.GeneratorRequest
 import to.wim.player.logic.MoodModel
 import to.wim.player.logic.Ordering
 import to.wim.player.logic.TrackText
+import to.wim.player.logic.WeightedTag
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.random.Random
@@ -115,6 +118,10 @@ class GenerationEngine(
             progress(GenerationStep.Tracks(0, minOf(budget, lookups.size)))
             val failures = AtomicInteger(0)
             val trackLists = ArrayList<List<PoolTrack>>()
+            // Mood tags come from MusicBrainz, track lists from ListenBrainz: each has its own rate
+            // limit, so an artist's tags are read as soon as its tracks are in, alongside the rest.
+            val tagGate = Semaphore(PARALLEL)
+            val tagJobs = ConcurrentHashMap<String, Deferred<List<WeightedTag>>>()
             var next = 0
             while (trackLists.count { it.isNotEmpty() } < budget && next < lookups.size) {
                 val missing = budget - trackLists.count { it.isNotEmpty() }
@@ -124,7 +131,14 @@ class GenerationEngine(
                     batch.map { artist ->
                         async {
                             gate.withPermit { tolerant(failures) { music.artistTopTracks(artist, perArtist) }.orEmpty() }
-                                .also { progress(GenerationStep.Tracks(done.incrementAndGet(), next)) }
+                                .also { tracks ->
+                                    progress(GenerationStep.Tracks(done.incrementAndGet(), next))
+                                    tracks.firstOrNull()?.let { first ->
+                                        tagJobs.computeIfAbsent(TrackText.artistKey(first.artist)) {
+                                            async { tagGate.withPermit { tolerant { music.artistTags(first.artist) }.orEmpty() } }
+                                        }
+                                    }
+                                }
                         }
                     }.awaitAll()
             }
@@ -138,7 +152,8 @@ class GenerationEngine(
             val artistMood =
                 poolArtists.map { artist ->
                     async {
-                        val tags = gate.withPermit { tolerant { music.artistTags(artist) }.orEmpty() }
+                        val started = tagJobs[TrackText.artistKey(artist)]
+                        val tags = started?.await() ?: tagGate.withPermit { tolerant { music.artistTags(artist) }.orEmpty() }
                         progress(GenerationStep.Moods(done.incrementAndGet(), poolArtists.size))
                         TrackText.artistKey(artist) to MoodModel.fromTags(tags)
                     }

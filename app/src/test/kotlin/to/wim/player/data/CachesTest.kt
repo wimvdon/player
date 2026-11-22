@@ -11,7 +11,9 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import to.wim.player.data.cache.JsonFileCache
 import to.wim.player.data.cache.MemoryCache
+import to.wim.player.data.brainz.BrainzAuthRequiredException
 import to.wim.player.data.brainz.BrainzCaches
+import to.wim.player.data.brainz.RadioRecording
 import to.wim.player.data.brainz.BrainzListen
 import to.wim.player.data.brainz.ListenHistory
 import to.wim.player.data.brainz.BrainzMatch
@@ -143,6 +145,49 @@ private class CountingListenBrainz : ListenBrainzSource {
     }
 }
 
+/** ListenBrainz as it answers since 2026: top recordings need a token, artist radio doesn't. */
+private class TokenOnlyTopListenBrainz : ListenBrainzSource by CountingListenBrainz() {
+    val calls = mutableListOf<String>()
+
+    override suspend fun topRecordings(artistMbid: String, limit: Int): List<BrainzRecording> {
+        calls += "top:$artistMbid"
+        throw BrainzAuthRequiredException("LISTENBRAINZ")
+    }
+
+    override suspend fun artistRadioRecordings(artistMbid: String, count: Int): List<RadioRecording> {
+        calls += "radio:$artistMbid"
+        return listOf(RadioRecording("r-live", 900_000), RadioRecording("r-hit", 80_000), RadioRecording("r-b", 8_000), RadioRecording("r-hit2", 50))
+    }
+
+    override suspend fun recordingMetadata(recordingMbids: List<String>): List<BrainzRecording> {
+        calls += "metadata:${recordingMbids.size}"
+        val titles = mapOf("r-live" to "Kerala (Live)", "r-hit" to "Kerala", "r-b" to "Cirrus", "r-hit2" to "Kerala - Remastered 2017")
+        return recordingMbids.mapNotNull { id -> titles[id]?.let { BrainzRecording(it, "Somebody Else", id, listOf("x")) } }
+    }
+}
+
+class BrainzMusicTokenTest {
+    @Test
+    fun `without a token, top tracks come from the artist radio and the refused call isn't repeated`() =
+        runBlocking {
+            val listenBrainz = TokenOnlyTopListenBrainz()
+            val music =
+                BrainzMusic(
+                    CountingMusicBrainz(),
+                    listenBrainz,
+                    BrainzCaches(MemoryCache(), MemoryCache(), MemoryCache<List<PoolTrack>>(), MemoryCache<List<WeightedTag>>(), MemoryCache()),
+                )
+            val tracks = music.artistTopTracks("Bonobo", 15)
+            // Most listened first, live version and a second "Kerala" left out, the asked-for name kept.
+            assertEquals(listOf("Kerala", "Cirrus"), tracks.map { it.title })
+            assertEquals(listOf("Bonobo"), tracks.map { it.artist }.distinct())
+            assertEquals(10_000L, tracks.first().listeners)
+            music.artistTopTracks("Tycho", 15)
+            assertEquals(1, listenBrainz.calls.count { it.startsWith("top:") })
+            assertEquals(2, listenBrainz.calls.count { it.startsWith("radio:") })
+        }
+}
+
 class BrainzMusicTest {
     private val musicBrainz = CountingMusicBrainz()
     private val listenBrainz = CountingListenBrainz()
@@ -232,8 +277,9 @@ class BrainzMusicTest {
     @Test
     fun `genre artists come from tag radio first, ranked by votes, topped up from MusicBrainz`() =
         runBlocking {
-            assertEquals(listOf("Slowdive", "Ride", "Tycho"), music.genreArtists("Shoegaze", 50))
-            assertEquals(listOf("Slowdive"), music.genreArtists("shoegaze", 1))
+            // Ride's recording has 4 votes, Slowdive's best 3.
+            assertEquals(listOf("Ride", "Slowdive", "Tycho"), music.genreArtists("Shoegaze", 50))
+            assertEquals(listOf("Ride"), music.genreArtists("shoegaze", 1))
             music.artistTopTracks("Ride", 15)
             assertTrue("top:mb-ride" in listenBrainz.calls)
             assertEquals(0, musicBrainz.searches)

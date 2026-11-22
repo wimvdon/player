@@ -118,7 +118,7 @@ class AppGraph(app: Application) {
     private val userAgent = BrainzHttp.userAgent(runCatching { app.packageManager.getPackageInfo(app.packageName, 0).versionName }.getOrNull() ?: "dev")
 
     private fun brainzHttp(service: Service) =
-        BrainzHttp(http, service, userAgent, TokenBucket(BrainzLimits.CALLS_PER_SECOND, 1.0, now, ::sleep), callLog, now = now)
+        BrainzHttp(http, service, userAgent, TokenBucket(BrainzLimits.callsPerSecond(service), 1.0, now, ::sleep), callLog, now = now)
 
     private val listenBrainz = ListenBrainzClient(brainzHttp(Service.LISTENBRAINZ))
 

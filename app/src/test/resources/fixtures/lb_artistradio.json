@@ -1,0 +1,12 @@
+{
+  "mb-ride": [
+    {"recording_mbid": "r-obscure", "similar_artist_mbid": "mb-ride", "similar_artist_name": "Ride", "total_listen_count": 23},
+    {"recording_mbid": "r-vapour", "similar_artist_mbid": "mb-ride", "similar_artist_name": "Ride", "total_listen_count": 45734},
+    {"recording_mbid": "r-leave", "similar_artist_mbid": "mb-ride", "similar_artist_name": "Ride", "total_listen_count": 10223},
+    {"recording_mbid": "r-vapour", "similar_artist_mbid": "mb-ride", "similar_artist_name": "Ride", "total_listen_count": 45734},
+    {"similar_artist_mbid": "mb-ride", "total_listen_count": 5}
+  ],
+  "mb-mbv": [
+    {"recording_mbid": "r-soon", "similar_artist_mbid": "mb-mbv", "similar_artist_name": "My Bloody Valentine", "total_listen_count": 861171}
+  ]
+}

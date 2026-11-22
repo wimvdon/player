@@ -4,6 +4,7 @@ import to.wim.player.data.brainz.BrainzListen
 import to.wim.player.data.brainz.BrainzRecording
 import to.wim.player.data.brainz.BrainzTopArtist
 import to.wim.player.data.brainz.MbArtist
+import to.wim.player.data.brainz.RadioRecording
 import to.wim.player.data.brainz.Recommendation
 import to.wim.player.data.brainz.SimilarArtist
 import to.wim.player.data.brainz.TagRecording
@@ -90,6 +91,12 @@ interface ListenBrainzSource {
 
     /** Recordings tagged with [tag] (on the recording, its album or its artist), from ListenBrainz's tag radio. */
     suspend fun tagRecordings(tag: String, count: Int = 200): List<TagRecording> = emptyList()
+
+    /**
+     * A sample of up to [count] of the artist's recordings with their listens, most listened
+     * first, from ListenBrainz's artist radio. Needs no token, unlike [topRecordings].
+     */
+    suspend fun artistRadioRecordings(artistMbid: String, count: Int = 200): List<RadioRecording> = emptyList()
 
     /** Title and artists of each recording (at most [METADATA_BATCH] at a time). */
     suspend fun recordingMetadata(recordingMbids: List<String>): List<BrainzRecording> = emptyList()

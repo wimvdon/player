@@ -15,12 +15,16 @@ Playlist (open in Spotify, progress, Stop), Settings (keys and setup steps, play
 `data/brainz/BrainzMusic.kt`, which turns names into MusicBrainz IDs and caches every answer):
 1. Seeds: the picked artists and genres, or the user's top artists (Spotify, then ListenBrainz).
 2. Candidate artists: ListenBrainz similar artists (Labs) per seed and, per genre, the artists of
-   ListenBrainz tag-radio recordings ranked by tag votes (topped up by a MusicBrainz tag search),
-   shared out round-robin, as many as the length needs (`artistBudget`: 100 for 250 tracks,
-   40 to 170; both services allow one call a second). When that's too few, the similar artists of
+   ListenBrainz tag-radio recordings ranked by the most tag votes on one of their recordings
+   (topped up by a MusicBrainz tag search), shared out round-robin, as many as the length needs
+   (`artistBudget`: 100 for 250 tracks, 40 to 170). When that's too few, the similar artists of
    up to 12 candidates are added.
 3. Tracks: ListenBrainz's most listened recordings per artist (15, or 20 with fewer than 50
-   artists). Artists without known tracks are replaced by the next candidates.
+   artists). Its top-recordings endpoint wants a user token for most artists, so after the first
+   refusal the app reads a sample of 200 recordings from the artist radio (`/1/lb-radio/artist`),
+   keeps the most listened and names them with one metadata lookup. Artists without known tracks
+   are replaced by the next candidates. Each artist's MusicBrainz tags (for mood) are read as soon
+   as its tracks are in, alongside the ListenBrainz calls.
 4. Mood (0 calm … 1 upbeat): cached ReccoBeats tempo and energy when known, otherwise the artist's
    MusicBrainz genres and tags weighted by `MoodModel.TagWeights` (`logic/Scores.kt`, one editable map).
 5. Familiarity (0 known … 1 new): known when in the user's Spotify top or saved tracks, their
@@ -40,7 +44,8 @@ After a problem, Continue picks up where it stopped without making a second play
 `docs/decisions.md` for why.
 
 **MusicBrainz and ListenBrainz** (`data/brainz/`): two clients (`MusicBrainzSource`,
-`ListenBrainzSource`), one call a second each through `BrainzHttp`, combined into the engine's
+`ListenBrainzSource`) through `BrainzHttp`, MusicBrainz at 0.9 calls a second and ListenBrainz
+at 2 (`BrainzLimits`), combined into the engine's
 `MusicSource` by `BrainzMusic`. An artist picked from the search keeps its MusicBrainz ID, so
 artists with the same name don't mix. The genre picker offers a fixed list (`logic/Genres.kt`).
 
