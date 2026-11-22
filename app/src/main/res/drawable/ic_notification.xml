@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Status bar icon: Material "queue music" (Apache 2.0). -->
+<!-- Status bar icon: the launcher icon's three bars (ic_launcher_monochrome), scaled to 20dp. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
-    <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M15,6H3v2h12V6zM15,10H3v2h12v-2zM3,16h8v-2H3V16zM17,6v8.18C16.69,14.07 16.35,14 16,14c-1.66,0 -3,1.34 -3,3s1.34,3 3,3s3,-1.34 3,-3V8h3V6H17z" />
+    <group
+        android:scaleX="0.41667"
+        android:scaleY="0.41667"
+        android:translateX="-10.5"
+        android:translateY="-10.5">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M36,30h18a6,6 0,0 1,0,12h-18a6,6 0,0 1,0,-12z M36,48h36a6,6 0,0 1,0,12h-36a6,6 0,0 1,0,-12z M36,66h10a6,6 0,0 1,0,12h-10a6,6 0,0 1,0,-12z" />
+    </group>
 </vector>

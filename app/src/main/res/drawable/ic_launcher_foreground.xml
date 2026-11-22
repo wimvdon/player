@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Four rounded bars lying on their side, of uneven length like a level meter (and a playlist's
+<!-- Three rounded bars lying on their side, of uneven length like a level meter (and a playlist's
      rows). Gradient from top left to bottom right, #FFA23A → #F0243A → #A0105E, on the soft red
-     plate (ic_launcher_background). The bars span 48dp around 54,54, inside the 66dp safe zone.
+     plate (ic_launcher_background). The bars span 48dp around 54,54 (30 to 78 both ways), inside the 66dp safe zone.
      See DESIGN.md, "This app". -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
@@ -9,7 +9,7 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path android:pathData="M34.00,30.00h18.00a4.75,4.75 0 0,1 0,9.5h-18.00a4.75,4.75 0 0,1 0,-9.5z M34.00,42.83h40.00a4.75,4.75 0 0,1 0,9.5h-40.00a4.75,4.75 0 0,1 0,-9.5z M34.00,55.67h10.00a4.75,4.75 0 0,1 0,9.5h-10.00a4.75,4.75 0 0,1 0,-9.5z M34.00,68.50h28.00a4.75,4.75 0 0,1 0,9.5h-28.00a4.75,4.75 0 0,1 0,-9.5z">
+    <path android:pathData="M36,30h18a6,6 0,0 1,0,12h-18a6,6 0,0 1,0,-12z M36,48h36a6,6 0,0 1,0,12h-36a6,6 0,0 1,0,-12z M36,66h10a6,6 0,0 1,0,12h-10a6,6 0,0 1,0,-12z">
         <aapt:attr name="android:fillColor">
             <gradient
                 android:type="linear"

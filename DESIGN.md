@@ -230,10 +230,10 @@ app apart from their package (and `R` import) lines. Copy a change to the other 
 playlist. It is the playful one of the family: Material 3 Expressive ideas (bold type, shapes that
 react, a morphing loader, a wavy progress bar), dark by default like Spotify.
 
-- **Icon:** four rounded bars lying on their side, of uneven length like a level meter (and a
+- **Icon:** three rounded bars lying on their side, of uneven length like a level meter (and a
   playlist's rows). Gradient `#FFA23A` → `#F0243A` → `#A0105E` (orange, red, magenta), on a soft
-  red plate (`#FCE9E8` → `#F9D3D1`) instead of white. The themed icon is the same four bars, and
-  the wordmark shows them as its logo (`ic_logo_bars`). The loading animation still starts from
+  red plate (`#FCE9E8` → `#F9D3D1`) instead of white. The themed icon and the status bar icon are the same three bars,
+  and the wordmark shows them as its logo (`ic_logo_bars`). The loading animation still starts from
   the nine-lobed "cookie" (`logic/Blob.kt`), which was the icon until 2026-11-22. (Player isn't
   in the shared icon table above yet; adding it means copying the table to every app's
   `DESIGN.md`.)

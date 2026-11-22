@@ -2,6 +2,12 @@
 
 Newest first. Add an entry for every notable choice: what was decided, why, and what was rejected.
 
+## 2026-11-22: Three bars instead of four in the icon
+
+The owner asked for three bars. The launcher icon, the themed icon, the wordmark's logo and the
+status bar icon (which was still Material's "queue music") now show three uneven bars: short, long,
+shorter. Same gradient and plate.
+
 ## 2026-11-22: An optional ListenBrainz token in Settings
 
 The owner offered his own ListenBrainz token. Settings now has an optional token field (shown as
