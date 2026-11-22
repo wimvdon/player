@@ -12,8 +12,8 @@ directly to the services below, using **your own** Spotify developer key.
   involved.
 - **ListenBrainz** (`api.listenbrainz.org`, `labs.api.listenbrainz.org`): MusicBrainz IDs of
   artists, to get similar artists and their most played tracks, and (if you enter it) your
-  ListenBrainz username, to read your most played artists and tracks. No key is sent; a
-  ListenBrainz profile is public.
+  ListenBrainz username, to read your most played artists and tracks and your full list of plays
+  (so every song you've played counts as known). No key is sent; a ListenBrainz profile is public.
 - **Spotify** (`api.spotify.com`, `accounts.spotify.com`): sign-in, searches for the tracks
   being added, your top tracks, top artists and saved tracks (to spot songs you know), and a new
   private playlist for each set, with the name you confirm, which Player creates, fills and starts.
@@ -29,8 +29,9 @@ directly to the services below, using **your own** Spotify developer key.
   They are encrypted with a key from the Android Keystore.
 - **Not backed up:** a cache of MusicBrainz and ListenBrainz answers (kept 30 days,
   artist IDs 180 days), your Spotify library and charts
-  (kept a day), and the Spotify tracks songs were matched to. Clear it in Settings → API calls and
-  cache → Clear cache.
+  (kept a day), the Spotify tracks songs were matched to, and the list of tracks in your ListenBrainz
+  play history (artist and title only, kept until you clear it or change the username). Clear it in
+  Settings → API calls and cache → Clear cache.
 - **Backed up by Android** (to your Google account, if you turned that on, and when moving to a new
   phone): your settings (theme, playlist order, ListenBrainz username) and the generator's last input
   (sliders, genres, artists, length).

@@ -1,6 +1,7 @@
 package to.wim.player.data.brainz
 
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import to.wim.player.data.LISTENS_PAGE
 import to.wim.player.data.ListenBrainzSource
 
 /** ListenBrainz and its Labs datasets over HTTP. Reading needs only a username. No caching here. */
@@ -46,6 +47,17 @@ class ListenBrainzClient(private val http: BrainzHttp) : ListenBrainzSource {
             if (page.size < PAGE || offset >= ListenBrainzJson.totalRecordingCount(answer.body)) break
         }
         return result
+    }
+
+    override suspend fun listens(username: String, minTs: Long?, maxTs: Long?, count: Int): List<BrainzListen> {
+        val url = "$API/user/${username.trim()}/listens".toHttpUrl().newBuilder()
+            .addQueryParameter("count", "${count.coerceIn(1, LISTENS_PAGE)}")
+            .apply {
+                if (minTs != null) addQueryParameter("min_ts", "$minTs") else if (maxTs != null) addQueryParameter("max_ts", "$maxTs")
+            }
+            .build()
+        val answer = http.get(url, "GET /1/user/{name}/listens")
+        return if (answer.hasData) ListenBrainzJson.listens(answer.body) else emptyList()
     }
 
     override suspend fun recommendations(username: String, limit: Int): List<Recommendation> {

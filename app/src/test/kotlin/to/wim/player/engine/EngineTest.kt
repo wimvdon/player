@@ -40,7 +40,7 @@ private class World : FakeMusic() {
     override suspend fun artistTags(artist: String): List<WeightedTag> =
         if (artist.hashCode() % 2 == 0) listOf(WeightedTag("ambient", 100)) else listOf(WeightedTag("techno", 100))
 
-    override suspend fun userTopTrackKeys(username: String) = setOf(TrackText.key("Seed A", "Seed A Song 1"))
+    override suspend fun userKnownTrackKeys(username: String) = setOf(TrackText.key("Seed A", "Seed A Song 1"))
 
     override suspend fun userTopArtists(username: String, limit: Int) = listOf("Top One", "Top Two")
 }

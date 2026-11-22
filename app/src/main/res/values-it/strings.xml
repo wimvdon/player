@@ -142,6 +142,21 @@
     <string name="settings_listenbrainz_help">Facoltativo. I tuoi artisti preferiti avviano una selezione se non ne scegli nessuno, e i brani già ascoltati contano come conosciuti.</string>
     <string name="settings_listenbrainz_import">Per usare la cronologia di Last.fm o Spotify (lo ZIP della cronologia di streaming estesa di Spotify), importala su ListenBrainz (Impostazioni, Importa).</string>
     <string name="action_open_listenbrainz">Apri ListenBrainz</string>
+    <plurals name="settings_listenbrainz_history_reading">
+        <item quantity="one">Lettura della cronologia di ascolto da ListenBrainz: %1$s brano finora…</item>
+        <item quantity="many">Lettura della cronologia di ascolto da ListenBrainz: %1$s brani finora…</item>
+        <item quantity="other">Lettura della cronologia di ascolto da ListenBrainz: %1$s brani finora…</item>
+    </plurals>
+    <plurals name="settings_listenbrainz_history_done">
+        <item quantity="one">%1$s brano della tua cronologia di ascolto conta come già noto.</item>
+        <item quantity="many">%1$s brani della tua cronologia di ascolto contano come già noti.</item>
+        <item quantity="other">%1$s brani della tua cronologia di ascolto contano come già noti.</item>
+    </plurals>
+    <plurals name="settings_listenbrainz_history_partial">
+        <item quantity="one">%1$s brano letto dalla tua cronologia di ascolto finora. Player leggerà il resto più tardi.</item>
+        <item quantity="many">%1$s brani letti dalla tua cronologia di ascolto finora. Player leggerà il resto più tardi.</item>
+        <item quantity="other">%1$s brani letti dalla tua cronologia di ascolto finora. Player leggerà il resto più tardi.</item>
+    </plurals>
     <plurals name="preview_summary">
         <item quantity="one">%1$d brano di %2$d artisti</item>
         <item quantity="many">%1$d brani di %2$d artisti</item>

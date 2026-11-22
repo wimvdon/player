@@ -142,6 +142,21 @@
     <string name="settings_listenbrainz_help">Opcional. Tus artistas más escuchados inician una selección si no eliges ninguno, y las canciones que ya escuchaste cuentan como conocidas.</string>
     <string name="settings_listenbrainz_import">Para usar tu historial de Last.fm o Spotify (el ZIP del historial de reproducción ampliado de Spotify), impórtalo en ListenBrainz (Ajustes, Importar).</string>
     <string name="action_open_listenbrainz">Abrir ListenBrainz</string>
+    <plurals name="settings_listenbrainz_history_reading">
+        <item quantity="one">Leyendo tu historial de escucha de ListenBrainz: %1$s canción por ahora…</item>
+        <item quantity="many">Leyendo tu historial de escucha de ListenBrainz: %1$s canciones por ahora…</item>
+        <item quantity="other">Leyendo tu historial de escucha de ListenBrainz: %1$s canciones por ahora…</item>
+    </plurals>
+    <plurals name="settings_listenbrainz_history_done">
+        <item quantity="one">%1$s canción de tu historial de escucha cuenta como conocida.</item>
+        <item quantity="many">%1$s canciones de tu historial de escucha cuentan como conocidas.</item>
+        <item quantity="other">%1$s canciones de tu historial de escucha cuentan como conocidas.</item>
+    </plurals>
+    <plurals name="settings_listenbrainz_history_partial">
+        <item quantity="one">%1$s canción leída de tu historial de escucha por ahora. Player leerá el resto más tarde.</item>
+        <item quantity="many">%1$s canciones leídas de tu historial de escucha por ahora. Player leerá el resto más tarde.</item>
+        <item quantity="other">%1$s canciones leídas de tu historial de escucha por ahora. Player leerá el resto más tarde.</item>
+    </plurals>
     <plurals name="preview_summary">
         <item quantity="one">%1$d canción de %2$d artistas</item>
         <item quantity="many">%1$d canciones de %2$d artistas</item>

@@ -96,6 +96,14 @@ object ListenBrainzJson {
     /** Total pages are not given; this tells whether another page may follow. */
     fun totalRecordingCount(text: String): Int = payload(text)?.long("total_recording_count")?.toInt() ?: 0
 
+    /** `GET /1/user/{name}/listens`: newest first. Plays without an artist or title are left out. */
+    fun listens(text: String): List<BrainzListen> =
+        payload(text)?.get("listens").objects().mapNotNull { item ->
+            val at = item.long("listened_at") ?: return@mapNotNull null
+            val track = item["track_metadata"] as? JsonObject ?: return@mapNotNull null
+            BrainzListen(track.string("artist_name") ?: return@mapNotNull null, track.string("track_name") ?: return@mapNotNull null, at)
+        }
+
     /** `GET /1/cf/recommendation/user/{name}/recording`: best first. Empty when there are none yet. */
     fun recommendations(text: String): List<Recommendation> =
         payload(text)?.get("mbids").objects().mapNotNull { item ->

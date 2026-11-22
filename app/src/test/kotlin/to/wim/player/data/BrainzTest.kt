@@ -100,6 +100,15 @@ class ListenBrainzJsonTest {
     }
 
     @Test
+    fun `listens keep artist, title and time, and skip plays without a title`() {
+        val listens = ListenBrainzJson.listens(fixture("lb_listens"))
+        assertEquals(listOf("Kerala", "Anthem"), listens.map { it.title })
+        assertEquals(listOf("Bonobo", "Emancipator"), listens.map { it.artist })
+        assertEquals(listOf(1700000300L, 1700000000L), listens.map { it.listenedAt })
+        assertTrue(ListenBrainzJson.listens("{}").isEmpty())
+    }
+
+    @Test
     fun `recommendations skip entries without an mbid`() {
         val recs = ListenBrainzJson.recommendations(fixture("lb_recommendations"))
         assertEquals(listOf("r9", "r8"), recs.map { it.recordingMbid })

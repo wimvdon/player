@@ -21,8 +21,9 @@ Playlist (open in Spotify, progress, Stop), Settings (keys and setup steps, play
    artists).
 4. Mood (0 calm … 1 upbeat): cached ReccoBeats tempo and energy when known, otherwise the artist's
    MusicBrainz genres and tags weighted by `MoodModel.TagWeights` (`logic/Scores.kt`, one editable map).
-5. Familiarity (0 known … 1 new): known when in the user's Spotify top or saved tracks or
-   ListenBrainz top recordings; otherwise from the ListenBrainz listener count on a log scale.
+5. Familiarity (0 known … 1 new): known when in the user's Spotify top or saved tracks, their
+   ListenBrainz top recordings or their whole ListenBrainz play history (`data/brainz/ListenHistory.kt`,
+   read in the background, never awaited by a set); otherwise from the ListenBrainz listener count on a log scale.
 6. `logic/Generator.kt` picks the closest tracks to both sliders (with a little randomness), at
    most 3 per artist, at least half from artists the user didn't pick (unless familiarity is fully
    "known"), orders them (mood curve, best match or shuffle) and keeps the same artist apart.
@@ -58,6 +59,12 @@ browse, batch track lookups) and the `popularity` field are not used. Search use
   scopes and the quota pause, each value encrypted with an Android Keystore AES key. Not backed up.
 - `noBackupFilesDir/cache/*.json` (`data/cache/Caches.kt`): MusicBrainz and ListenBrainz answers (artist IDs 180 days, the rest 30 days), the user's
   library and charts (1 day), Spotify matches and audio features (forever).
+- `noBackupFilesDir/listen_history.json` (`data/brainz/ListenHistory.kt`): every track in the
+  user's ListenBrainz play history (artist and title keys only, no times per play), with how far
+  reading got. The first read pages through all plays, 1 000 a call (a few minutes for a long
+  history, resumed if interrupted, saved every 10 calls); after that only plays newer than the
+  last one are read, at most every 6 hours, at app start, when the username changes and when a set
+  is generated. Settings shows the count; Clear cache deletes the file.
 
 ## Structure
 ```

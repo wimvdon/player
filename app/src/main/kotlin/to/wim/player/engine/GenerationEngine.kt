@@ -175,7 +175,7 @@ class GenerationEngine(
             val fromSpotify = tolerant { spotify.knownTrackKeys() }
             if (fromSpotify == null) spotifyFailed = true else keys += fromSpotify
         }
-        if (username.isNotBlank()) tolerant { music.userTopTrackKeys(username) }?.let { keys += it }
+        if (username.isNotBlank()) tolerant { music.userKnownTrackKeys(username) }?.let { keys += it }
         return Known(keys, spotifyFailed)
     }
 

@@ -12,6 +12,8 @@ import org.junit.rules.TemporaryFolder
 import to.wim.player.data.cache.JsonFileCache
 import to.wim.player.data.cache.MemoryCache
 import to.wim.player.data.brainz.BrainzCaches
+import to.wim.player.data.brainz.BrainzListen
+import to.wim.player.data.brainz.ListenHistory
 import to.wim.player.data.brainz.BrainzMatch
 import to.wim.player.data.brainz.BrainzMusic
 import to.wim.player.data.brainz.BrainzRecording
@@ -117,6 +119,9 @@ private class CountingListenBrainz : ListenBrainzSource {
     }
 
     override suspend fun recommendations(username: String, limit: Int): List<Recommendation> = emptyList()
+
+    override suspend fun listens(username: String, minTs: Long?, maxTs: Long?, count: Int): List<BrainzListen> =
+        if (maxTs == null && minTs == null) listOf(BrainzListen("Tycho", "Awake", 100)) else emptyList()
 }
 
 class BrainzMusicTest {
@@ -172,9 +177,29 @@ class BrainzMusicTest {
     @Test
     fun `user history gives track keys`() =
         runBlocking {
-            assertEquals(setOf(TrackText.key("Bonobo", "Kerala"), TrackText.key("Bonobo", "Kerala (Live)")), music.userTopTrackKeys("someone"))
-            music.userTopTrackKeys("Someone")
+            assertEquals(setOf(TrackText.key("Bonobo", "Kerala"), TrackText.key("Bonobo", "Kerala (Live)")), music.userKnownTrackKeys("someone"))
+            music.userKnownTrackKeys("Someone")
             assertEquals(1, listenBrainz.calls.count { it.startsWith("user:") })
+        }
+
+    @Test
+    fun `the read play history adds to the top recordings`() =
+        runBlocking {
+            val history = ListenHistory(listenBrainz, MemoryHistoryFile())
+            val withHistory =
+                BrainzMusic(
+                    musicBrainz,
+                    listenBrainz,
+                    BrainzCaches(MemoryCache(), MemoryCache(), MemoryCache<List<PoolTrack>>(), MemoryCache<List<WeightedTag>>(), MemoryCache()),
+                    history,
+                )
+            assertEquals(2, withHistory.userKnownTrackKeys("someone").size)
+            history.sync("someone")
+            assertEquals(
+                setOf(TrackText.key("Bonobo", "Kerala"), TrackText.key("Bonobo", "Kerala (Live)"), TrackText.key("Tycho", "Awake")),
+                withHistory.userKnownTrackKeys("someone"),
+            )
+            assertEquals(2, withHistory.userKnownTrackKeys("someone else").size)
         }
 
     @Test
@@ -214,7 +239,7 @@ open class FakeMusic : MusicSource {
 
     override suspend fun searchArtists(query: String): List<ArtistHit> = emptyList()
 
-    override suspend fun userTopTrackKeys(username: String): Set<String> = emptySet()
+    override suspend fun userKnownTrackKeys(username: String): Set<String> = emptySet()
 
     override suspend fun userTopArtists(username: String, limit: Int): List<String> = emptyList()
 }

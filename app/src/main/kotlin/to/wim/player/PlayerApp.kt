@@ -12,7 +12,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import okhttp3.OkHttpClient
@@ -21,6 +25,8 @@ import to.wim.player.data.cache.JsonFileCache
 import to.wim.player.data.brainz.BrainzCaches
 import to.wim.player.data.brainz.BrainzHttp
 import to.wim.player.data.brainz.BrainzMusic
+import to.wim.player.data.brainz.JsonListenHistoryFile
+import to.wim.player.data.brainz.ListenHistory
 import to.wim.player.data.brainz.ListenBrainzClient
 import to.wim.player.data.brainz.MusicBrainzClient
 import to.wim.player.data.model.AudioFeatures
@@ -114,11 +120,17 @@ class AppGraph(app: Application) {
     private fun brainzHttp(service: Service) =
         BrainzHttp(http, service, userAgent, TokenBucket(BrainzLimits.CALLS_PER_SECOND, 1.0, now, ::sleep), callLog, now = now)
 
+    private val listenBrainz = ListenBrainzClient(brainzHttp(Service.LISTENBRAINZ))
+
+    /** Every track the user played on ListenBrainz, on this phone only (`noBackupFilesDir`). */
+    val history = ListenHistory(listenBrainz, JsonListenHistoryFile(File(app.noBackupFilesDir, "listen_history.json")), now)
+
     val music =
         BrainzMusic(
             MusicBrainzClient(brainzHttp(Service.MUSICBRAINZ)),
-            ListenBrainzClient(brainzHttp(Service.LISTENBRAINZ)),
+            listenBrainz,
             BrainzCaches(artistIdCache, artistListCache, trackCache, tagCache, userChartCache),
+            history,
         )
 
     val webApi = SpotifyWebApi(http, secrets, callLog, TokenBucket(SpotifyWebApi.CALLS_PER_SECOND, 1.0, now, ::sleep))
@@ -133,8 +145,15 @@ class AppGraph(app: Application) {
 
     /** A generator that reads Spotify only when the user is signed in. */
     suspend fun engine(): GenerationEngine {
+        syncHistory(settings.current().listenBrainzUsername)
         val signedIn = secrets.current().spotifySignedIn
         return GenerationEngine(music, if (signedIn) catalog else null, resolver, features)
+    }
+
+    /** Reads new plays in the background (at most every few hours); the set never waits for it. */
+    fun syncHistory(username: String) {
+        if (username.isBlank()) return
+        scope.launch(Dispatchers.IO) { runCatching { history.sync(username) } }
     }
 
     /** Saves changed caches to disk. */
@@ -151,6 +170,15 @@ class AppGraph(app: Application) {
             runCatching { settings.removeLastFm() }
             OLD_CACHES.forEach { runCatching { File(cacheDir, "$it.json").delete() } }
         }
+        // Read the play history for the username in Settings, again when it changes (after typing stops).
+        scope.launch {
+            settings.settings.map { it.listenBrainzUsername.trim() }.distinctUntilChanged().collectLatest { name ->
+                history.show(name)
+                if (name.isBlank()) return@collectLatest
+                delay(HISTORY_TYPING_DELAY_MILLIS)
+                withContext(Dispatchers.IO) { runCatching { history.sync(name) } }
+            }
+        }
         // Save caches now and then while the app runs (queueing adds Spotify matches).
         scope.launch {
             while (true) {
@@ -161,6 +189,7 @@ class AppGraph(app: Application) {
     }
 
     private companion object {
+        const val HISTORY_TYPING_DELAY_MILLIS = 3_000L
         val OLD_CACHES = listOf("lastfm_artists", "lastfm_tracks", "lastfm_tags", "lastfm_names")
     }
 }

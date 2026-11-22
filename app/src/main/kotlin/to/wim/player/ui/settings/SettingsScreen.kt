@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
@@ -58,6 +59,7 @@ import to.wim.player.ui.theme.SettingsScaffold
 import to.wim.player.ui.theme.SettingsSection
 import to.wim.player.ui.theme.SwitchSetting
 import to.wim.player.ui.theme.rememberAppVersion
+import java.text.NumberFormat
 
 @Composable
 fun SettingsScreen(
@@ -68,6 +70,7 @@ fun SettingsScreen(
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val secrets by viewModel.secrets.collectAsStateWithLifecycle()
     val signInProblem by viewModel.signInProblem.collectAsStateWithLifecycle()
+    val history by viewModel.history.collectAsStateWithLifecycle()
     val currentSettings = settings ?: return
     val currentSecrets = secrets ?: return
     val activity = LocalActivity.current
@@ -179,6 +182,18 @@ fun SettingsScreen(
                         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None, autoCorrectEnabled = false, imeAction = ImeAction.Done),
                         modifier = Modifier.fillMaxWidth(),
                     )
+                    if (username.isNotBlank() && (history.syncing || history.songs > 0)) {
+                        val songs = NumberFormat.getIntegerInstance().format(history.songs)
+                        Text(
+                            when {
+                                history.syncing -> pluralStringResource(R.plurals.settings_listenbrainz_history_reading, history.songs, songs)
+                                history.complete -> pluralStringResource(R.plurals.settings_listenbrainz_history_done, history.songs, songs)
+                                else -> pluralStringResource(R.plurals.settings_listenbrainz_history_partial, history.songs, songs)
+                            },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                     Step(stringResource(R.string.settings_listenbrainz_import))
                     OutlinedButton(onClick = { uriHandler.openUri(LISTENBRAINZ) }) {
                         Text(stringResource(R.string.action_open_listenbrainz))
