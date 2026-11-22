@@ -57,8 +57,8 @@ description. In addition, check every now and then (always before a release):
 - [ ] **Setup:** with no keys, the start screen asks to connect. Settings → Spotify → the steps show
       the redirect URI, package name and SHA-1 with copy buttons. Connect Spotify signs in and shows
       "Signed in as …".
-- [ ] **Look:** a fresh install starts dark, with the "player" wordmark and the cookie in the app
-      bar. Settings › Appearance › Light switches to the light colours.
+- [ ] **Look:** a fresh install starts dark, with the "player" wordmark and the four
+      bars of the icon in the app bar. Settings › Appearance › Light switches to the light colours.
 - [ ] **Generate:** pick 2 artists and 1 genre, 250 tracks (the + and − buttons step by 50 above
       100, by 10 below). The generating screen shows the morphing shape, the wavy bar and the
       steps ticking off; with an empty cache the preview appears in a few minutes, the second time
