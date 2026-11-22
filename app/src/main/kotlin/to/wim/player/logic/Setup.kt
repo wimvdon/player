@@ -1,10 +1,10 @@
 package to.wim.player.logic
 
-/** Checks for the keys the user pastes in, and the values they paste into Spotify's dashboard. */
+/** Checks for the key the user pastes in, and the values they paste into Spotify's dashboard. */
 object Setup {
     private val Hex32 = Regex("^[0-9a-fA-F]{32}$")
 
-    /** Spotify Client IDs and Last.fm API keys are both 32 hexadecimal characters. */
+    /** Spotify Client IDs are 32 hexadecimal characters. */
     fun isValidKey(value: String): Boolean = Hex32.matches(value.trim())
 
     /** The redirect URI the app listens on: its package name as the scheme. */

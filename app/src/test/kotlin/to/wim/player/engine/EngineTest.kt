@@ -11,14 +11,11 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import to.wim.player.data.FakeLastFm
+import to.wim.player.data.FakeMusic
 import to.wim.player.data.SpotifyCatalog
 import to.wim.player.data.PlaylistTarget
 import to.wim.player.data.cache.MemoryCache
-import to.wim.player.data.lastfm.LastFmErrors
-import to.wim.player.data.lastfm.LastFmException
-import to.wim.player.data.model.LfmArtist
-import to.wim.player.data.model.LfmTrack
+import to.wim.player.data.model.PoolTrack
 import to.wim.player.data.model.Resolution
 import to.wim.player.data.model.SpotifyTrack
 import to.wim.player.data.spotify.SpotifyPausedException
@@ -29,26 +26,22 @@ import to.wim.player.logic.TrackText
 import to.wim.player.logic.WeightedTag
 import kotlin.random.Random
 
-/** A small music world: seeds have similar artists, genres have charts, every artist has tracks and tags. */
-private class WorldLastFm : FakeLastFm() {
+/** A small music world: seeds have similar artists, genres have artists, every artist has tracks and tags. */
+private class World : FakeMusic() {
     val calls = mutableListOf<String>()
 
-    override suspend fun similarArtists(artist: String, limit: Int) =
-        (1..30).map { LfmArtist("$artist Similar $it") }.also { calls += "similar:$artist" }
+    override suspend fun similarArtists(artist: String, limit: Int) = (1..30).map { "$artist Similar $it" }.also { calls += "similar:$artist" }
 
-    override suspend fun tagTopArtists(tag: String, limit: Int) = (1..50).map { LfmArtist("$tag Artist $it") }.also { calls += "tagArtists:$tag" }
+    override suspend fun genreArtists(genre: String, limit: Int) = (1..50).map { "$genre Artist $it" }.also { calls += "genreArtists:$genre" }
 
-    override suspend fun tagTopTracks(tag: String, limit: Int) = (1..50).map { LfmTrack("$tag Hit $it", "$tag Artist $it") }
+    override suspend fun artistTopTracks(artist: String, limit: Int) = (1..limit).map { PoolTrack("$artist Song $it", artist, listeners = 10L * it * it) }
 
-    override suspend fun artistTopTracks(artist: String, limit: Int) =
-        (1..limit).map { LfmTrack("$artist Song $it", artist, listeners = 1_000L * it * it) }
-
-    override suspend fun artistTopTags(artist: String): List<WeightedTag> =
+    override suspend fun artistTags(artist: String): List<WeightedTag> =
         if (artist.hashCode() % 2 == 0) listOf(WeightedTag("ambient", 100)) else listOf(WeightedTag("techno", 100))
 
     override suspend fun userTopTrackKeys(username: String) = setOf(TrackText.key("Seed A", "Seed A Song 1"))
 
-    override suspend fun userTopArtists(username: String, limit: Int) = listOf(LfmArtist("Top One"), LfmArtist("Top Two"))
+    override suspend fun userTopArtists(username: String, limit: Int) = listOf("Top One", "Top Two")
 }
 
 private open class FakeCatalog : SpotifyCatalog {
@@ -72,33 +65,33 @@ class GenerationEngineTest {
         length: Int = 250,
         mood: Double = 0.5,
         familiarity: Double = 0.5,
-    ) = GenerationInput(artists, genres, mood, familiarity, length, Ordering.MOOD_CURVE, lastFmUsername = "someone")
+    ) = GenerationInput(artists, genres, mood, familiarity, length, Ordering.MOOD_CURVE, listenBrainzUsername = "someone")
 
     @Test
     fun `two seeds and a genre give the full length`() =
         runBlocking {
-            val lastFm = WorldLastFm()
-            val engine = GenerationEngine(lastFm, FakeCatalog(), null, null, Random(1))
+            val world = World()
+            val engine = GenerationEngine(world, FakeCatalog(), null, null, Random(1))
             val result = engine.generate(input())
             assertEquals(250, result.tracks.size)
             assertTrue(result.poolSize >= 3 * 250)
             assertTrue(result.tracks.count { !it.fromSeedArtist } >= 125)
             assertTrue(result.tracks.groupingBy { it.artistKey }.eachCount().values.all { it <= 3 })
-            assertEquals(listOf("similar:Seed A", "similar:Seed B", "tagArtists:trip-hop").sorted(), lastFm.calls.sorted())
+            assertEquals(listOf("similar:Seed A", "similar:Seed B", "genreArtists:trip-hop").sorted(), world.calls.sorted())
         }
 
     @Test
     fun `no Spotify searches while generating`() =
         runBlocking {
             val catalog = FakeCatalog()
-            GenerationEngine(WorldLastFm(), catalog, TrackResolver(catalog, MemoryCache()), null, Random(2)).generate(input(length = 50))
+            GenerationEngine(World(), catalog, TrackResolver(catalog, MemoryCache()), null, Random(2)).generate(input(length = 50))
             assertEquals(0, catalog.searches)
         }
 
     @Test
-    fun `scrobbled tracks count as known`() =
+    fun `tracks from the listening history count as known`() =
         runBlocking {
-            val result = GenerationEngine(WorldLastFm(), null, null, null, Random(3)).generate(input(familiarity = 0.0, length = 100))
+            val result = GenerationEngine(World(), null, null, null, Random(3)).generate(input(familiarity = 0.0, length = 100))
             val known = result.tracks.first { it.title == "Seed A Song 1" }
             assertEquals(0.0, known.familiarity, 1e-9)
         }
@@ -106,7 +99,7 @@ class GenerationEngineTest {
     @Test
     fun `mood follows the slider`() =
         runBlocking {
-            val engine = GenerationEngine(WorldLastFm(), null, null, null, Random(4))
+            val engine = GenerationEngine(World(), null, null, null, Random(4))
             val calm = engine.generate(input(mood = 0.0, length = 60)).tracks.map { it.mood }.average()
             val upbeat = engine.generate(input(mood = 1.0, length = 60)).tracks.map { it.mood }.average()
             assertTrue(calm < 0.3)
@@ -116,31 +109,32 @@ class GenerationEngineTest {
     @Test
     fun `no seeds uses top artists from Spotify first`() =
         runBlocking {
-            val result = GenerationEngine(WorldLastFm(), FakeCatalog(), null, null, Random(5)).generate(input(artists = emptyList(), genres = emptyList(), length = 30))
+            val result = GenerationEngine(World(), FakeCatalog(), null, null, Random(5)).generate(input(artists = emptyList(), genres = emptyList(), length = 30))
             assertTrue(result.usedTopArtists)
             assertTrue(result.tracks.any { it.artist.startsWith("Spotify Top") })
         }
 
     @Test
-    fun `no seeds and no Spotify falls back to Last fm top artists`() =
+    fun `no seeds and no Spotify falls back to ListenBrainz top artists`() =
         runBlocking {
-            val result = GenerationEngine(WorldLastFm(), null, null, null, Random(6)).generate(input(artists = emptyList(), genres = emptyList(), length = 30))
+            val result = GenerationEngine(World(), null, null, null, Random(6)).generate(input(artists = emptyList(), genres = emptyList(), length = 30))
             assertTrue(result.tracks.any { it.artist.startsWith("Top ") })
         }
 
     @Test(expected = NoSeedsException::class)
     fun `nothing to start from`() {
         runBlocking {
-            GenerationEngine(FakeLastFm(), null, null, null).generate(input(artists = emptyList(), genres = emptyList()).copy(lastFmUsername = ""))
+            GenerationEngine(FakeMusic(), null, null, null).generate(input(artists = emptyList(), genres = emptyList()).copy(listenBrainzUsername = ""))
         }
     }
 
-    @Test(expected = LastFmException::class)
-    fun `a bad key stops the generation`() {
+    @Test(expected = java.io.IOException::class)
+    fun `when every track lookup fails the generation fails`() {
         val broken =
-            object : FakeLastFm() {
-                override suspend fun similarArtists(artist: String, limit: Int): List<LfmArtist> =
-                    throw LastFmException(LastFmErrors.INVALID_API_KEY, "Invalid API key")
+            object : FakeMusic() {
+                override suspend fun similarArtists(artist: String, limit: Int) = listOf("Other")
+
+                override suspend fun artistTopTracks(artist: String, limit: Int): List<PoolTrack> = throw java.io.IOException("offline")
             }
         runBlocking { GenerationEngine(broken, null, null, null).generate(input()) }
     }
@@ -149,11 +143,11 @@ class GenerationEngineTest {
     fun `one failing artist is left out`() =
         runBlocking {
             val flaky =
-                object : FakeLastFm() {
-                    override suspend fun similarArtists(artist: String, limit: Int) = listOf(LfmArtist("Good"), LfmArtist("Bad"))
+                object : FakeMusic() {
+                    override suspend fun similarArtists(artist: String, limit: Int) = listOf("Good", "Bad")
 
-                    override suspend fun artistTopTracks(artist: String, limit: Int): List<LfmTrack> =
-                        if (artist == "Bad") throw java.io.IOException("timeout") else (1..10).map { LfmTrack("$artist $it", artist) }
+                    override suspend fun artistTopTracks(artist: String, limit: Int): List<PoolTrack> =
+                        if (artist == "Bad") throw java.io.IOException("timeout") else (1..10).map { PoolTrack("$artist $it", artist) }
                 }
             val result = GenerationEngine(flaky, null, null, null, Random(7)).generate(input(artists = listOf("Seed"), genres = emptyList(), length = 10))
             assertTrue(result.tracks.none { it.artist == "Bad" })

@@ -6,14 +6,19 @@ import to.wim.player.logic.WeightedTag
 
 /** MusicBrainz over HTTP (no key). No caching here. */
 class MusicBrainzClient(private val http: BrainzHttp) : MusicBrainzSource {
-    override suspend fun searchArtists(name: String, limit: Int): List<MbArtist> {
-        val query = "artist:\"${name.replace("\"", " ")}\""
+    override suspend fun searchArtists(name: String, limit: Int): List<MbArtist> = search("artist", name, limit)
+
+    override suspend fun artistsByTag(tag: String, limit: Int): List<MbArtist> = search("tag", tag, limit)
+
+    /** A Lucene search on one field; quotes in the text are dropped so it stays one phrase. */
+    private suspend fun search(field: String, text: String, limit: Int): List<MbArtist> {
+        val query = "$field:\"${text.replace("\"", " ").trim()}\""
         val url = "$BASE/artist".toHttpUrl().newBuilder()
             .addQueryParameter("query", query)
-            .addQueryParameter("limit", "$limit")
+            .addQueryParameter("limit", "${limit.coerceIn(1, 100)}")
             .addQueryParameter("fmt", "json")
             .build()
-        val answer = http.get(url, "GET /ws/2/artist?query")
+        val answer = http.get(url, "GET /ws/2/artist?query=$field")
         return if (answer.hasData) MusicBrainzJson.artistSearch(answer.body) else emptyList()
     }
 

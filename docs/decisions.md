@@ -2,6 +2,27 @@
 
 Newest first. Add an entry for every notable choice: what was decided, why, and what was rejected.
 
+## 2026-11-22: Sets are built from ListenBrainz and MusicBrainz; Last.fm is removed
+
+The engine now reads all music data through `MusicSource` (`data/brainz/BrainzMusic.kt`), and
+Last.fm's client, settings and texts are gone. Only a Spotify Client ID is needed to start.
+
+- **Genres:** MusicBrainz has no chart of the most used tags, so the picker offers a fixed list of
+  40 genres (`logic/Genres.kt`); typing any other genre still works. Artists for a genre come from
+  a MusicBrainz tag search. Last.fm's tag top tracks have no counterpart, so tracks come only from
+  each artist's most listened recordings on ListenBrainz.
+- **At most 60 candidate artists** instead of 100, because of the one-call-a-second limit. Answers
+  are cached (artist IDs 180 days, the rest 30 days), and IDs found in similar-artist and genre
+  answers are kept, so later sets need few calls. A first set with new artists takes about a minute.
+- **Name to ID:** an artist picked from the search keeps its MusicBrainz ID. Other names take the
+  exact name match among MusicBrainz results with a score of at least 90, otherwise the top
+  result; a miss is cached too.
+- **Familiarity scale:** ListenBrainz has far fewer listeners than Last.fm, so the listener
+  count's log scale now runs from 10 (new) to 100 000 (a hit).
+- **Old data:** at start, Player removes the Last.fm key, username and cache files older versions
+  stored.
+- Rejected: keeping Last.fm as a fallback for genre charts (a second key to set up for little gain).
+
 ## 2026-11-22: A new, named playlist for every set, filled in one go
 
 The owner wants every run to make a new playlist instead of replacing "Player", with all tracks at
@@ -32,8 +53,8 @@ plays keep arriving), artist IDs and genres from **MusicBrainz**, and sound from
   which both ask for. A repository link instead of an email, so no personal address is in the app.
 - Reading ListenBrainz needs only a username. A user token is optional (higher rate limits).
 - ListenBrainz works with MusicBrainz IDs, not names, so names go through MusicBrainz first.
-- Done in steps: first the clients with tests (not used yet), then the engine switch that removes
-  Last.fm, then importing Spotify's extended streaming history on the phone.
+- Done in steps: first the clients with tests, then the engine switch that removes Last.fm
+  (entry above), then importing Spotify's extended streaming history on the phone.
 - Rejected: keeping Last.fm for history (the ListenBrainz importer covers it) or as a fallback
   for genres (more code and settings; can be added later if MusicBrainz tags prove too thin).
 

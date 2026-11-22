@@ -61,10 +61,10 @@ class CallLogTest {
     fun `call log keeps the newest first and counts per service`() {
         val log = CallLog(capacity = 2)
         log.record(ApiCall(1, Service.SPOTIFY, "GET /search", 200))
-        log.record(ApiCall(2, Service.LAST_FM, "tag.getTopTags", 200))
+        log.record(ApiCall(2, Service.MUSICBRAINZ, "GET /ws/2/artist", 200))
         log.record(ApiCall(3, Service.SPOTIFY, "GET /me", 429, "QUOTA_EXCEEDED"))
         assertEquals(listOf(3L, 2L), log.calls.value.map { it.atMillis })
         assertEquals(2, log.counts.value[Service.SPOTIFY])
-        assertEquals(1, log.counts.value[Service.LAST_FM])
+        assertEquals(1, log.counts.value[Service.MUSICBRAINZ])
     }
 }

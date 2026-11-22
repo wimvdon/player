@@ -127,7 +127,8 @@ fun DebugScreen(
                                 stringResource(
                                     R.string.debug_counts,
                                     counts[Service.SPOTIFY] ?: 0,
-                                    counts[Service.LAST_FM] ?: 0,
+                                    counts[Service.MUSICBRAINZ] ?: 0,
+                                    counts[Service.LISTENBRAINZ] ?: 0,
                                     counts[Service.RECCOBEATS] ?: 0,
                                 ),
                                 style = MaterialTheme.typography.bodyMedium,
@@ -203,7 +204,6 @@ private fun CallRow(
     val service =
         when (call.service) {
             Service.SPOTIFY -> stringResource(R.string.service_spotify)
-            Service.LAST_FM -> stringResource(R.string.service_lastfm)
             Service.RECCOBEATS -> stringResource(R.string.service_reccobeats)
             Service.MUSICBRAINZ -> stringResource(R.string.service_musicbrainz)
             Service.LISTENBRAINZ -> stringResource(R.string.service_listenbrainz)
@@ -226,10 +226,10 @@ private fun CallRow(
 private fun cacheLabel(name: String): String =
     stringResource(
         when (name) {
-            "lastfm_artists" -> R.string.cache_lastfm_artists
-            "lastfm_tracks" -> R.string.cache_lastfm_tracks
-            "lastfm_tags" -> R.string.cache_lastfm_tags
-            "lastfm_names" -> R.string.cache_lastfm_genres
+            "artist_ids" -> R.string.cache_artist_ids
+            "artist_lists" -> R.string.cache_artist_lists
+            "top_tracks" -> R.string.cache_top_tracks
+            "artist_tags" -> R.string.cache_artist_tags
             "user_charts" -> R.string.cache_user_charts
             "spotify_library" -> R.string.cache_spotify_library
             "spotify_matches" -> R.string.cache_spotify_matches

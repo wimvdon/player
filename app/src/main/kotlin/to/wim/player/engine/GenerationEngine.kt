@@ -6,10 +6,9 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import to.wim.player.data.AudioFeatureSource
-import to.wim.player.data.LastFmSource
+import to.wim.player.data.MusicSource
 import to.wim.player.data.SpotifyCatalog
-import to.wim.player.data.lastfm.LastFmException
-import to.wim.player.data.model.LfmTrack
+import to.wim.player.data.model.PoolTrack
 import to.wim.player.logic.Candidate
 import to.wim.player.logic.Familiarity
 import to.wim.player.logic.Generator
@@ -28,7 +27,7 @@ data class GenerationInput(
     val familiarity: Double,
     val length: Int,
     val ordering: Ordering,
-    val lastFmUsername: String = "",
+    val listenBrainzUsername: String = "",
 )
 
 /** Where a generation is, for the progress bar. */
@@ -58,17 +57,17 @@ data class GenerationResult(
 /** Nothing picked and no top artists to start from. */
 class NoSeedsException : Exception("No seed artists or genres")
 
-/** Last.fm gave nothing to pick from. */
+/** The music services gave nothing to pick from. */
 class EmptyPoolException : Exception("No tracks found")
 
 /**
- * Builds a set of tracks from seeds: similar artists and genre charts from Last.fm, their top
- * tracks, mood from artist tags (or cached audio features) and familiarity from the user's
- * library and listener counts. No Spotify searches happen here; tracks are matched on Spotify
- * while they are queued.
+ * Builds a set of tracks from seeds: similar artists (ListenBrainz) and genre artists
+ * (MusicBrainz), their top tracks (ListenBrainz), mood from artist tags (or cached audio
+ * features) and familiarity from the user's library, history and listener counts. No Spotify
+ * searches happen here; tracks are matched on Spotify while they are queued.
  */
 class GenerationEngine(
-    private val lastFm: LastFmSource,
+    private val music: MusicSource,
     private val spotify: SpotifyCatalog?,
     private val resolver: TrackResolver?,
     private val features: AudioFeatureSource?,
@@ -77,15 +76,15 @@ class GenerationEngine(
     suspend fun generate(input: GenerationInput, progress: (GenerationStep) -> Unit = {}): GenerationResult =
         coroutineScope {
             progress(GenerationStep.Seeds)
-            val knownJob = async { knownKeys(input.lastFmUsername) }
+            val knownJob = async { knownKeys(input.listenBrainzUsername) }
             var seeds = input.seedArtists.filter(String::isNotBlank).distinctBy(TrackText::artistKey)
             val genres = input.genres.filter(String::isNotBlank).distinctBy(TrackText::normalize)
             val usedTopArtists = seeds.isEmpty() && genres.isEmpty()
-            if (usedTopArtists) seeds = topArtists(input.lastFmUsername)
+            if (usedTopArtists) seeds = topArtists(input.listenBrainzUsername)
             if (seeds.isEmpty() && genres.isEmpty()) throw NoSeedsException()
             val seedKeys = seeds.map(TrackText::artistKey).toSet()
 
-            // Candidate artists: each seed with its similar artists, plus each genre's chart.
+            // Candidate artists: each seed with its similar artists, plus artists tagged with each genre.
             val sources = seeds.size + genres.size
             val done = AtomicInteger(0)
             progress(GenerationStep.Artists(0, sources))
@@ -94,42 +93,33 @@ class GenerationEngine(
                 (
                     seeds.map { seed ->
                         async {
-                            gate.withPermit { listOf(seed) + tolerant { lastFm.similarArtists(seed, SIMILAR_LIMIT) }.orEmpty().map { it.name } }
+                            gate.withPermit { listOf(seed) + tolerant { music.similarArtists(seed, SIMILAR_LIMIT) }.orEmpty() }
                                 .also { progress(GenerationStep.Artists(done.incrementAndGet(), sources)) }
                         }
                     } +
                         genres.map { genre ->
                             async {
-                                gate.withPermit { tolerant { lastFm.tagTopArtists(genre, TAG_ARTISTS_LIMIT) }.orEmpty().map { it.name } }
+                                gate.withPermit { tolerant { music.genreArtists(genre, TAG_ARTISTS_LIMIT) }.orEmpty() }
                                     .also { progress(GenerationStep.Artists(done.incrementAndGet(), sources)) }
                             }
                         }
                 ).awaitAll()
             val artists = roundRobin(artistLists, MAX_ARTISTS)
 
-            // Tracks: each artist's top tracks plus each genre's top tracks.
+            // Tracks: each artist's most listened tracks.
             val perArtist = if (artists.size < 50) 20 else 15
-            val trackJobs = artists.size + genres.size
             done.set(0)
-            progress(GenerationStep.Tracks(0, trackJobs))
+            progress(GenerationStep.Tracks(0, artists.size))
             val failures = AtomicInteger(0)
             val trackLists =
-                (
-                    artists.map { artist ->
-                        async {
-                            gate.withPermit { tolerant(failures) { lastFm.artistTopTracks(artist, perArtist) }.orEmpty() }
-                                .also { progress(GenerationStep.Tracks(done.incrementAndGet(), trackJobs)) }
-                        }
-                    } +
-                        genres.map { genre ->
-                            async {
-                                gate.withPermit { tolerant(failures) { lastFm.tagTopTracks(genre, TAG_TRACKS_LIMIT) }.orEmpty() }
-                                    .also { progress(GenerationStep.Tracks(done.incrementAndGet(), trackJobs)) }
-                            }
-                        }
-                ).awaitAll()
-            val pool: List<LfmTrack> = trackLists.flatten().distinctBy { TrackText.key(it.artist, it.title) }
-            if (pool.isEmpty()) throw if (failures.get() > 0) java.io.IOException("Last.fm unavailable") else EmptyPoolException()
+                artists.map { artist ->
+                    async {
+                        gate.withPermit { tolerant(failures) { music.artistTopTracks(artist, perArtist) }.orEmpty() }
+                            .also { progress(GenerationStep.Tracks(done.incrementAndGet(), artists.size)) }
+                    }
+                }.awaitAll()
+            val pool: List<PoolTrack> = trackLists.flatten().distinctBy { TrackText.key(it.artist, it.title) }
+            if (pool.isEmpty()) throw if (failures.get() > 0) java.io.IOException("Music data unavailable") else EmptyPoolException()
 
             // Mood: one tag lookup per artist (cheaper than per track).
             val poolArtists = pool.map { it.artist }.distinctBy(TrackText::artistKey)
@@ -138,7 +128,7 @@ class GenerationEngine(
             val artistMood =
                 poolArtists.map { artist ->
                     async {
-                        val tags = gate.withPermit { tolerant { lastFm.artistTopTags(artist) }.orEmpty() }
+                        val tags = gate.withPermit { tolerant { music.artistTags(artist) }.orEmpty() }
                         progress(GenerationStep.Moods(done.incrementAndGet(), poolArtists.size))
                         TrackText.artistKey(artist) to MoodModel.fromTags(tags)
                     }
@@ -170,7 +160,7 @@ class GenerationEngine(
             )
         }
 
-    private fun featureMood(track: LfmTrack): Double? {
+    private fun featureMood(track: PoolTrack): Double? {
         val uri = resolver?.cached(track.artist, track.title)?.uri ?: return null
         val found = features?.cached(uri.substringAfterLast(':')) ?: return null
         return MoodModel.fromFeatures(found.energy, found.tempo)
@@ -185,33 +175,24 @@ class GenerationEngine(
             val fromSpotify = tolerant { spotify.knownTrackKeys() }
             if (fromSpotify == null) spotifyFailed = true else keys += fromSpotify
         }
-        if (username.isNotBlank()) tolerant { lastFm.userTopTrackKeys(username) }?.let { keys += it }
+        if (username.isNotBlank()) tolerant { music.userTopTrackKeys(username) }?.let { keys += it }
         return Known(keys, spotifyFailed)
     }
 
     private suspend fun topArtists(username: String): List<String> {
         spotify?.let { catalog -> tolerant { catalog.topArtists() }?.takeIf { it.isNotEmpty() }?.let { return it.take(TOP_ARTIST_SEEDS) } }
         if (username.isNotBlank()) {
-            tolerant { lastFm.userTopArtists(username, TOP_ARTIST_SEEDS) }?.takeIf { it.isNotEmpty() }?.let { list ->
-                return list.map { it.name }
-            }
+            tolerant { music.userTopArtists(username, TOP_ARTIST_SEEDS) }?.takeIf { it.isNotEmpty() }?.let { return it }
         }
         return emptyList()
     }
 
-    /**
-     * Runs one lookup; a failure leaves that source out instead of failing the whole set. A bad
-     * Last.fm key still stops everything, since nothing would work.
-     */
+    /** Runs one lookup; a failure leaves that source out instead of failing the whole set. */
     private suspend fun <T> tolerant(failures: AtomicInteger? = null, block: suspend () -> T): T? =
         try {
             block()
         } catch (e: CancellationException) {
             throw e
-        } catch (e: LastFmException) {
-            if (e.isKeyProblem) throw e
-            failures?.incrementAndGet()
-            null
         } catch (e: Exception) {
             failures?.incrementAndGet()
             null
@@ -220,8 +201,11 @@ class GenerationEngine(
     companion object {
         const val SIMILAR_LIMIT = 30
         const val TAG_ARTISTS_LIMIT = 50
-        const val TAG_TRACKS_LIMIT = 50
-        const val MAX_ARTISTS = 100
+        /**
+         * MusicBrainz and ListenBrainz allow one call a second, so fewer artists than with Last.fm:
+         * a first set from new artists takes about a minute, later ones come from the cache.
+         */
+        const val MAX_ARTISTS = 60
         const val TOP_ARTIST_SEEDS = 5
         private const val PARALLEL = 6
 

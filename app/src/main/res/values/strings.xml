@@ -2,10 +2,10 @@
 <resources>
     <!-- Names of services, the same in every language. -->
     <string name="service_spotify" translatable="false">Spotify</string>
-    <string name="service_lastfm" translatable="false">Last.fm</string>
     <string name="service_reccobeats" translatable="false">ReccoBeats</string>
     <string name="service_musicbrainz" translatable="false">MusicBrainz</string>
     <string name="service_listenbrainz" translatable="false">ListenBrainz</string>
+    <string name="settings_listenbrainz" translatable="false">ListenBrainz</string>
     <string name="problem_playlist_rejected">Spotify didn\'t accept the playlist change. Try again.</string>
     <string name="playlist_press_play">Open it in Spotify and press play.</string>
     <string name="playlist_playing">Playing on Spotify.</string>
@@ -26,7 +26,6 @@
     <string name="action_copy_named">Copy %1$s</string>
     <string name="action_generate">Generate</string>
     <string name="action_open">Open</string>
-    <string name="action_open_lastfm">Open Last.fm</string>
     <string name="action_open_settings">Open settings</string>
     <string name="action_open_spotify_dashboard">Open Spotify dashboard</string>
     <string name="action_regenerate">Regenerate</string>
@@ -39,48 +38,41 @@
     <string name="action_start_queue">Send to Spotify</string>
     <string name="action_stop">Stop</string>
     <string name="action_undo">Undo</string>
-    <string name="artists_failed">Couldn\'t search Last.fm. Check your connection.</string>
+    <string name="artists_failed">Couldn\'t search MusicBrainz. Check your connection.</string>
     <string name="artists_no_results">No artists found for “%1$s”.</string>
     <string name="artists_none_help">With no artists or genres picked, Player starts from your top artists.</string>
     <string name="artists_optional_help">Optional. Similar artists are added too.</string>
     <string name="artists_search">Search artists</string>
     <string name="artists_suggestions">From your top artists</string>
     <string name="artists_title">Artists</string>
-    <string name="cache_lastfm_artists">Last.fm artists</string>
-    <string name="cache_lastfm_tracks">Last.fm tracks</string>
-    <string name="cache_lastfm_tags">Artist tags</string>
-    <string name="cache_lastfm_genres">Genres</string>
     <string name="cache_user_charts">Your charts</string>
     <string name="cache_spotify_library">Spotify library</string>
     <string name="cache_spotify_matches">Spotify matches</string>
     <string name="cache_audio_features">Audio features</string>
     <string name="cache_audio_features_missing">Audio features not found</string>
     <string name="clear_cache_title">Clear the cache?</string>
-    <string name="clear_cache_body">The next set reads everything from Last.fm and Spotify again. That takes longer and uses more of Spotify\'s limit.</string>
+    <string name="clear_cache_body">The next set reads everything from MusicBrainz, ListenBrainz and Spotify again. That takes longer and uses more of Spotify\'s limit.</string>
     <string name="debug_cache">Cache</string>
     <string name="debug_cache_entry">%1$d · %2$d KB</string>
     <string name="debug_call_overline">%1$s · %2$s</string>
     <string name="debug_calls">Recent calls</string>
-    <string name="debug_counts">Calls since the app started: Spotify %1$d, Last.fm %2$d, ReccoBeats %3$d</string>
+    <string name="debug_counts">Calls since the app started: Spotify %1$d, MusicBrainz %2$d, ListenBrainz %3$d, ReccoBeats %4$d</string>
     <string name="debug_no_answer">No answer</string>
     <string name="debug_no_calls">No calls yet.</string>
     <string name="debug_quota">Spotify limit</string>
     <string name="debug_quota_ok">Spotify calls are allowed.</string>
     <string name="debug_quota_paused">Spotify\'s limit for this app was reached. Calls are paused until %1$s.</string>
     <string name="debug_title">API calls and cache</string>
-    <string name="error_lastfm_key">Last.fm didn\'t accept the API key.</string>
-    <string name="error_network">Couldn\'t reach Last.fm. Check your connection and try again.</string>
+    <string name="error_network">Couldn\'t reach MusicBrainz or ListenBrainz. Check your connection and try again.</string>
     <string name="error_no_seeds">Pick an artist or a genre. Player couldn\'t read your top artists.</string>
-    <string name="error_nothing_found">Last.fm has no tracks for these artists and genres. Try others.</string>
+    <string name="error_nothing_found">No tracks found for these artists and genres. Try others.</string>
     <string name="familiarity_title">Familiarity</string>
     <string name="familiarity_low">Known</string>
     <string name="familiarity_high">Discovery</string>
-    <string name="genres_failed">Couldn\'t load genres from Last.fm.</string>
+    <string name="genres_failed">Couldn\'t load genres.</string>
     <string name="genres_search">Search or add a genre</string>
     <string name="genres_title">Genres</string>
     <string name="genres_use">Use “%1$s”</string>
-    <string name="lastfm_step_create">1. Sign in to Last.fm and create an API account. Any name works; leave the callback URL empty.</string>
-    <string name="lastfm_step_copy">2. Copy the API key (not the shared secret) into the field above.</string>
     <string name="length_label">Tracks</string>
     <string name="length_range">%1$d to %2$d</string>
     <string name="length_title">Length</string>
@@ -114,13 +106,8 @@
     <string name="settings_debug_help">Every API call, the cache and Spotify\'s limit</string>
     <string name="settings_dynamic_color">Dynamic color</string>
     <string name="settings_dynamic_color_help">Use colors from your wallpaper</string>
-    <string name="settings_footer">%1$s %2$s · Music data from Last.fm, playback by Spotify</string>
+    <string name="settings_footer">%1$s %2$s · Music data from MusicBrainz and ListenBrainz, playback by Spotify</string>
     <string name="settings_key_invalid">Should be 32 letters and numbers.</string>
-    <string name="settings_lastfm">Last.fm</string>
-    <string name="settings_lastfm_key">API key</string>
-    <string name="settings_lastfm_steps_title">Get a Last.fm API key</string>
-    <string name="settings_lastfm_username">Username</string>
-    <string name="settings_lastfm_username_help">Optional. Tracks you scrobbled count as known.</string>
     <string name="settings_order">Order</string>
     <string name="settings_queue">Playlist</string>
     <string name="settings_reccobeats">Tempo and energy from ReccoBeats</string>
@@ -132,8 +119,8 @@
     <string name="settings_theme">Theme</string>
     <string name="settings_title">Settings</string>
     <string name="settings_troubleshooting">Troubleshooting</string>
-    <string name="setup_title">Connect Spotify and Last.fm</string>
-    <string name="setup_body">Player works with your own free developer keys. The settings show where to get them.</string>
+    <string name="setup_title">Connect Spotify</string>
+    <string name="setup_body">Player works with your own free Spotify developer key. The settings show where to get it.</string>
     <string name="sign_in_cancelled">Sign-in cancelled.</string>
     <string name="sign_in_failed">Spotify sign-in didn\'t finish. Try again.</string>
     <string name="sign_in_refused">Spotify refused the sign-in. Check the Client ID, redirect URI and Android package in your Spotify app.</string>
@@ -153,10 +140,14 @@
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <string name="track_description">%1$d. %2$s by %3$s. Mood %4$d%%, new %5$d%%</string>
-    <plurals name="listeners">
-        <item quantity="one">%s listener</item>
-        <item quantity="other">%s listeners</item>
-    </plurals>
+    <string name="cache_artist_tags">Artist tags</string>
+    <string name="cache_artist_ids">Artist IDs</string>
+    <string name="cache_artist_lists">Similar and genre artists</string>
+    <string name="cache_top_tracks">Top tracks</string>
+    <string name="settings_listenbrainz_username">Username</string>
+    <string name="settings_listenbrainz_help">Optional. Your top artists start a set when you pick none, and tracks you\'ve played count as known.</string>
+    <string name="settings_listenbrainz_import">To use your Last.fm history, import it on ListenBrainz (Settings, Import).</string>
+    <string name="action_open_listenbrainz">Open ListenBrainz</string>
     <plurals name="preview_summary">
         <item quantity="one">%1$d track from %2$d artists</item>
         <item quantity="other">%1$d tracks from %2$d artists</item>

@@ -1,9 +1,9 @@
 # Player
 
 An Android app that builds a set of tracks from a few controls (mood, familiarity, genres, seed
-artists) using Last.fm data, and plays it through Spotify in a new private playlist for each
-set, named by you. Each user enters their own (free) Spotify
-and Last.fm developer keys in the app's settings.
+artists) using MusicBrainz and ListenBrainz data, and plays it through Spotify in a new private
+playlist for each set, named by you. Each user enters their own (free) Spotify developer key in
+the app's settings.
 
 Built from the Android app template: Kotlin, Jetpack Compose, Material 3, Android 12+, with CI
 on every pull request and one-click signed releases. Rules for Claude Code sessions are in
@@ -13,15 +13,16 @@ on every pull request and one-click signed releases. Rules for Claude Code sessi
 
 ## First use
 
-You need Spotify Premium, the Spotify app on your phone, and two free developer keys. The app's
-settings walk you through it, with copy buttons for every value:
+You need Spotify Premium, the Spotify app on your phone, and a free Spotify developer key. The
+app's settings walk you through it, with copy buttons for every value:
 
-1. **Last.fm API key:** create one at https://www.last.fm/api/account/create and paste the API
-   key into Settings → Last.fm. Optionally add your Last.fm username, so tracks you scrobbled
-   count as known.
-2. **Spotify app:** at https://developer.spotify.com/dashboard create an app with the redirect URI,
+1. **Spotify app:** at https://developer.spotify.com/dashboard create an app with the redirect URI,
    the Android package name and the SHA-1 fingerprint shown in Settings → Spotify, and tick
    Android and Web API. Paste its Client ID into the settings and tap **Connect Spotify**.
+2. **ListenBrainz (optional):** with an account at https://listenbrainz.org, enter your username
+   in Settings → ListenBrainz so songs you've played count as known. To bring your history from
+   Last.fm, use listenbrainz.org → Settings → Import, and link Spotify there so new plays keep
+   arriving.
 
 Then pick a mood, genres and artists, tap **Generate**, check the preview and tap **Send to
 Spotify**. Player suggests a name (you can type your own) and makes a new private playlist with

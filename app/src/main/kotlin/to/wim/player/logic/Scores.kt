@@ -3,7 +3,7 @@ package to.wim.player.logic
 import kotlinx.serialization.Serializable
 import kotlin.math.log10
 
-/** A Last.fm tag with its weight (Last.fm gives 0 to 100 for an artist's top tags). */
+/** A genre or tag with its weight (MusicBrainz: the number of votes). */
 @Serializable
 data class WeightedTag(
     val name: String,
@@ -15,7 +15,7 @@ fun normalizeToUnit(value: Double, low: Double, high: Double): Double = ((value 
 
 /**
  * The mood score of a track, from 0 (downtempo) to 1 (upbeat). Audio features win when they are
- * known; otherwise the artist's Last.fm tags give an estimate.
+ * known; otherwise the artist's MusicBrainz genres and tags give an estimate.
  */
 object MoodModel {
     /**
@@ -80,7 +80,7 @@ object MoodModel {
     /** The weight of one tag, or null when the map doesn't know it. */
     fun weightOf(tag: String): Double? = lookup[tagKey(tag)]
 
-    /** Average of the known tags, weighted by their Last.fm count. No known tags: 0.5. */
+    /** Average of the known tags, weighted by their votes. No known tags: 0.5. */
     fun fromTags(tags: List<WeightedTag>): Double {
         var sum = 0.0
         var total = 0.0
@@ -100,19 +100,26 @@ object MoodModel {
 
 /** How new a track is to the user, from 0 (known) to 1 (discovery). */
 object Familiarity {
-    /** The score of a track the user saved, has in their top tracks, or scrobbled. */
+    /** The score of a track the user saved or has in their top tracks (Spotify or ListenBrainz). */
     const val KNOWN = 0.0
 
-    /** Used when Last.fm gives no listener count. */
+    /** Used when ListenBrainz gives no listener count. */
     const val UNKNOWN_LISTENERS = 0.7
 
     /** The lowest score a track the user doesn't know can get, so "known" stays distinct. */
     const val MIN_UNKNOWN = 0.1
 
+    /**
+     * Listener counts are ListenBrainz users, far fewer than Last.fm had: about 10 (log 1) is
+     * niche, 100 000 (log 5) a worldwide hit. Edit these to tune the familiarity slider.
+     */
+    const val LOG_LISTENERS_NICHE = 1.0
+    const val LOG_LISTENERS_HIT = 5.0
+
     fun score(known: Boolean, listeners: Long?): Double {
         if (known) return KNOWN
         if (listeners == null || listeners <= 0) return UNKNOWN_LISTENERS
-        val popularity = normalizeToUnit(log10(listeners.toDouble()), 3.0, 7.0)
+        val popularity = normalizeToUnit(log10(listeners.toDouble()), LOG_LISTENERS_NICHE, LOG_LISTENERS_HIT)
         return (1.0 - popularity).coerceIn(MIN_UNKNOWN, 1.0)
     }
 }

@@ -8,7 +8,7 @@ import to.wim.player.logic.TrackMatcher
 import to.wim.player.logic.TrackText
 
 /**
- * Finds the Spotify track for a Last.fm track with one search, and remembers the answer forever,
+ * Finds the Spotify track for a pool track with one search, and remembers the answer forever,
  * misses included, so no song is searched twice.
  */
 class TrackResolver(

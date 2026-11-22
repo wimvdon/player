@@ -51,9 +51,9 @@ class ScoresTest {
 
     @Test
     fun `listener counts map to discovery on a log scale`() {
-        assertEquals(1.0, Familiarity.score(false, 500), 1e-9)
-        assertEquals(0.5, Familiarity.score(false, 100_000), 1e-9)
-        assertEquals(Familiarity.MIN_UNKNOWN, Familiarity.score(false, 50_000_000), 1e-9)
+        assertEquals(1.0, Familiarity.score(false, 5), 1e-9)
+        assertEquals(0.5, Familiarity.score(false, 1_000), 1e-9)
+        assertEquals(Familiarity.MIN_UNKNOWN, Familiarity.score(false, 1_000_000), 1e-9)
         assertEquals(Familiarity.UNKNOWN_LISTENERS, Familiarity.score(false, null), 1e-9)
     }
 }

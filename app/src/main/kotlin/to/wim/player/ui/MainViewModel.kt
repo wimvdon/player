@@ -16,9 +16,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import to.wim.player.PlayerApp
 import to.wim.player.R
-import to.wim.player.data.lastfm.LastFmException
 import to.wim.player.data.model.AppSettings
-import to.wim.player.data.model.LfmArtist
+import to.wim.player.data.model.ArtistHit
 import to.wim.player.data.model.Secrets
 import to.wim.player.engine.EmptyPoolException
 import to.wim.player.engine.GenerationInput
@@ -34,7 +33,7 @@ import java.time.LocalDate
 import kotlin.coroutines.cancellation.CancellationException
 
 /** Why a generation failed, for the message. */
-enum class GenerateError { LASTFM_KEY, NO_SEEDS, NOTHING_FOUND, NETWORK }
+enum class GenerateError { NO_SEEDS, NOTHING_FOUND, NETWORK }
 
 /** A list that loads over the network. */
 sealed interface Loadable<out T> {
@@ -56,7 +55,7 @@ data class GeneratorUi(
     val topTags: Loadable<List<String>> = Loadable.Loading,
     val artists: List<String> = emptyList(),
     val artistQuery: String = "",
-    val artistResults: Loadable<List<LfmArtist>>? = null,
+    val artistResults: Loadable<List<ArtistHit>>? = null,
     val suggestions: List<String> = emptyList(),
     val step: GenerationStep? = null,
     val error: GenerateError? = null,
@@ -102,9 +101,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun loadTopTags() {
         viewModelScope.launch {
-            if (graph.secrets.current().lastFmApiKey.isBlank()) return@launch
             _ui.update { it.copy(topTags = Loadable.Loading) }
-            val tags = runCatching { graph.lastFm.topTags() }.getOrNull()
+            val tags = runCatching { graph.music.genres() }.getOrNull()
             _ui.update { it.copy(topTags = if (tags == null) Loadable.Failed else Loadable.Ready(tags)) }
             graph.flushCaches()
         }
@@ -160,9 +158,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             viewModelScope.launch {
                 delay(SEARCH_DELAY_MILLIS)
                 _ui.update { it.copy(artistResults = Loadable.Loading) }
-                val results = runCatching { graph.lastFm.searchArtists(query) }.getOrNull()
+                val results = runCatching { graph.music.searchArtists(query) }.getOrNull()
                 _ui.update { it.copy(artistResults = if (results == null) Loadable.Failed else Loadable.Ready(results)) }
             }
+    }
+
+    /** Adds an artist the user picked from the search, so that same-named artists don't mix. */
+    fun addArtist(hit: ArtistHit) {
+        graph.music.pin(hit)
+        addArtist(hit.name)
     }
 
     fun addArtist(name: String) =
@@ -196,7 +200,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                             familiarity = state.familiarity.toDouble(),
                             length = length,
                             ordering = settings.ordering,
-                            lastFmUsername = settings.lastFmUsername,
+                            listenBrainzUsername = settings.listenBrainzUsername,
                         )
                     val engine = graph.engine()
                     val result = withContext(Dispatchers.Default) { engine.generate(input) { step -> _ui.update { it.copy(step = step) } } }
@@ -209,7 +213,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 } catch (e: Exception) {
                     val error =
                         when (e) {
-                            is LastFmException -> if (e.isKeyProblem) GenerateError.LASTFM_KEY else GenerateError.NETWORK
                             is NoSeedsException -> GenerateError.NO_SEEDS
                             is EmptyPoolException -> GenerateError.NOTHING_FOUND
                             else -> GenerateError.NETWORK
