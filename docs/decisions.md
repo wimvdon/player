@@ -2,6 +2,25 @@
 
 Newest first. Add an entry for every notable choice: what was decided, why, and what was rejected.
 
+## 2026-11-22: Player fills a Spotify playlist instead of the play queue
+
+On the owner's phone, App Remote's connect never answered, so nothing could be queued. The
+owner chose to use a playlist instead (the brief had ruled playlists out). Player now puts each
+set in **one private playlist called "Player"**, reused for every set (its contents are replaced),
+so the library doesn't fill up with playlists. It's made with `POST /me/playlists` and filled with
+`PUT`/`POST /playlists/{id}/items` (the endpoints Spotify kept for Development Mode apps in
+February 2026), then started with `PUT /me/player/play`; when no Spotify device is active, Player
+opens the playlist in the Spotify app so the user presses play.
+
+- **Rolling** mode adds 10 tracks whenever less than 40 minutes of the playlist are left, counted
+  from when it started (track lengths come from the Spotify search). It doesn't read what's
+  playing, so it costs no extra calls; after a long pause it simply runs further ahead.
+- **App Remote, its AAR and Gson are removed.** The scopes change to `playlist-modify-private`,
+  `playlist-modify-public`, `user-modify-playback-state`, `user-top-read` and `user-library-read`;
+  a sign-in from 0.1.0 (other scopes) counts as signed out, so the app asks to connect again.
+- Rejected: a new playlist per set (clutters the library), and polling "currently playing" to
+  follow the listener (extra Web API calls against the quota).
+
 ## 2026-11-22: Player: libraries, storage and how the brief was adapted
 
 The owner approved network access, the notification and foreground-service permissions, and the

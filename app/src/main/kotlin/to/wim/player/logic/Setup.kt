@@ -16,10 +16,16 @@ object Setup {
     /** The scopes the app asks Spotify for. */
     val SpotifyScopes =
         arrayOf(
-            "user-read-playback-state",
+            "playlist-modify-private",
+            "playlist-modify-public",
             "user-modify-playback-state",
             "user-top-read",
             "user-library-read",
-            "app-remote-control",
         )
+
+    /** The scopes as stored with a sign-in, to spot sign-ins from older versions. */
+    val scopeString: String = SpotifyScopes.joinToString(" ")
+
+    /** The name of the playlist Player fills. */
+    const val PLAYLIST_NAME = "Player"
 }

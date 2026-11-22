@@ -6,11 +6,17 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 import okhttp3.FormBody
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
+import to.wim.player.data.PlaylistTarget
 import to.wim.player.data.SpotifyCatalog
 import to.wim.player.data.cache.KeyValueCache
 import to.wim.player.data.model.SpotifyTrack
@@ -54,7 +60,7 @@ class SpotifyWebApi(
     private val log: CallLog,
     private val bucket: TokenBucket,
     private val now: () -> Long = System::currentTimeMillis,
-) : SpotifyCatalog {
+) : SpotifyCatalog, PlaylistTarget {
     private val refreshLock = Mutex()
 
     override suspend fun searchTrack(artist: String, title: String): List<SpotifyTrack> {
@@ -82,10 +88,50 @@ class SpotifyWebApi(
     /** The signed-in user's name, shown in the settings. */
     suspend fun displayName(): String? = SpotifyJson.displayName(get("/me"))
 
-    /** Queues a track on the active Spotify device (the fallback when App Remote can't). */
-    suspend fun queue(uri: String) {
-        send("POST", "/me/player/queue", "uri" to uri)
+    override suspend fun createPlaylist(name: String, description: String): String {
+        val body =
+            buildJsonObject {
+                put("name", name)
+                put("description", description)
+                put("public", false)
+            }
+        val root = playlistCall("POST", "/me/playlists", body)
+        return SpotifyJson.playlistId(root) ?: throw SpotifyHttpException(0, "No playlist ID in Spotify's answer")
     }
+
+    override suspend fun replaceItems(playlistId: String, uris: List<String>) {
+        playlistCall("PUT", "/playlists/$playlistId/items", uriBody(uris))
+    }
+
+    override suspend fun addItems(playlistId: String, uris: List<String>) {
+        playlistCall("POST", "/playlists/$playlistId/items", uriBody(uris))
+    }
+
+    override suspend fun play(playlistId: String): Boolean =
+        try {
+            send("PUT", "/me/player/play", body = buildJsonObject { put("context_uri", "spotify:playlist:$playlistId") })
+            true
+        } catch (e: SpotifyHttpException) {
+            // 404: no active device; 403: not allowed (for example no Premium). The user presses play instead.
+            false
+        }
+
+    private fun uriBody(uris: List<String>): JsonObject = buildJsonObject { putJsonArray("uris") { uris.take(MAX_ITEMS).forEach { add(it) } } }
+
+    /**
+     * A playlist change. A 403 here means the sign-in lacks the playlist scopes (a sign-in from
+     * version 0.1.0), so Player signs out and the settings ask to connect again.
+     */
+    private suspend fun playlistCall(method: String, path: String, body: JsonObject): JsonObject =
+        try {
+            send(method, path, body = body)
+        } catch (e: SpotifyHttpException) {
+            if (e.status == 403) {
+                account.signOut()
+                throw SpotifySignedOutException()
+            }
+            throw e
+        }
 
     /** Exchanges a refresh token for a new access token (PKCE: no client secret). */
     suspend fun refresh(): String =
@@ -126,7 +172,12 @@ class SpotifyWebApi(
 
     private suspend fun get(path: String, vararg query: Pair<String, String>): JsonObject = send("GET", path, *query)
 
-    private suspend fun send(method: String, path: String, vararg query: Pair<String, String>): JsonObject {
+    private suspend fun send(
+        method: String,
+        path: String,
+        vararg query: Pair<String, String>,
+        body: JsonObject? = null,
+    ): JsonObject {
         var retried401 = false
         var retried429 = false
         while (true) {
@@ -135,7 +186,12 @@ class SpotifyWebApi(
             val token = validToken()
             val url = (API + path).toHttpUrl().newBuilder().apply { query.forEach { (k, v) -> addQueryParameter(k, v) } }.build()
             val builder = Request.Builder().url(url).header("Authorization", "Bearer $token")
-            if (method == "POST") builder.post(ByteArray(0).toRequestBody()) else builder.get()
+            val requestBody = (body?.toString() ?: "").toRequestBody(if (body != null) JSON else null)
+            when (method) {
+                "POST" -> builder.post(requestBody)
+                "PUT" -> builder.put(requestBody)
+                else -> builder.get()
+            }
             bucket.acquire()
             val endpoint = "$method $path"
             val response = executeWithHeaders(builder.build(), endpoint)
@@ -200,6 +256,11 @@ class SpotifyWebApi(
 
         /** Saved tracks read to spot songs the user knows (5 calls, once a day). */
         private const val SAVED_TRACKS_MAX = 250
+
+        /** Spotify takes at most 100 tracks per playlist call. */
+        const val MAX_ITEMS = 100
+
+        private val JSON = "application/json".toMediaType()
 
         /** Spacing for Web API calls, to stay well inside the quota. */
         const val CALLS_PER_SECOND = 3.0

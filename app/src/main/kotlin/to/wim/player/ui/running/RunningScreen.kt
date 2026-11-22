@@ -1,5 +1,9 @@
 package to.wim.player.ui.running
 
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.text.format.DateFormat
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Stop
 import androidx.compose.material3.Button
@@ -27,7 +32,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -36,22 +45,21 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import to.wim.player.R
-import to.wim.player.data.PlayerProblem
 import to.wim.player.data.model.QueueMode
 import to.wim.player.engine.QueueProblem
 import to.wim.player.engine.QueueState
 import to.wim.player.engine.QueueStatus
+import to.wim.player.logic.Setup
 import to.wim.player.ui.MainViewModel
 import to.wim.player.ui.theme.AppShapes
 import to.wim.player.ui.theme.EmptyState
 import to.wim.player.ui.theme.readableWidth
 import java.util.Date
 
-/** The queue while it runs: what plays, how far it is, and Stop. */
+/** The playlist while it fills: open it in Spotify, how far it is, and Stop. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RunningScreen(
@@ -88,7 +96,7 @@ fun RunningScreen(
                 Modifier.readableWidth().fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp),
             ) {
-                NowPlaying(state)
+                PlaylistCard(state)
                 Progress(state)
                 Status(state = state, onStop = viewModel::stopQueue, onResume = viewModel::resumeQueue, onOpenSettings = onOpenSettings)
             }
@@ -97,29 +105,56 @@ fun RunningScreen(
 }
 
 @Composable
-private fun NowPlaying(state: QueueState) {
+private fun PlaylistCard(state: QueueState) {
+    val context = LocalContext.current
+    val id = state.playlistId
+    // Spotify couldn't start the playlist (no active device): open it once so the user can press play.
+    var opened by rememberSaveable(id) { mutableStateOf(false) }
+    LaunchedEffect(id, state.playbackStarted) {
+        if (id != null && state.playbackStarted == false && !opened) {
+            opened = true
+            openPlaylist(context, id)
+        }
+    }
     Card(
         shape = AppShapes.Group,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(stringResource(R.string.queue_now_playing), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-            val now = state.nowPlaying
-            if (now?.trackName == null) {
-                Text(
-                    stringResource(if (state.active) R.string.queue_waiting else R.string.queue_nothing_playing),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            } else {
-                Text(now.trackName, style = MaterialTheme.typography.headlineSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                now.artistName?.let { Text(it, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-                if (now.isPaused) {
-                    Text(stringResource(R.string.queue_paused), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(R.string.playlist_card_label), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+            Text(Setup.PLAYLIST_NAME, style = MaterialTheme.typography.headlineSmall)
+            Text(
+                stringResource(
+                    when {
+                        id == null -> R.string.playlist_preparing
+                        state.playbackStarted == true -> R.string.playlist_playing
+                        else -> R.string.playlist_press_play
+                    },
+                ),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            if (id != null) {
+                Button(onClick = { openPlaylist(context, id) }) {
+                    Text(stringResource(R.string.action_open_in_spotify))
+                    Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null, modifier = Modifier.padding(start = 8.dp))
                 }
             }
         }
+    }
+}
+
+/** Opens the playlist in the Spotify app, or on the web when the app isn't there. */
+private fun openPlaylist(
+    context: Context,
+    id: String,
+) {
+    val app = Intent(Intent.ACTION_VIEW, Uri.parse("spotify:playlist:$id")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    try {
+        context.startActivity(app)
+    } catch (e: ActivityNotFoundException) {
+        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://open.spotify.com/playlist/$id")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 }
 
@@ -132,9 +167,9 @@ private fun Progress(state: QueueState) {
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
         )
         LinearProgressIndicator(progress = { if (state.total == 0) 0f else state.processed.toFloat() / state.total }, modifier = Modifier.fillMaxWidth())
-        if (state.mode == QueueMode.ROLLING && state.active) {
+        if (state.mode == QueueMode.ROLLING && state.status == QueueStatus.RUNNING) {
             Text(
-                pluralStringResource(R.plurals.queue_ahead, state.ahead, state.ahead),
+                pluralStringResource(R.plurals.playlist_minutes_ahead, state.minutesAhead, state.minutesAhead),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -173,7 +208,7 @@ private fun Status(
                 }
             } else if (state.processed < state.total) {
                 val problem = state.problem
-                if (problem == QueueProblem.SignedOut || (problem is QueueProblem.Player && problem.problem == PlayerProblem.NOT_AUTHORIZED)) {
+                if (problem == QueueProblem.SignedOut) {
                     Button(onClick = onOpenSettings) { Text(stringResource(R.string.action_open_settings)) }
                 } else if (problem !is QueueProblem.SpotifyPaused) {
                     Button(onClick = onResume) { Text(stringResource(if (state.status == QueueStatus.FAILED) R.string.action_retry else R.string.action_continue)) }
@@ -203,19 +238,9 @@ private fun StatusText(
 private fun problemText(problem: QueueProblem?): String {
     val context = LocalContext.current
     return when (problem) {
-        is QueueProblem.Player ->
-            stringResource(
-                when (problem.problem) {
-                    PlayerProblem.NOT_INSTALLED -> R.string.problem_not_installed
-                    PlayerProblem.NOT_LOGGED_IN -> R.string.problem_not_logged_in
-                    PlayerProblem.NOT_AUTHORIZED -> R.string.problem_not_authorized
-                    PlayerProblem.OFFLINE -> R.string.problem_offline
-                    PlayerProblem.DISCONNECTED -> R.string.problem_disconnected
-                    PlayerProblem.QUEUE_FAILED -> R.string.problem_queue_failed
-                },
-            )
         is QueueProblem.SpotifyPaused -> stringResource(R.string.problem_quota, DateFormat.getTimeFormat(context).format(Date(problem.untilMillis)))
         QueueProblem.SignedOut -> stringResource(R.string.problem_signed_out)
+        QueueProblem.Rejected -> stringResource(R.string.problem_playlist_rejected)
         QueueProblem.Network, null -> stringResource(R.string.problem_network)
     }
 }

@@ -21,8 +21,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        // App Remote asks for permission from a screen the first time it connects.
-        graph.player.useActivity(this)
         if (savedInstanceState == null) receive(intent)
         setContent {
             val settings by graph.settings.settings.collectAsStateWithLifecycle(initialValue = null as AppSettings?)

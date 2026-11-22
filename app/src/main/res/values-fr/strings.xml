@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="problem_playlist_rejected">Spotify n’a pas accepté la modification de la playlist. Réessayez.</string>
+    <string name="playlist_press_play">Ouvrez-la dans Spotify et lancez la lecture.</string>
+    <string name="playlist_playing">Lecture sur Spotify.</string>
+    <string name="playlist_preparing">Création de la playlist…</string>
+    <string name="playlist_card_label">Playlist Spotify</string>
+    <string name="playlist_description">Créée avec Player</string>
+    <string name="start_dialog_playlist">Les titres vont dans votre playlist Spotify privée « %1$s ». Ce que Player y avait mis est remplacé.</string>
+    <string name="action_open_in_spotify">Ouvrir dans Spotify</string>
     <string name="app_name">Player</string>
     <string name="loading">Chargement…</string>
     <string name="section_expanded">Développé</string>
@@ -24,7 +32,7 @@
     <string name="action_retry">Réessayer</string>
     <string name="action_sign_out">Se déconnecter</string>
     <string name="action_start">Démarrer</string>
-    <string name="action_start_queue">Lancer la file</string>
+    <string name="action_start_queue">Envoyer à Spotify</string>
     <string name="action_stop">Arrêter</string>
     <string name="action_undo">Annuler</string>
     <string name="artists_failed">Impossible de chercher sur Last.fm. Vérifiez votre connexion.</string>
@@ -77,8 +85,8 @@
     <string name="mood_title">Ambiance</string>
     <string name="mood_low">Calme</string>
     <string name="mood_high">Entraînant</string>
-    <string name="notification_channel">File d’attente</string>
-    <string name="notification_queueing">Mise en file %1$d / %2$d</string>
+    <string name="notification_channel">Playlist</string>
+    <string name="notification_queueing">Ajout à la playlist %1$d / %2$d</string>
     <string name="order_best">Meilleurs</string>
     <string name="order_curve">Courbe</string>
     <string name="order_shuffle">Aléatoire</string>
@@ -91,32 +99,22 @@
     <string name="preview_short">Moins des %1$d titres demandés respectent les règles. Ajoutez des artistes ou des genres pour en avoir plus.</string>
     <string name="preview_title">Aperçu</string>
     <string name="preview_top_artists">Basé sur vos artistes favoris.</string>
-    <string name="problem_disconnected">La connexion avec l’app Spotify a été perdue.</string>
     <string name="problem_network">Impossible de joindre Spotify. Vérifiez votre connexion.</string>
-    <string name="problem_not_authorized">Spotify n’a pas autorisé Player à contrôler la lecture. Vérifiez le Client ID et le package Android dans votre app Spotify.</string>
-    <string name="problem_not_installed">Installez l’app Spotify et connectez-vous.</string>
-    <string name="problem_not_logged_in">Connectez-vous à l’app Spotify sur ce téléphone.</string>
-    <string name="problem_offline">Spotify est en mode hors connexion.</string>
-    <string name="problem_queue_failed">Spotify n’a pas accepté le titre. Lancez une lecture dans Spotify, puis réessayez.</string>
     <string name="problem_quota">La limite Spotify de cette app est épuisée. Player n’appellera pas Spotify avant %1$s.</string>
-    <string name="problem_signed_out">Spotify a déconnecté Player. Reconnectez-vous dans les paramètres.</string>
-    <string name="queue_banner_title">File en cours</string>
-    <string name="queue_connecting">Connexion à Spotify…</string>
-    <string name="queue_empty_title">File vide</string>
-    <string name="queue_empty_body">Générez une sélection et lancez la file depuis son aperçu.</string>
-    <string name="queue_finished">Tous les titres sont dans votre file Spotify.</string>
+    <string name="problem_signed_out">Spotify demande de vous reconnecter. Ouvrez les paramètres et touchez Connecter Spotify.</string>
+    <string name="queue_banner_title">Remplissage de la playlist</string>
+    <string name="queue_connecting">Création de la playlist…</string>
+    <string name="queue_empty_title">Pas encore de playlist</string>
+    <string name="queue_empty_body">Générez une sélection et envoyez-la à Spotify depuis son aperçu.</string>
+    <string name="queue_finished">Tous les titres sont dans la playlist.</string>
     <string name="queue_mode_all">Tout d’un coup</string>
     <string name="queue_mode_rolling">Continu</string>
-    <string name="queue_mode_all_help">Ajoute tous les titres maintenant, 25 à la fois. Utilise plus de recherches Spotify d’un coup.</string>
-    <string name="queue_mode_rolling_help">Garde 15 titres en file pendant l’écoute, pour étaler les recherches Spotify.</string>
-    <string name="queue_nothing_playing">Aucune lecture.</string>
-    <string name="queue_now_playing">En cours de lecture</string>
-    <string name="queue_paused">En pause</string>
+    <string name="queue_mode_all_help">Ajoute tous les titres maintenant. Utilise plus de recherches Spotify d’un coup.</string>
+    <string name="queue_mode_rolling_help">Ajoute quelques titres à la fois, environ 40 minutes à l’avance, pour étaler les recherches Spotify.</string>
     <string name="queue_progress">%1$d titres traités sur %2$d</string>
-    <string name="queue_stop_note">Les titres déjà dans la file Spotify y restent.</string>
-    <string name="queue_stopped">Arrêté. Les titres déjà en file restent dans Spotify.</string>
-    <string name="queue_title">File d’attente</string>
-    <string name="queue_waiting">En attente de Spotify…</string>
+    <string name="queue_stop_note">Les titres déjà ajoutés restent dans la playlist.</string>
+    <string name="queue_stopped">Arrêté. La playlist garde les titres déjà ajoutés.</string>
+    <string name="queue_title">Playlist</string>
     <string name="settings_appearance">Apparence</string>
     <string name="settings_client_id">Client ID</string>
     <string name="settings_debug_help">Chaque appel API, le cache et la limite Spotify</string>
@@ -130,8 +128,8 @@
     <string name="settings_lastfm_username">Nom d’utilisateur</string>
     <string name="settings_lastfm_username_help">Facultatif. Les titres que vous avez scrobblés comptent comme connus.</string>
     <string name="settings_order">Ordre</string>
-    <string name="settings_queue">File d’attente</string>
-    <string name="settings_queue_mode">Remplir la file</string>
+    <string name="settings_queue">Playlist</string>
+    <string name="settings_queue_mode">Remplir la playlist</string>
     <string name="settings_reccobeats">Tempo et énergie via ReccoBeats</string>
     <string name="settings_reccobeats_help">Envoie les identifiants de titres Spotify à ReccoBeats pour une ambiance plus précise.</string>
     <string name="settings_signed_in_as">Connecté en tant que %1$s</string>
@@ -152,9 +150,8 @@
     <string name="spotify_step_apis">3. Dans les API utilisées, cochez Android et Web API.</string>
     <string name="spotify_step_android">4. Ajoutez un package Android avec ce nom de package et cette empreinte SHA-1 :</string>
     <string name="spotify_step_client_id">5. Copiez le Client ID dans le champ ci-dessus, puis touchez Connecter Spotify.</string>
-    <string name="start_dialog_title">Lancer la file ?</string>
-    <string name="start_dialog_queue_warning">Les apps ne peuvent pas vider la file Spotify. Ce qui s’y trouve déjà reste et passe en premier.</string>
-    <string name="start_dialog_rolling">Player garde 15 titres en file pendant l’écoute.</string>
+    <string name="start_dialog_title">Envoyer à Spotify ?</string>
+    <string name="start_dialog_rolling">Quelques titres sont ajoutés au fil de l’écoute, environ 40 minutes à l’avance.</string>
     <string name="step_seeds">Lecture de votre bibliothèque…</string>
     <string name="step_artists">Recherche d’artistes similaires (%1$d sur %2$d)</string>
     <string name="step_tracks">Collecte des titres (%1$d sur %2$d)</string>
@@ -164,6 +161,11 @@
     <string name="theme_light">Clair</string>
     <string name="theme_dark">Sombre</string>
     <string name="track_description">%1$d. %2$s par %3$s. Ambiance %4$d %%, nouveau %5$d %%</string>
+    <plurals name="playlist_minutes_ahead">
+        <item quantity="one">Environ %d minute de musique prête</item>
+        <item quantity="many">Environ %d minutes de musique prêtes</item>
+        <item quantity="other">Environ %d minutes de musique prêtes</item>
+    </plurals>
     <plurals name="listeners">
         <item quantity="one">%s auditeur</item>
         <item quantity="many">%s auditeurs</item>
@@ -174,11 +176,6 @@
         <item quantity="many">%1$d titres de %2$d artistes</item>
         <item quantity="other">%1$d titres de %2$d artistes</item>
     </plurals>
-    <plurals name="queue_ahead">
-        <item quantity="one">%d titre en attente</item>
-        <item quantity="many">%d titres en attente</item>
-        <item quantity="other">%d titres en attente</item>
-    </plurals>
     <plurals name="queue_skipped">
         <item quantity="one">%d titre absent de Spotify a été ignoré</item>
         <item quantity="many">%d titres absents de Spotify ont été ignorés</item>
@@ -186,7 +183,7 @@
     </plurals>
     <plurals name="start_dialog_all">
         <item quantity="one">%d titre est ajouté maintenant.</item>
-        <item quantity="many">Les %d titres sont ajoutés maintenant, 25 à la fois.</item>
-        <item quantity="other">Les %d titres sont ajoutés maintenant, 25 à la fois.</item>
+        <item quantity="many">Les %d titres sont ajoutés maintenant.</item>
+        <item quantity="other">Les %d titres sont ajoutés maintenant.</item>
     </plurals>
 </resources>

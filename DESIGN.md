@@ -226,7 +226,7 @@ app apart from their package (and `R` import) lines. Copy a change to the other 
 
 ## This app
 
-**Player**: builds a set of tracks from Last.fm data and queues it in Spotify.
+**Player**: builds a set of tracks from Last.fm data and plays it in a Spotify playlist.
 
 - **Icon:** a disc with a white play triangle. Gradient `#FF5A47` → `#D51007` → `#A3001F`.
   (Player isn't in the shared icon table above yet; adding it means copying the table to every
@@ -240,5 +240,5 @@ app apart from their package (and `R` import) lines. Copy a change to the other 
   mood and how new the track is (`ScoreMeter`). The bars always have a text label and the row a
   full screen-reader description, so the colour never carries meaning on its own.
 - **Structure:** one top-level screen (the generator, settings in its top app bar), so no
-  navigation bar. Preview, Queue, Settings and "API calls and cache" are child pages. Generate is
+  navigation bar. Preview, Playlist, Settings and "API calls and cache" are child pages. Generate is
   the screen's one FAB.

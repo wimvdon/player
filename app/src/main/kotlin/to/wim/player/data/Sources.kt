@@ -1,6 +1,5 @@
 package to.wim.player.data
 
-import kotlinx.coroutines.flow.StateFlow
 import to.wim.player.data.model.AudioFeatures
 import to.wim.player.data.model.LfmArtist
 import to.wim.player.data.model.LfmTrack
@@ -50,36 +49,24 @@ interface AudioFeatureSource {
     suspend fun fetch(spotifyIds: List<String>)
 }
 
-/** What Spotify is playing, from App Remote. */
-data class PlayerSnapshot(
-    val trackUri: String?,
-    val trackName: String?,
-    val artistName: String?,
-    val isPaused: Boolean,
-)
+/** The Spotify playlist Player fills (Web API). */
+interface PlaylistTarget {
+    /** Creates a private playlist in the user's account and returns its ID. */
+    suspend fun createPlaylist(name: String, description: String): String
 
-/** Why the player can't be used. Shown to the user, so each has its own message. */
-enum class PlayerProblem {
-    NOT_INSTALLED,
-    NOT_LOGGED_IN,
-    NOT_AUTHORIZED,
-    OFFLINE,
-    DISCONNECTED,
-    QUEUE_FAILED,
+    /** Replaces everything in the playlist with [uris] (at most 100). */
+    suspend fun replaceItems(playlistId: String, uris: List<String>)
+
+    /** Adds [uris] (at most 100) at the end of the playlist. */
+    suspend fun addItems(playlistId: String, uris: List<String>)
+
+    /** Starts the playlist on the active Spotify device; false when there is none. */
+    suspend fun play(playlistId: String): Boolean
 }
 
-class PlayerException(val problem: PlayerProblem, cause: Throwable? = null) : Exception(problem.name, cause)
+/** Remembers which playlist Player reuses, so each set doesn't make a new one. */
+interface PlaylistMemory {
+    suspend fun playlistId(): String
 
-/** Plays and queues tracks in the Spotify app. App Remote first, the Web API as fallback. */
-interface SpotifyPlayer {
-    val state: StateFlow<PlayerSnapshot?>
-
-    /** Connects to the Spotify app, or throws [PlayerException]. */
-    suspend fun connect()
-
-    suspend fun queue(uri: String)
-
-    suspend fun play(uri: String)
-
-    fun disconnect()
+    suspend fun savePlaylistId(id: String)
 }

@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import to.wim.player.PlayerApp
+import to.wim.player.R
 import to.wim.player.data.lastfm.LastFmException
 import to.wim.player.data.model.AppSettings
 import to.wim.player.data.model.LfmArtist
@@ -26,6 +27,7 @@ import to.wim.player.engine.GenerationStep
 import to.wim.player.engine.NoSeedsException
 import to.wim.player.logic.Candidate
 import to.wim.player.logic.Generator
+import to.wim.player.logic.Setup
 import to.wim.player.logic.TrackText
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -245,7 +247,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val tracks = graph.preview.value?.tracks.orEmpty()
         if (tracks.isEmpty()) return false
         val mode = settings.value?.queueMode ?: return false
-        graph.queue.start(tracks, mode)
+        val description = getApplication<Application>().getString(R.string.playlist_description)
+        graph.queue.start(tracks, mode, Setup.PLAYLIST_NAME, description)
         return true
     }
 

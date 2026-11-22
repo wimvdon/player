@@ -3,13 +3,13 @@
 
     <!-- Approved by the owner (2026-11-22, see docs/decisions.md and PRIVACY.md):
          internet for Last.fm, Spotify and ReccoBeats; a foreground service with a notification
-         while the queue is being filled. -->
+         while the playlist is being filled. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
-    <!-- To find the Spotify app (App Remote and sign-in). -->
+    <!-- To find the Spotify app (sign-in through the app, opening the playlist). -->
     <queries>
         <package android:name="com.spotify.music" />
     </queries>
@@ -53,7 +53,7 @@
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Keeps the Spotify play queue topped up while the user listens" />
+                android:value="Keeps adding tracks to the user's Spotify playlist while they listen" />
         </service>
     </application>
 

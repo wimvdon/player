@@ -5,8 +5,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.Assert.assertEquals
@@ -14,11 +12,9 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import to.wim.player.data.FakeLastFm
-import to.wim.player.data.PlayerException
-import to.wim.player.data.PlayerProblem
-import to.wim.player.data.PlayerSnapshot
 import to.wim.player.data.SpotifyCatalog
-import to.wim.player.data.SpotifyPlayer
+import to.wim.player.data.PlaylistMemory
+import to.wim.player.data.PlaylistTarget
 import to.wim.player.data.cache.MemoryCache
 import to.wim.player.data.lastfm.LastFmErrors
 import to.wim.player.data.lastfm.LastFmException
@@ -27,7 +23,9 @@ import to.wim.player.data.model.LfmTrack
 import to.wim.player.data.model.QueueMode
 import to.wim.player.data.model.Resolution
 import to.wim.player.data.model.SpotifyTrack
+import to.wim.player.data.spotify.SpotifyHttpException
 import to.wim.player.data.spotify.SpotifyPausedException
+import to.wim.player.data.spotify.SpotifySignedOutException
 import to.wim.player.logic.Candidate
 import to.wim.player.logic.Ordering
 import to.wim.player.logic.TrackText
@@ -199,31 +197,38 @@ class TrackResolverTest {
         }
 }
 
-private class FakePlayer : SpotifyPlayer {
-    val actions = mutableListOf<String>()
-    val flow = MutableStateFlow<PlayerSnapshot?>(null)
-    var failConnect: PlayerProblem? = null
+private class FakePlaylists : PlaylistTarget, PlaylistMemory {
+    val playlists = mutableMapOf<String, MutableList<String>>()
+    var saved = ""
+    var created = 0
+    var canPlay = true
+    var failAdd: Exception? = null
 
-    override val state: StateFlow<PlayerSnapshot?> = flow
-
-    override suspend fun connect() {
-        failConnect?.let { throw PlayerException(it) }
-        if (flow.value == null) flow.value = PlayerSnapshot(null, null, null, isPaused = true)
+    override suspend fun createPlaylist(name: String, description: String): String {
+        created++
+        val id = "pl$created"
+        playlists[id] = mutableListOf()
+        return id
     }
 
-    override suspend fun queue(uri: String) {
-        actions += "queue $uri"
+    override suspend fun replaceItems(playlistId: String, uris: List<String>) {
+        val list = playlists[playlistId] ?: throw SpotifyHttpException(404, "Not found")
+        list.clear()
+        list += uris
     }
 
-    override suspend fun play(uri: String) {
-        actions += "play $uri"
-        flow.value = PlayerSnapshot(uri, "t", "a", isPaused = false)
+    override suspend fun addItems(playlistId: String, uris: List<String>) {
+        failAdd?.let { throw it }
+        require(uris.size <= 100)
+        playlists.getValue(playlistId) += uris
     }
 
-    override fun disconnect() {}
+    override suspend fun play(playlistId: String): Boolean = canPlay
 
-    fun playing(uri: String) {
-        flow.value = PlayerSnapshot(uri, "t", "a", isPaused = false)
+    override suspend fun playlistId(): String = saved
+
+    override suspend fun savePlaylistId(id: String) {
+        saved = id
     }
 }
 
@@ -242,90 +247,134 @@ class QueueControllerTest {
         }
     }
 
+    private fun controller(
+        playlists: FakePlaylists,
+        catalog: FakeCatalog,
+        scope: CoroutineScope,
+        clock: () -> Long = { 0L },
+    ) = QueueController(playlists, playlists, TrackResolver(catalog, MemoryCache()), null, scope, now = clock, checkEveryMillis = 10)
+
     @Test
-    fun `rolling keeps fifteen ahead and plays the first when idle`() =
+    fun `all at once makes a playlist with every track found`() =
         runBlocking {
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-            val player = FakePlayer()
+            val playlists = FakePlaylists()
+            val c = controller(playlists, FakeCatalog(), scope)
+            c.start(tracks(250, missingEvery = 5), QueueMode.ALL_NOW, "Player", "Made by Player")
+            waitFor { c.state.value.status == QueueStatus.FINISHED }
+            assertEquals(1, playlists.created)
+            assertEquals("pl1", playlists.saved)
+            assertEquals(200, playlists.playlists.getValue("pl1").size)
+            assertEquals(50, c.state.value.skipped)
+            assertEquals(250, c.state.value.processed)
+            assertEquals(true, c.state.value.playbackStarted)
+            scope.cancel()
+        }
+
+    @Test
+    fun `the saved playlist is reused and emptied`() =
+        runBlocking {
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+            val playlists =
+                FakePlaylists().apply {
+                    playlists["old"] = mutableListOf("spotify:track:stale")
+                    saved = "old"
+                }
+            val c = controller(playlists, FakeCatalog(), scope)
+            c.start(tracks(20), QueueMode.ALL_NOW, "Player", "")
+            waitFor { c.state.value.status == QueueStatus.FINISHED }
+            assertEquals(0, playlists.created)
+            assertEquals(tracks(20).map(::uriOf), playlists.playlists.getValue("old"))
+            scope.cancel()
+        }
+
+    @Test
+    fun `a deleted playlist is made again`() =
+        runBlocking {
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+            val playlists = FakePlaylists().apply { saved = "gone" }
+            val c = controller(playlists, FakeCatalog(), scope)
+            c.start(tracks(5), QueueMode.ALL_NOW, "Player", "")
+            waitFor { c.state.value.status == QueueStatus.FINISHED }
+            assertEquals("pl1", playlists.saved)
+            assertEquals(5, playlists.playlists.getValue("pl1").size)
+            scope.cancel()
+        }
+
+    @Test
+    fun `rolling adds as listening time passes`() =
+        runBlocking {
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+            val playlists = FakePlaylists()
+            var clock = 0L
             val catalog = FakeCatalog()
-            val controller = QueueController(player, TrackResolver(catalog, MemoryCache()), null, scope, spacingMillis = 0, batchPauseMillis = 0)
-            val list = tracks(40)
-            controller.start(list, QueueMode.ROLLING)
-            waitFor { controller.state.value.queued == 16 }
-            assertEquals("play ${uriOf(list[0])}", player.actions.first())
-            assertEquals(15, controller.state.value.ahead)
-            // Only the queued tracks were searched: the rest waits for listening.
-            assertEquals(16, catalog.searches)
-            // Track 3 starts: two more are queued.
-            player.playing(uriOf(list[2]))
-            waitFor { controller.state.value.queued == 18 }
-            assertEquals(15, controller.state.value.ahead)
-            controller.stop()
+            val c = controller(playlists, catalog, scope) { clock }
+            c.start(tracks(100), QueueMode.ROLLING, "Player", "")
+            // 3.5 minutes a track (search gave no length): the first 15 are 52 minutes, past the 40 ahead.
+            waitFor { c.state.value.queued == 15 && c.state.value.status == QueueStatus.RUNNING }
+            delay(50)
+            assertEquals(15, playlists.playlists.getValue("pl1").size)
+            assertEquals(15, catalog.searches)
+            // Half an hour later the playlist is topped up.
+            clock += 30 * 60_000
+            waitFor { c.state.value.queued == 25 }
+            assertEquals(tracks(25).map(::uriOf), playlists.playlists.getValue("pl1"))
+            c.stop()
+            assertEquals(QueueStatus.STOPPED, c.state.value.status)
             scope.cancel()
         }
 
     @Test
-    fun `tracks not on Spotify are skipped`() =
+    fun `no active device means the user presses play`() =
         runBlocking {
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-            val player = FakePlayer()
-            val controller = QueueController(player, TrackResolver(FakeCatalog(), MemoryCache()), null, scope, 0, 0)
-            controller.start(tracks(30, missingEvery = 3), QueueMode.ALL_NOW)
-            waitFor { controller.state.value.status == QueueStatus.FINISHED }
-            assertEquals(10, controller.state.value.skipped)
-            assertEquals(20, controller.state.value.queued)
-            assertEquals(30, controller.state.value.processed)
+            val playlists = FakePlaylists().apply { canPlay = false }
+            val c = controller(playlists, FakeCatalog(), scope)
+            c.start(tracks(3), QueueMode.ALL_NOW, "Player", "")
+            waitFor { c.state.value.status == QueueStatus.FINISHED }
+            assertEquals(false, c.state.value.playbackStarted)
             scope.cancel()
         }
 
     @Test
-    fun `missing Spotify app is reported`() =
+    fun `quota pause stops and resume loses nothing`() =
         runBlocking {
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-            val player = FakePlayer().apply { failConnect = PlayerProblem.NOT_INSTALLED }
-            val controller = QueueController(player, TrackResolver(FakeCatalog(), MemoryCache()), null, scope, 0, 0)
-            controller.start(tracks(5), QueueMode.ROLLING)
-            waitFor { controller.state.value.status == QueueStatus.FAILED }
-            assertEquals(QueueProblem.Player(PlayerProblem.NOT_INSTALLED), controller.state.value.problem)
-            scope.cancel()
-        }
-
-    @Test
-    fun `quota pause stops the queue and resume carries on`() =
-        runBlocking {
-            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-            var paused = true
+            var paused = false
             val catalog =
                 object : FakeCatalog() {
                     override suspend fun searchTrack(artist: String, title: String): List<SpotifyTrack> {
-                        if (paused && title == "Song 3") throw SpotifyPausedException(123)
+                        if (paused) throw SpotifyPausedException(123)
                         return super.searchTrack(artist, title)
                     }
                 }
-            val player = FakePlayer()
-            val controller = QueueController(player, TrackResolver(catalog, MemoryCache()), null, scope, 0, 0)
-            controller.start(tracks(5), QueueMode.ALL_NOW)
-            waitFor { controller.state.value.status == QueueStatus.FAILED }
-            assertEquals(QueueProblem.SpotifyPaused(123), controller.state.value.problem)
-            assertEquals(2, controller.state.value.queued)
+            val playlists = FakePlaylists()
+            var clock = 0L
+            val c = controller(playlists, catalog, scope) { clock }
+            c.start(tracks(40), QueueMode.ROLLING, "Player", "")
+            waitFor { c.state.value.queued == 15 && c.state.value.status == QueueStatus.RUNNING }
+            paused = true
+            clock += 60 * 60_000
+            waitFor { c.state.value.status == QueueStatus.FAILED }
+            assertEquals(QueueProblem.SpotifyPaused(123), c.state.value.problem)
             paused = false
-            controller.resume()
-            waitFor { controller.state.value.status == QueueStatus.FINISHED }
-            // Song 3 is tried again after the pause, so nothing is lost.
-            assertEquals(5, controller.state.value.queued)
+            c.resume()
+            waitFor { c.state.value.queued > 15 }
+            val list = playlists.playlists.getValue("pl1")
+            assertEquals(tracks(40).take(list.size).map(::uriOf), list)
+            c.stop()
             scope.cancel()
         }
 
     @Test
-    fun `stop ends the queue`() =
+    fun `signed out is reported`() =
         runBlocking {
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-            val player = FakePlayer()
-            val controller = QueueController(player, TrackResolver(FakeCatalog(), MemoryCache()), null, scope, 0, 0)
-            controller.start(tracks(100), QueueMode.ROLLING)
-            waitFor { controller.state.value.queued == 16 }
-            controller.stop()
-            assertEquals(QueueStatus.STOPPED, controller.state.value.status)
+            val playlists = FakePlaylists().apply { failAdd = SpotifySignedOutException() }
+            val c = controller(playlists, FakeCatalog(), scope)
+            c.start(tracks(3), QueueMode.ALL_NOW, "Player", "")
+            waitFor { c.state.value.status == QueueStatus.FAILED }
+            assertEquals(QueueProblem.SignedOut, c.state.value.problem)
             scope.cancel()
         }
 }

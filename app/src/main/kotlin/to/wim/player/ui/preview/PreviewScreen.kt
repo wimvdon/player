@@ -70,6 +70,7 @@ import kotlinx.coroutines.launch
 import to.wim.player.R
 import to.wim.player.data.model.QueueMode
 import to.wim.player.logic.Candidate
+import to.wim.player.logic.Setup
 import to.wim.player.ui.MainViewModel
 import to.wim.player.ui.common.CoverArt
 import to.wim.player.ui.common.ScoreMeter
@@ -243,7 +244,7 @@ fun PreviewScreen(
             title = { Text(stringResource(R.string.start_dialog_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(stringResource(R.string.start_dialog_queue_warning))
+                    Text(stringResource(R.string.start_dialog_playlist, Setup.PLAYLIST_NAME))
                     Text(
                         if (mode == QueueMode.ROLLING) {
                             stringResource(R.string.start_dialog_rolling)
