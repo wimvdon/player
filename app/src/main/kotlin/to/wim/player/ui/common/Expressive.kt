@@ -111,7 +111,7 @@ class BlobShape(private val blob: Blob = Blob.Cookie) : Shape {
     ): Outline = Outline.Generic(Path().apply { blob(size, blob.depth) { blob.radius(it) } })
 }
 
-/** The four uneven bars of the launcher icon, in its gradient: the wordmark's logo. */
+/** The three uneven bars of the launcher icon, in its gradient: the wordmark's logo. */
 @Composable
 fun BarsLogo(
     modifier: Modifier = Modifier,

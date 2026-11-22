@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Themed icon: the same four bars. -->
+<!-- Themed icon: the same three bars. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
@@ -7,5 +7,5 @@
     android:viewportHeight="108">
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M34.00,30.00h18.00a4.75,4.75 0 0,1 0,9.5h-18.00a4.75,4.75 0 0,1 0,-9.5z M34.00,42.83h40.00a4.75,4.75 0 0,1 0,9.5h-40.00a4.75,4.75 0 0,1 0,-9.5z M34.00,55.67h10.00a4.75,4.75 0 0,1 0,9.5h-10.00a4.75,4.75 0 0,1 0,-9.5z M34.00,68.50h28.00a4.75,4.75 0 0,1 0,9.5h-28.00a4.75,4.75 0 0,1 0,-9.5z" />
+        android:pathData="M36,30h18a6,6 0,0 1,0,12h-18a6,6 0,0 1,0,-12z M36,48h36a6,6 0,0 1,0,12h-36a6,6 0,0 1,0,-12z M36,66h10a6,6 0,0 1,0,12h-10a6,6 0,0 1,0,-12z" />
 </vector>
