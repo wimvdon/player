@@ -84,7 +84,7 @@ app/src/main/kotlin/<package>/
   service/QueueService.kt  Foreground service with the queue notification.
   ui/theme/                Material 3 theme (Theme.kt, Type.kt) and the shared design kit (see DESIGN.md).
   ui/common/               Player's own pieces: score bars, covers, and the expressive ones
-                           (Expressive.kt: wordmark, cookie shape, loader, wavy progress, slider,
+                           (Expressive.kt: wordmark, bars logo, cookie shape, loader, wavy progress, slider,
                            stepper, mood line, record). Shape maths in logic/Blob.kt.
   ui/<screen>/             Composables: display state, forward clicks. No logic.
 app/src/main/res/

@@ -19,6 +19,16 @@ in 82 seconds; one seed artist, 250 tracks, gave 250 tracks in 169 seconds.
 Rejected: asking every user for a ListenBrainz token (an extra setup step; can be added later to
 use the one-call endpoint again).
 
+## 2026-11-22: The app icon is four uneven bars on a soft red plate
+
+Part of making all of the owner's app icons one family. The owner asked for an icon that says
+"music" more than "play": four sideways bars of uneven length, like a level meter and a
+playlist's rows at once, with a stronger gradient that moves from orange through red to magenta.
+The white background becomes a soft plate in the app's red. Rejected (mockup rounds 13–15): bars
+forming a play triangle, three sliders, a playlist with a note, upright equalizer bars and a
+sound wave. The wordmark's logo switched to the same bars right after (owner's choice); the loader keeps
+the cookie shape.
+
 ## 2026-11-22: Genre artists come from ListenBrainz tag radio; sets reach their length
 
 A "calm shoegaze" set of 100 tracks came back with 12 tracks from 4 artists, none of them really
