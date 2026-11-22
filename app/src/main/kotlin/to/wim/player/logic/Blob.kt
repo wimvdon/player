@@ -11,7 +11,7 @@ data class Blob(val lobes: Int, val depth: Float) {
     fun radius(angle: Float): Float = 1f + depth * cos(lobes * angle)
 
     companion object {
-        /** The nine-lobed cookie of the icon and the wordmark. */
+        /** The nine-lobed cookie of the expressive shapes and the loader (the app icon until 2026-11-22). */
         val Cookie = Blob(lobes = 9, depth = 0.085f)
 
         /** The shapes the loading animation morphs through, in order. */
