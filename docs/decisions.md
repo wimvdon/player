@@ -2,6 +2,22 @@
 
 Newest first. Add an entry for every notable choice: what was decided, why, and what was rejected.
 
+## 2026-11-22: Genre artists come from ListenBrainz tag radio; sets reach their length
+
+A "calm shoegaze" set of 100 tracks came back with 12 tracks from 4 artists, none of them really
+shoegaze. The MusicBrainz tag search ranks artists by how few other tags they have, so its first
+50 for a genre are mostly little-known artists with one vote, whose tracks ListenBrainz doesn't
+know; the few left were artists with a stray tag. Genre artists now come from ListenBrainz's tag
+radio (`/1/lb-radio/tags`, recordings whose recording, album or artist carries the tag) named with
+one metadata lookup per 50 recordings, ranked by the sum of their tag votes; the MusicBrainz tag
+search only tops up the list (100 artists per genre). Artists without known tracks are replaced by
+the next candidates (at most twice as many lookups as the set needs), a seed with too few similar
+artists adds the similar artists of up to 12 of them, and when the pool still can't fill the set
+at 3 tracks per artist the generator allows up to 6 per artist. Every track carries the name the
+artist was looked up with, so "Smashing Pumpkins" and "The Smashing Pumpkins" no longer show as two.
+Rejected: filtering similar artists by their tags (one MusicBrainz call each at one a second) and
+dropping the per-artist cap altogether (one artist could then fill a set).
+
 ## 2026-11-22: Player gets a playful, dark-by-default look (Material 3 Expressive ideas)
 
 The owner asked for a much more fun UI, inspired by Material 3 Expressive, with dark mode as the

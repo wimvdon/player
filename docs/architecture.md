@@ -14,18 +14,20 @@ Playlist (open in Spotify, progress, Stop), Settings (keys and setup steps, play
 **How a set is made** (`engine/GenerationEngine.kt`, no Spotify searches; music data comes from
 `data/brainz/BrainzMusic.kt`, which turns names into MusicBrainz IDs and caches every answer):
 1. Seeds: the picked artists and genres, or the user's top artists (Spotify, then ListenBrainz).
-2. Candidate artists: ListenBrainz similar artists (Labs) per seed and MusicBrainz artists with
-   the genre's tag, shared out round-robin, as many as the length needs (`artistBudget`: 100 for 250 tracks,
-   40 to 170; both services allow one call a second).
+2. Candidate artists: ListenBrainz similar artists (Labs) per seed and, per genre, the artists of
+   ListenBrainz tag-radio recordings ranked by tag votes (topped up by a MusicBrainz tag search),
+   shared out round-robin, as many as the length needs (`artistBudget`: 100 for 250 tracks,
+   40 to 170; both services allow one call a second). When that's too few, the similar artists of
+   up to 12 candidates are added.
 3. Tracks: ListenBrainz's most listened recordings per artist (15, or 20 with fewer than 50
-   artists).
+   artists). Artists without known tracks are replaced by the next candidates.
 4. Mood (0 calm … 1 upbeat): cached ReccoBeats tempo and energy when known, otherwise the artist's
    MusicBrainz genres and tags weighted by `MoodModel.TagWeights` (`logic/Scores.kt`, one editable map).
 5. Familiarity (0 known … 1 new): known when in the user's Spotify top or saved tracks, their
    ListenBrainz top recordings or their whole ListenBrainz play history (`data/brainz/ListenHistory.kt`,
    read in the background, never awaited by a set); otherwise from the ListenBrainz listener count on a log scale.
 6. `logic/Generator.kt` picks the closest tracks to both sliders (with a little randomness), at
-   most 3 per artist, at least half from artists the user didn't pick (unless familiarity is fully
+   most 3 per artist (up to 6 when that's the only way to reach the length), at least half from artists the user didn't pick (unless familiarity is fully
    "known"), orders them (mood curve, best match or shuffle) and keeps the same artist apart.
 
 **Filling the playlist** (`engine/QueueController.kt`, while `service/QueueService.kt` shows a

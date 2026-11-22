@@ -3,6 +3,7 @@ package to.wim.player.data.brainz
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import to.wim.player.data.LISTENS_PAGE
 import to.wim.player.data.ListenBrainzSource
+import to.wim.player.data.METADATA_BATCH
 
 /** ListenBrainz and its Labs datasets over HTTP. Reading needs only a username. No caching here. */
 class ListenBrainzClient(private val http: BrainzHttp) : ListenBrainzSource {
@@ -66,6 +67,28 @@ class ListenBrainzClient(private val http: BrainzHttp) : ListenBrainzSource {
             .build()
         val answer = http.get(url, "GET /1/cf/recommendation/user/{name}/recording")
         return if (answer.hasData) ListenBrainzJson.recommendations(answer.body) else emptyList()
+    }
+
+    override suspend fun tagRecordings(tag: String, count: Int): List<TagRecording> {
+        val url = "$API/lb-radio/tags".toHttpUrl().newBuilder()
+            .addQueryParameter("tag", tag.trim().lowercase())
+            .addQueryParameter("operator", "or")
+            .addQueryParameter("pop_begin", "0")
+            .addQueryParameter("pop_end", "100")
+            .addQueryParameter("count", "$count")
+            .build()
+        val answer = http.get(url, "GET /1/lb-radio/tags")
+        return if (answer.hasData) ListenBrainzJson.tagRecordings(answer.body) else emptyList()
+    }
+
+    override suspend fun recordingMetadata(recordingMbids: List<String>): List<BrainzRecording> {
+        if (recordingMbids.isEmpty()) return emptyList()
+        val url = "$API/metadata/recording/".toHttpUrl().newBuilder()
+            .addQueryParameter("recording_mbids", recordingMbids.take(METADATA_BATCH).joinToString(","))
+            .addQueryParameter("inc", "artist")
+            .build()
+        val answer = http.get(url, "GET /1/metadata/recording")
+        return if (answer.hasData) ListenBrainzJson.recordingMetadata(answer.body) else emptyList()
     }
 
     companion object {

@@ -21,6 +21,7 @@ import to.wim.player.data.brainz.BrainzTopArtist
 import to.wim.player.data.brainz.MbArtist
 import to.wim.player.data.brainz.Recommendation
 import to.wim.player.data.brainz.SimilarArtist
+import to.wim.player.data.brainz.TagRecording
 import to.wim.player.data.model.ArtistHit
 import to.wim.player.data.model.PoolTrack
 import to.wim.player.logic.TrackText
@@ -122,6 +123,24 @@ private class CountingListenBrainz : ListenBrainzSource {
 
     override suspend fun listens(username: String, minTs: Long?, maxTs: Long?, count: Int): List<BrainzListen> =
         if (maxTs == null && minTs == null) listOf(BrainzListen("Tycho", "Awake", 100)) else emptyList()
+
+    /** Tag radio for "shoegaze" only: two recordings by Slowdive, one by Ride. */
+    override suspend fun tagRecordings(tag: String, count: Int): List<TagRecording> {
+        calls += "radio:$tag"
+        if (tag != "shoegaze") return emptyList()
+        return listOf(TagRecording("r1", 2, 100.0), TagRecording("r2", 3, 90.0), TagRecording("r3", 4, 80.0))
+    }
+
+    override suspend fun recordingMetadata(recordingMbids: List<String>): List<BrainzRecording> {
+        calls += "metadata:${recordingMbids.size}"
+        val known =
+            mapOf(
+                "r1" to BrainzRecording("Alison", "Slowdive", "r1", listOf("mb-slowdive")),
+                "r2" to BrainzRecording("When the Sun Hits", "Slowdive", "r2", listOf("mb-slowdive")),
+                "r3" to BrainzRecording("Vapour Trail", "Ride", "r3", listOf("mb-ride")),
+            )
+        return recordingMbids.mapNotNull { known[it] }
+    }
 }
 
 class BrainzMusicTest {
@@ -203,11 +222,32 @@ class BrainzMusicTest {
         }
 
     @Test
-    fun `genre artists come from MusicBrainz tags`() =
+    fun `genre artists come from MusicBrainz tags when tag radio has none`() =
         runBlocking {
             assertEquals(listOf("Tycho"), music.genreArtists("downtempo", 50))
             music.artistTopTracks("Tycho", 15)
             assertEquals(0, musicBrainz.searches)
+        }
+
+    @Test
+    fun `genre artists come from tag radio first, ranked by votes, topped up from MusicBrainz`() =
+        runBlocking {
+            assertEquals(listOf("Slowdive", "Ride", "Tycho"), music.genreArtists("Shoegaze", 50))
+            assertEquals(listOf("Slowdive"), music.genreArtists("shoegaze", 1))
+            music.artistTopTracks("Ride", 15)
+            assertTrue("top:mb-ride" in listenBrainz.calls)
+            assertEquals(0, musicBrainz.searches)
+            // Cached: the second "Shoegaze" lookup with the same limit asks nothing.
+            val before = listenBrainz.calls.size
+            music.genreArtists("shoegaze", 50)
+            assertEquals(before, listenBrainz.calls.size)
+        }
+
+    @Test
+    fun `every top track carries the asked-for artist name`() =
+        runBlocking {
+            val tracks = music.artistTopTracks("Bonobo", 15)
+            assertEquals(listOf("Bonobo"), tracks.map { it.artist }.distinct())
         }
 }
 

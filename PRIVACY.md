@@ -11,7 +11,8 @@ directly to the services below, using **your own** Spotify developer key.
   each artist's MusicBrainz ID, artists with a genre, and an artist's genres. No key or account is
   involved.
 - **ListenBrainz** (`api.listenbrainz.org`, `labs.api.listenbrainz.org`): MusicBrainz IDs of
-  artists, to get similar artists and their most played tracks, and (if you enter it) your
+  artists and the genres you pick, to get similar artists, artists with a genre and their most
+  played tracks, and (if you enter it) your
   ListenBrainz username, to read your most played artists and tracks and your full list of plays
   (so every song you've played counts as known). No key is sent; a ListenBrainz profile is public.
 - **Spotify** (`api.spotify.com`, `accounts.spotify.com`): sign-in, searches for the tracks

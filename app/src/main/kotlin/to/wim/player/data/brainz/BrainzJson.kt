@@ -110,6 +110,37 @@ object ListenBrainzJson {
             Recommendation(item.string("recording_mbid") ?: return@mapNotNull null, item.double("score") ?: 0.0)
         }
 
+    /** `GET /1/lb-radio/tags`: a plain list, most tag votes first. Entries without an MBID are skipped. */
+    fun tagRecordings(text: String): List<TagRecording> =
+        parseJson(text).objects().mapNotNull { item ->
+            TagRecording(
+                recordingMbid = item.string("recording_mbid") ?: return@mapNotNull null,
+                tagCount = item.long("tag_count")?.toInt() ?: 0,
+                popularity = item.double("percent") ?: 0.0,
+            )
+        }
+
+    /**
+     * `GET /1/metadata/recording?inc=artist`: an object keyed by recording MBID. Each recording
+     * keeps its title, the credited name and the MBIDs of the credited artists, main artist first.
+     */
+    fun recordingMetadata(text: String): List<BrainzRecording> {
+        val root = parseJson(text) as? JsonObject ?: return emptyList()
+        return root.entries.mapNotNull { (mbid, value) ->
+            val item = value as? JsonObject ?: return@mapNotNull null
+            val recording = item["recording"] as? JsonObject ?: return@mapNotNull null
+            val credit = item["artist"] as? JsonObject ?: return@mapNotNull null
+            val artists = credit["artists"].objects()
+            BrainzRecording(
+                title = recording.string("name") ?: return@mapNotNull null,
+                artist = artists.firstOrNull()?.string("name") ?: credit.string("name") ?: return@mapNotNull null,
+                recordingMbid = mbid,
+                artistMbids = artists.mapNotNull { it.string("artist_mbid") },
+                lengthMillis = recording.long("length"),
+            )
+        }
+    }
+
     private fun payload(text: String): JsonObject? = (parseJson(text) as? JsonObject)?.get("payload") as? JsonObject
 
     private fun recording(item: JsonObject, listensKey: String, listenersKey: String?): BrainzRecording? {

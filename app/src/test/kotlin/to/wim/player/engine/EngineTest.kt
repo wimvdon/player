@@ -156,6 +156,40 @@ class GenerationEngineTest {
         }
 
     @Test
+    fun `genre artists without known tracks are replaced by the next ones`() =
+        runBlocking {
+            val sparse =
+                object : FakeMusic() {
+                    override suspend fun genreArtists(genre: String, limit: Int) = (1..limit).map { "G$it" }
+
+                    // Only every other genre artist has tracks on ListenBrainz.
+                    override suspend fun artistTopTracks(artist: String, limit: Int): List<PoolTrack> =
+                        if (artist.drop(1).toInt() % 2 == 0) emptyList() else (1..limit).map { PoolTrack("$artist Song $it", artist, 100) }
+                }
+            val result = GenerationEngine(sparse, null, null, null, Random(3)).generate(input(artists = emptyList(), genres = listOf("shoegaze"), length = 100))
+            assertEquals(100, result.tracks.size)
+            assertTrue(result.tracks.groupingBy { it.artistKey }.eachCount().values.all { it <= Generator.MAX_PER_ARTIST })
+        }
+
+    @Test
+    fun `one seed still fills a long set through similar artists of similar artists`() =
+        runBlocking {
+            val world = World()
+            val result = GenerationEngine(world, null, null, null, Random(4)).generate(input(artists = listOf("Seed A"), genres = emptyList(), length = 250))
+            assertEquals(250, result.tracks.size)
+            assertTrue(world.calls.count { it.startsWith("similar:") } > 1)
+            assertTrue(world.calls.count { it.startsWith("similar:") } <= 1 + GenerationEngine.MAX_WIDEN)
+        }
+
+    @Test
+    fun `enough artists means no extra similar lookups`() =
+        runBlocking {
+            val world = World()
+            GenerationEngine(world, null, null, null, Random(5)).generate(input(length = 100))
+            assertEquals(listOf("similar:Seed A", "similar:Seed B"), world.calls.filter { it.startsWith("similar:") }.sorted())
+        }
+
+    @Test
     fun `round robin shares the artist slots`() {
         val lists = listOf(listOf("a1", "a2", "a3"), listOf("b1", "b2"), listOf("a1", "c1"))
         assertEquals(listOf("a1", "b1", "a2", "b2", "c1"), GenerationEngine.roundRobin(lists, 5))

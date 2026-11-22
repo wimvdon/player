@@ -44,11 +44,15 @@ data class GeneratorRequest(
 /**
  * Picks and orders tracks for the sliders. Pure functions, so the rules below are unit tested:
  * - closest to both sliders first, with a little randomness so Regenerate gives a different set;
- * - at most [MAX_PER_ARTIST] tracks per artist, never the same artist twice in a row;
+ * - at most [MAX_PER_ARTIST] tracks per artist, or [RELAXED_MAX_PER_ARTIST] when that is the only
+ *   way to reach the length; never the same artist twice in a row;
  * - at least half from artists the user didn't pick, unless familiarity is fully on "known".
  */
 object Generator {
     const val MAX_PER_ARTIST = 3
+
+    /** The cap per artist when the pool has too few artists to fill the set at [MAX_PER_ARTIST]. */
+    const val RELAXED_MAX_PER_ARTIST = 6
 
     /** How far the random factor can move a track's distance (the slider space is 0..1 by 0..1). */
     const val JITTER = 0.08
@@ -86,15 +90,22 @@ object Generator {
         val maxFromSeeds = if (requiresDiscovery(request)) length - ceil(length / 2.0).toInt() else length
         val perArtist = HashMap<String, Int>()
         val result = ArrayList<Candidate>(length)
+        val taken = HashSet<String>()
         var fromSeeds = 0
-        for ((candidate, _) in scored) {
-            if (result.size == length) break
-            val count = perArtist[candidate.artistKey] ?: 0
-            if (count >= MAX_PER_ARTIST) continue
-            if (candidate.fromSeedArtist && fromSeeds >= maxFromSeeds) continue
-            result += candidate
-            perArtist[candidate.artistKey] = count + 1
-            if (candidate.fromSeedArtist) fromSeeds++
+        // First with the usual cap per artist; when that can't fill the set, a second pass lets
+        // the artists there are give a few more tracks each, so the set reaches its length.
+        for (cap in listOf(MAX_PER_ARTIST, RELAXED_MAX_PER_ARTIST)) {
+            for ((candidate, _) in scored) {
+                if (result.size == length) break
+                if (candidate.key in taken) continue
+                val count = perArtist[candidate.artistKey] ?: 0
+                if (count >= cap) continue
+                if (candidate.fromSeedArtist && fromSeeds >= maxFromSeeds) continue
+                result += candidate
+                taken += candidate.key
+                perArtist[candidate.artistKey] = count + 1
+                if (candidate.fromSeedArtist) fromSeeds++
+            }
         }
         // With few other artists the seed share is capped below the length; trim so the share holds.
         if (requiresDiscovery(request)) {

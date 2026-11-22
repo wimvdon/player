@@ -13,6 +13,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import to.wim.player.data.brainz.BrainzHttp
+import to.wim.player.data.brainz.BrainzMusic
 import to.wim.player.data.brainz.ListenBrainzJson
 import to.wim.player.data.brainz.MusicBrainzJson
 import to.wim.player.logic.BrainzLimits
@@ -54,10 +55,42 @@ class MusicBrainzJsonTest {
         assertTrue(MusicBrainzJson.artistSearch("<html>").isEmpty())
         assertTrue(MusicBrainzJson.artistTags("").isEmpty())
         assertTrue(MusicBrainzJson.urlArtists("[]").isEmpty())
+        assertTrue(ListenBrainzJson.tagRecordings("{}").isEmpty())
+        assertTrue(ListenBrainzJson.recordingMetadata("[]").isEmpty())
     }
 }
 
 class ListenBrainzJsonTest {
+    @Test
+    fun `tag radio keeps votes and popularity, skips entries without an mbid`() {
+        val tagged = ListenBrainzJson.tagRecordings(fixture("lb_tagradio"))
+        assertEquals(listOf("rec-ride-1", "rec-slowdive-1", "rec-slowdive-2", "rec-pumpkins-1", "rec-unknown"), tagged.map { it.recordingMbid })
+        assertEquals(6, tagged.first().tagCount)
+        assertEquals(74.9, tagged[1].popularity, 1e-9)
+    }
+
+    @Test
+    fun `recording metadata names the main artist first and skips broken entries`() {
+        val recordings = ListenBrainzJson.recordingMetadata(fixture("lb_recordingmetadata")).associateBy { it.recordingMbid }
+        assertEquals(setOf("rec-ride-1", "rec-slowdive-1", "rec-slowdive-2", "rec-pumpkins-1"), recordings.keys)
+        val pumpkins = recordings.getValue("rec-pumpkins-1")
+        assertEquals("The Smashing Pumpkins", pumpkins.artist)
+        assertEquals(listOf("mb-pumpkins", "mb-someone"), pumpkins.artistMbids)
+        assertEquals("Without You", pumpkins.title)
+        assertEquals(352000L, recordings.getValue("rec-ride-1").lengthMillis)
+    }
+
+    @Test
+    fun `genre artists are ranked by their tag votes`() {
+        val ranked =
+            BrainzMusic.rankGenreArtists(
+                ListenBrainzJson.tagRecordings(fixture("lb_tagradio")),
+                ListenBrainzJson.recordingMetadata(fixture("lb_recordingmetadata")),
+            )
+        assertEquals(listOf("Slowdive", "Ride", "The Smashing Pumpkins"), ranked.map { it.name })
+        assertEquals(listOf("mb-slowdive", "mb-ride", "mb-pumpkins"), ranked.map { it.mbid })
+    }
+
     @Test
     fun `similar artists leave out the artist asked about, dedupe and sort by score`() {
         val similar = ListenBrainzJson.similarArtists(fixture("lb_similar"), of = "a74b1b7f-71a5-4011-9441-d0b5e4122711")

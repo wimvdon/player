@@ -6,6 +6,7 @@ import to.wim.player.data.brainz.BrainzTopArtist
 import to.wim.player.data.brainz.MbArtist
 import to.wim.player.data.brainz.Recommendation
 import to.wim.player.data.brainz.SimilarArtist
+import to.wim.player.data.brainz.TagRecording
 import to.wim.player.data.model.ArtistHit
 import to.wim.player.data.model.AudioFeatures
 import to.wim.player.data.model.PoolTrack
@@ -86,7 +87,16 @@ interface ListenBrainzSource {
 
     /** Collaborative-filtering recommendations for the user. Empty until ListenBrainz has made some. */
     suspend fun recommendations(username: String, limit: Int = 100): List<Recommendation>
+
+    /** Recordings tagged with [tag] (on the recording, its album or its artist), from ListenBrainz's tag radio. */
+    suspend fun tagRecordings(tag: String, count: Int = 200): List<TagRecording> = emptyList()
+
+    /** Title and artists of each recording (at most [METADATA_BATCH] at a time). */
+    suspend fun recordingMetadata(recordingMbids: List<String>): List<BrainzRecording> = emptyList()
 }
+
+/** The most recordings one ListenBrainz metadata lookup asks for, so the address stays short. */
+const val METADATA_BATCH = 50
 
 /** What the app reads from the Spotify Web API (searches and the user's library). */
 interface SpotifyCatalog {
