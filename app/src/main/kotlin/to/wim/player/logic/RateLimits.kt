@@ -70,3 +70,25 @@ object SpotifyLimits {
         return SpotifyLimit.RetryAfter(seconds * 1000)
     }
 }
+
+/** Rate limits of MusicBrainz and ListenBrainz: one call a second, 429 or 503 when exceeded. */
+object BrainzLimits {
+    /** Both services ask every client to stay at one call a second. */
+    const val CALLS_PER_SECOND = 1.0
+
+    /** The longest wait the app accepts inside one call; longer limits fail the call. */
+    const val MAX_WAIT_MILLIS = 60_000L
+
+    /** True for answers that mean "slow down and try again". MusicBrainz uses 503 for this. */
+    fun isRateLimited(status: Int): Boolean = status == 429 || status == 503
+
+    /**
+     * How long to wait after a rate-limited answer: ListenBrainz's `X-RateLimit-Reset-In` or the
+     * standard `Retry-After` (both in seconds), else exponential backoff for [attempt].
+     */
+    fun waitMillis(resetIn: String?, retryAfter: String?, attempt: Int): Long {
+        val seconds = (resetIn ?: retryAfter)?.trim()?.toDoubleOrNull()
+        val millis = if (seconds != null) (seconds * 1000).toLong().coerceAtLeast(1_000) else Backoff.delayMillis(attempt)
+        return millis.coerceAtMost(MAX_WAIT_MILLIS)
+    }
+}

@@ -24,7 +24,9 @@ python3 -m unittest discover -s scripts/tests
   them with JUnit in `app/src/test/kotlin/`, mirroring the package. See `GeneratorTest`.
 - Services are faked behind their interfaces (`FakeLastFm`, `FakeCatalog`, `FakePlayer` in the
   tests), so generation and queueing run without network. Last.fm parsing reads trimmed real
-  answers from `app/src/test/resources/fixtures/`.
+  answers from `app/src/test/resources/fixtures/`; MusicBrainz (`mb_*`) and ListenBrainz (`lb_*`)
+  parsing reads answers shaped like the documented ones. `BrainzHttpTest` fakes HTTP with an OkHttp
+  interceptor to check the User-Agent, the token and waiting on rate limits.
 - Test names describe behaviour in words: `` fun `tap stops at the maximum`() ``.
 - No device tests (instrumented/UI tests) are set up: they need an emulator, which makes CI slow and
   flaky. Add them only if a decision in `decisions.md` says so.
