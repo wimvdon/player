@@ -3,7 +3,6 @@
     <string name="problem_playlist_rejected">Spotify no aceptó el cambio en la lista. Inténtalo de nuevo.</string>
     <string name="playlist_press_play">Ábrela en Spotify y dale a reproducir.</string>
     <string name="playlist_playing">Sonando en Spotify.</string>
-    <string name="playlist_card_label">Lista de Spotify</string>
     <string name="playlist_description">Creada con Player</string>
     <string name="action_open_in_spotify">Abrir en Spotify</string>
     <string name="app_name">Player</string>
@@ -28,7 +27,6 @@
     <string name="action_resume_spotify">Reanudar ahora</string>
     <string name="action_retry">Reintentar</string>
     <string name="action_sign_out">Cerrar sesión</string>
-    <string name="action_start">Empezar</string>
     <string name="action_start_queue">Enviar a Spotify</string>
     <string name="action_stop">Detener</string>
     <string name="action_undo">Deshacer</string>
@@ -67,8 +65,6 @@
     <string name="genres_search">Buscar o añadir un género</string>
     <string name="genres_title">Géneros</string>
     <string name="genres_use">Usar «%1$s»</string>
-    <string name="length_label">Canciones</string>
-    <string name="length_range">%1$d a %2$d</string>
     <string name="length_title">Duración</string>
     <string name="meter_mood">Ánimo</string>
     <string name="meter_new">Nuevo</string>
@@ -171,4 +167,24 @@
         <item quantity="many">Player crea una lista privada nueva en tu cuenta de Spotify con las %d canciones.</item>
         <item quantity="other">Player crea una lista privada nueva en tu cuenta de Spotify con las %d canciones.</item>
     </plurals>
+    <string name="generator_headline">¿Qué %1$s te apetece hoy?</string>
+    <string name="generator_headline_word">ambiente</string>
+    <!-- The word under the number on the length stepper (always 10 or more). -->
+    <string name="length_unit">canciones</string>
+    <plurals name="length_tracks">
+        <item quantity="one">%d canción</item>
+        <item quantity="other">%d canciones</item>
+        <item quantity="many">%d canciones</item>
+    </plurals>
+    <string name="action_more_tracks">Más canciones</string>
+    <string name="action_fewer_tracks">Menos canciones</string>
+    <string name="generating_title">Rebuscando entre discos…</string>
+    <string name="preview_curve_title">Ambiente a lo largo de la sesión</string>
+    <string name="preview_curve_peak">Pico en la canción %1$d</string>
+    <string name="preview_curve_description">El ambiente empieza en %1$d %%, llega al pico en la canción %2$d y termina en %3$d %%.</string>
+    <string name="start_dialog_dice">Sugerir otro nombre</string>
+    <string name="action_send">Enviar</string>
+    <string name="step_artists_short">Buscando artistas similares</string>
+    <string name="step_tracks_short">Reuniendo canciones</string>
+    <string name="step_moods_short">Leyendo etiquetas</string>
 </resources>

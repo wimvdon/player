@@ -51,7 +51,7 @@ enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
 /** Settings Android backs up (they'd be wanted on a new phone). */
 data class AppSettings(
-    val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val themeMode: ThemeMode = ThemeMode.DARK,
     val dynamicColor: Boolean = false,
     val listenBrainzUsername: String = "",
     val ordering: Ordering = Ordering.MOOD_CURVE,

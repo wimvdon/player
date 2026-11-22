@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -58,8 +59,8 @@ fun CoverArt(
     name: String,
     modifier: Modifier = Modifier,
     size: Dp = 48.dp,
+    shape: Shape = RoundedCornerShape(12.dp),
 ) {
-    val shape = RoundedCornerShape(8.dp)
     if (url != null) {
         AsyncImage(
             model = url,

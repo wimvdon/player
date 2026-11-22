@@ -3,7 +3,6 @@
     <string name="problem_playlist_rejected">Spotify hat die Änderung an der Playlist nicht angenommen. Versuche es erneut.</string>
     <string name="playlist_press_play">Öffne sie in Spotify und tippe auf Abspielen.</string>
     <string name="playlist_playing">Läuft auf Spotify.</string>
-    <string name="playlist_card_label">Spotify-Playlist</string>
     <string name="playlist_description">Erstellt mit Player</string>
     <string name="action_open_in_spotify">In Spotify öffnen</string>
     <string name="app_name">Player</string>
@@ -28,7 +27,6 @@
     <string name="action_resume_spotify">Jetzt fortsetzen</string>
     <string name="action_retry">Wiederholen</string>
     <string name="action_sign_out">Abmelden</string>
-    <string name="action_start">Starten</string>
     <string name="action_start_queue">An Spotify senden</string>
     <string name="action_stop">Stoppen</string>
     <string name="action_undo">Rückgängig</string>
@@ -67,8 +65,6 @@
     <string name="genres_search">Genre suchen oder hinzufügen</string>
     <string name="genres_title">Genres</string>
     <string name="genres_use">„%1$s“ verwenden</string>
-    <string name="length_label">Titel</string>
-    <string name="length_range">%1$d bis %2$d</string>
     <string name="length_title">Länge</string>
     <string name="meter_mood">Stimmung</string>
     <string name="meter_new">Neu</string>
@@ -168,4 +164,23 @@
         <item quantity="one">Player erstellt eine neue private Playlist in deinem Spotify-Konto mit %d Titel.</item>
         <item quantity="other">Player erstellt eine neue private Playlist in deinem Spotify-Konto mit allen %d Titeln.</item>
     </plurals>
+    <string name="generator_headline">Was ist heute dein %1$s?</string>
+    <string name="generator_headline_word">Vibe</string>
+    <!-- The word under the number on the length stepper (always 10 or more). -->
+    <string name="length_unit">Titel</string>
+    <plurals name="length_tracks">
+        <item quantity="one">%d Titel</item>
+        <item quantity="other">%d Titel</item>
+    </plurals>
+    <string name="action_more_tracks">Mehr Titel</string>
+    <string name="action_fewer_tracks">Weniger Titel</string>
+    <string name="generating_title">Wir wühlen in den Plattenkisten…</string>
+    <string name="preview_curve_title">Stimmung im Set</string>
+    <string name="preview_curve_peak">Höhepunkt bei Titel %1$d</string>
+    <string name="preview_curve_description">Die Stimmung beginnt bei %1$d %%, erreicht bei Titel %2$d ihren Höhepunkt und endet bei %3$d %%.</string>
+    <string name="start_dialog_dice">Anderen Namen vorschlagen</string>
+    <string name="action_send">Senden</string>
+    <string name="step_artists_short">Suche ähnliche Künstler</string>
+    <string name="step_tracks_short">Sammle Titel</string>
+    <string name="step_moods_short">Lese Tags</string>
 </resources>

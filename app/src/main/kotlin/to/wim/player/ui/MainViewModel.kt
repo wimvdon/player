@@ -249,7 +249,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun coverOf(track: Candidate): String? = graph.resolver.cached(track.artist, track.title)?.imageUrl
 
     /** A name for the new playlist, from the picked genres or artists, the mood and today's date. */
-    fun suggestPlaylistName(): String {
+    fun suggestPlaylistName(): String = playlistNameOptions().first()
+
+    /** Names for the send sheet: the suggestion first, then others for the dice (never empty). */
+    fun playlistNameOptions(): List<String> {
         val app = getApplication<Application>()
         val state = _ui.value
         val templates =
@@ -260,7 +263,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 fallback = Setup.PLAYLIST_NAME,
             )
         val locale = app.resources.configuration.locales[0]
-        return PlaylistName.suggest(state.genres, state.artists, state.mood.toDouble(), LocalDate.now(), locale, templates)
+        return PlaylistName.alternatives(state.genres, state.artists, state.mood.toDouble(), LocalDate.now(), locale, templates)
     }
 
     /** Makes a new playlist called [name] with every track of the preview. */

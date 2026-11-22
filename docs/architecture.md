@@ -30,8 +30,8 @@ Playlist (open in Spotify, progress, Stop), Settings (keys and setup steps, play
 **Filling the playlist** (`engine/QueueController.kt`, while `service/QueueService.kt` shows a
 notification): first every track is matched on Spotify (`engine/TrackResolver.kt`, one search
 per track, cached forever, misses too). Only then is a new private playlist made, with the name
-from the start dialog (`logic/PlaylistName.kt` suggests one from the genres or artists, the mood
-and the date), and every match goes in straight away, in calls of 100 (Spotify's limit,
+from the send sheet (`logic/PlaylistName.kt` suggests one from the genres or artists, the mood
+and the date, plus other names for the dice), and every match goes in straight away, in calls of 100 (Spotify's limit,
 `logic/PlaylistPlan`). Then Player starts it on the active device or opens it in the Spotify app.
 After a problem, Continue picks up where it stopped without making a second playlist. See
 `docs/decisions.md` for why.
@@ -68,9 +68,13 @@ app/src/main/kotlin/<package>/
   engine/                  Generation and queueing over the data interfaces → unit tested.
   data/                    MusicBrainz, ListenBrainz, Spotify Web API, ReccoBeats, stores and caches.
   service/QueueService.kt  Foreground service with the queue notification.
-  ui/theme/                Material 3 theme and the shared design kit (see DESIGN.md).
+  ui/theme/                Material 3 theme (Theme.kt, Type.kt) and the shared design kit (see DESIGN.md).
+  ui/common/               Player's own pieces: score bars, covers, and the expressive ones
+                           (Expressive.kt: wordmark, cookie shape, loader, wavy progress, slider,
+                           stepper, mood line, record). Shape maths in logic/Blob.kt.
   ui/<screen>/             Composables: display state, forward clicks. No logic.
 app/src/main/res/
+  font/roboto_flex.ttf     Roboto Flex for the wordmark and big headlines (licence: assets/licenses/).
   values/strings.xml       All user-visible text (English, the default).
   values-xx/strings.xml    Dutch, French, German, Spanish and Italian. Every string must exist in every language.
 app/src/test/kotlin/       JVM unit tests (mirrors the main package structure).

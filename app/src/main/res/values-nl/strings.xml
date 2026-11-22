@@ -3,7 +3,6 @@
     <string name="problem_playlist_rejected">Spotify nam de wijziging aan de afspeellijst niet aan. Probeer opnieuw.</string>
     <string name="playlist_press_play">Open hem in Spotify en druk op afspelen.</string>
     <string name="playlist_playing">Speelt af op Spotify.</string>
-    <string name="playlist_card_label">Spotify-afspeellijst</string>
     <string name="playlist_description">Gemaakt door Player</string>
     <string name="action_open_in_spotify">Openen in Spotify</string>
     <string name="app_name">Player</string>
@@ -28,7 +27,6 @@
     <string name="action_resume_spotify">Nu hervatten</string>
     <string name="action_retry">Opnieuw proberen</string>
     <string name="action_sign_out">Uitloggen</string>
-    <string name="action_start">Starten</string>
     <string name="action_start_queue">Naar Spotify</string>
     <string name="action_stop">Stoppen</string>
     <string name="action_undo">Ongedaan maken</string>
@@ -67,8 +65,6 @@
     <string name="genres_search">Genre zoeken of toevoegen</string>
     <string name="genres_title">Genres</string>
     <string name="genres_use">‘%1$s’ gebruiken</string>
-    <string name="length_label">Nummers</string>
-    <string name="length_range">%1$d tot %2$d</string>
     <string name="length_title">Lengte</string>
     <string name="meter_mood">Sfeer</string>
     <string name="meter_new">Nieuw</string>
@@ -168,4 +164,23 @@
         <item quantity="one">Player maakt een nieuwe privé-afspeellijst in je Spotify-account met %d nummer.</item>
         <item quantity="other">Player maakt een nieuwe privé-afspeellijst in je Spotify-account met alle %d nummers.</item>
     </plurals>
+    <string name="generator_headline">Waar heb je vandaag %1$s in?</string>
+    <string name="generator_headline_word">zin</string>
+    <!-- The word under the number on the length stepper (always 10 or more). -->
+    <string name="length_unit">nummers</string>
+    <plurals name="length_tracks">
+        <item quantity="one">%d nummer</item>
+        <item quantity="other">%d nummers</item>
+    </plurals>
+    <string name="action_more_tracks">Meer nummers</string>
+    <string name="action_fewer_tracks">Minder nummers</string>
+    <string name="generating_title">Platenbakken doorzoeken…</string>
+    <string name="preview_curve_title">Sfeer door de set</string>
+    <string name="preview_curve_peak">Hoogtepunt bij nummer %1$d</string>
+    <string name="preview_curve_description">De sfeer begint op %1$d%%, piekt bij nummer %2$d en eindigt op %3$d%%.</string>
+    <string name="start_dialog_dice">Andere naam voorstellen</string>
+    <string name="action_send">Versturen</string>
+    <string name="step_artists_short">Vergelijkbare artiesten zoeken</string>
+    <string name="step_tracks_short">Nummers verzamelen</string>
+    <string name="step_moods_short">Tags lezen</string>
 </resources>

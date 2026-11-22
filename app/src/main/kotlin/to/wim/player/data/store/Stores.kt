@@ -58,7 +58,7 @@ class SettingsStore(context: Context) {
     val settings: Flow<AppSettings> =
         store.data.map { prefs ->
             AppSettings(
-                themeMode = enumOr(prefs[Keys.theme], ThemeMode.SYSTEM),
+                themeMode = enumOr(prefs[Keys.theme], ThemeMode.DARK),
                 dynamicColor = prefs[Keys.dynamicColor] ?: false,
                 listenBrainzUsername = prefs[Keys.listenBrainzUser].orEmpty(),
                 ordering = enumOr(prefs[Keys.ordering], Ordering.MOOD_CURVE),

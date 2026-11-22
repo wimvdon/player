@@ -47,4 +47,30 @@ class PlaylistNameTest {
         assertEquals("Player", PlaylistName.clean("   ", "Player"))
         assertEquals(PlaylistName.MAX_LENGTH, PlaylistName.clean("a".repeat(150), "Player").length)
     }
+
+    @Test
+    fun `alternatives start with the suggestion and add other names`() {
+        val names = PlaylistName.alternatives(listOf("indie", "jazz"), listOf("Bonobo"), 0.8, day, Locale.UK, english)
+        assertEquals("Upbeat Indie & Jazz · 22 Nov", names.first())
+        assertEquals(
+            listOf(
+                "Upbeat Indie & Jazz · 22 Nov",
+                "Upbeat Indie & Jazz",
+                "Indie & Jazz · 22 Nov",
+                "Upbeat Bonobo",
+                "Bonobo · 22 Nov",
+                "Upbeat Indie",
+                "Indie · 22 Nov",
+                "Upbeat Jazz",
+                "Jazz · 22 Nov",
+            ),
+            names,
+        )
+    }
+
+    @Test
+    fun `alternatives without picks are never empty and have no duplicates`() {
+        val names = PlaylistName.alternatives(emptyList(), emptyList(), 0.5, day, Locale.UK, english)
+        assertEquals(listOf("Player · 22 Nov", "Player"), names)
+    }
 }

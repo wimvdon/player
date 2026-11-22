@@ -2,6 +2,29 @@
 
 Newest first. Add an entry for every notable choice: what was decided, why, and what was rejected.
 
+## 2026-11-22: Player gets a playful, dark-by-default look (Material 3 Expressive ideas)
+
+The owner asked for a much more fun UI, inspired by Material 3 Expressive, with dark mode as the
+default like Spotify, from an approved mockup (wordmark option A, the cookie icon).
+
+- **Dark by default:** `ThemeMode.DARK` is the new default for anyone who never picked a theme;
+  a stored choice (System, Light) stays. The window background is dark in every mode, so a user
+  who picks Light sees a dark flash for a moment at start. Accepted: the default start matters more.
+- **Hand-tuned colours** around the icon's middle stop instead of a generated tonal scheme: a
+  vivid coral `primary` that a tonal dark scheme would wash out to pink, and amber only for mood.
+- **Roboto Flex is bundled** (`res/font/roboto_flex.ttf`, Latin subset with the weight, width and
+  optical-size axes, about 90 KB) for the wordmark and Display/Headline Large. It is a font file,
+  not a library; its SIL Open Font Licence ships in `assets/licenses/`. Rejected: downloadable
+  Google Fonts (needs a new dependency and network at first start) and the system font (Roboto
+  has no width axis, so no wide wordmark).
+- **No alpha libraries:** Material 3 1.4 (the stable one in our BOM) has no expressive loading
+  indicator, wavy progress, button groups or shape library yet; those are only in 1.5 alphas. Player
+  draws its own (`ui/common/Expressive.kt`) from plain Canvas and shapes, with the shape math in
+  `logic/Blob.kt`. When they reach a stable release, Material's own versions can replace these.
+- **Not in this change:** the "vibe pad" from the mockup (one square for mood and energy) needs a
+  second value (energy or happiness) the generator doesn't have yet. It comes with the new tuning
+  options; until then mood and familiarity use the new thick sliders. Order stays in Settings.
+
 ## 2026-11-22: Sets are built from ListenBrainz and MusicBrainz; Last.fm is removed
 
 The engine now reads all music data through `MusicSource` (`data/brainz/BrainzMusic.kt`), and

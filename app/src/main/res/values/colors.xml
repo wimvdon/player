@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="window_background">#FFFFF8F6</color>
+    <!-- The dark theme's background: the app starts dark unless the user picks Light or System. -->
+    <color name="window_background">#FF150F0E</color>
 </resources>

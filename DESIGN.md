@@ -226,19 +226,41 @@ app apart from their package (and `R` import) lines. Copy a change to the other 
 
 ## This app
 
-**Player**: builds a set of tracks from MusicBrainz and ListenBrainz data and plays it in a Spotify playlist.
+**Player**: builds a set of tracks from ListenBrainz and MusicBrainz data and plays it in a Spotify
+playlist. It is the playful one of the family: Material 3 Expressive ideas (bold type, shapes that
+react, a morphing loader, a wavy progress bar), dark by default like Spotify.
 
-- **Icon:** a disc with a white play triangle. Gradient `#FF5A47` → `#D51007` → `#A3001F`.
-  (Player isn't in the shared icon table above yet; adding it means copying the table to every
-  app's `DESIGN.md`.)
-- **Colour:** Last.fm's red (`#D51007`) as the seed. Unlike the other apps, the primary roles come
-  from Material's *fidelity* scheme so the red stays vivid, and the surfaces and secondary roles
-  from the *neutral* scheme of the same hue: near-white and near-black surfaces with one red
-  accent (the colours started from Last.fm, which Player used at first).
-- **Signature element:** chart rows in the preview, like a music chart: a rank number, the
-  cover (or the artist's first letter), title and artist, and two short bars on the right for
-  mood and how new the track is (`ScoreMeter`). The bars always have a text label and the row a
-  full screen-reader description, so the colour never carries meaning on its own.
+- **Icon:** a nine-lobed "cookie" with a white play triangle. Gradient `#FF8A5C` → `#FF5A47` →
+  `#C0182A`. The same cookie is the wordmark's logo and the first shape of the loading animation
+  (`logic/Blob.kt`). (Player isn't in the shared icon table above yet; adding it means copying the
+  table to every app's `DESIGN.md`.)
+- **Theme:** Dark is the default (`ThemeMode.DARK`); System and Light stay in Settings ›
+  Appearance. The window background is the dark surface, so the default start has no flash.
+- **Colour:** a hand-tuned scheme around the icon's middle stop `#FF5A47`, not a generated tonal
+  scheme: warm near-black surfaces (`#150F0E` up to `#3A2F2C`), one vivid coral red as `primary`
+  for what you press, and amber (`tertiary`, `#FFC05C`) only where mood is drawn (the mood line
+  and the Mood bar). Light uses the same roles with a deeper red (`#B02B1B`).
+- **Type:** Roboto Flex (bundled in `res/font`, SIL Open Font Licence in
+  `assets/licenses/`) wide and black for Display and Headline Large: the question on the
+  generator, the set's title, the generating title, the counters. Everything else stays Roboto,
+  including app bar titles and Settings' large app bar (Headline Medium).
+- **Wordmark:** the generator's app bar shows "player" in the widest, boldest Roboto Flex next to
+  the cookie (`Wordmark`). This is the one app bar title that isn't Title Large: it is the brand
+  on the start screen. Child pages keep the normal app bar title.
+- **Expressive pieces** (`ui/common/Expressive.kt`): a thick slider with a thin upright handle
+  (mood, familiarity), a number stepper with buttons that round off while pressed (length), filter
+  chips that round off when selected, a large Generate FAB that squishes when pressed, a morphing
+  loader and a wavy progress bar while generating, the mood line on the preview, and a spinning
+  record while the playlist fills. All decorative motion stops when the phone's animations are
+  off.
+- **Signature element:** chart rows in the preview: a rank number, the cover (or the artist's
+  first letter), title and artist, and two short bars on the right for mood (amber) and how new
+  the track is (red) (`ScoreMeter`). The bars always have a text label and the row a full
+  screen-reader description, so the colour never carries meaning on its own. Above the rows, a
+  cover collage, the set's title and the mood line show the whole set at a glance.
+- **Send:** a bottom sheet (not a dialog) with the suggested name, a dice that rolls through
+  other names (`PlaylistName.alternatives`) and two of them as chips.
 - **Structure:** one top-level screen (the generator, settings in its top app bar), so no
   navigation bar. Preview, Playlist, Settings and "API calls and cache" are child pages. Generate is
-  the screen's one FAB.
+  the screen's one FAB. While a set is generated, the generator shows the generating screen in
+  its place (with Cancel).
