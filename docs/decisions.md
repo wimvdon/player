@@ -18,6 +18,23 @@ once, and to choose its name. This replaces the "one reused playlist" and "rolli
   removed.
 - Rejected: making the playlist first and filling it while searching (it would show up half
   empty in Spotify).
+## 2026-11-22: Player moves from Last.fm to ListenBrainz, MusicBrainz and ReccoBeats
+
+The owner chose to drop Last.fm. History, taste and similar artists will come from
+**ListenBrainz** (the owner imports their Last.fm scrobbles there once and links Spotify so new
+plays keep arriving), artist IDs and genres from **MusicBrainz**, and sound from **ReccoBeats**
+(already used for tempo and energy). Spotify keeps the library, top items and recent plays.
+
+- Both MusicBrainz and ListenBrainz allow **one call a second** per client, so they share
+  `BrainzHttp` with a 1-per-second `TokenBucket`, wait on 429/503 (`X-RateLimit-Reset-In`,
+  `Retry-After`) and send `Player/<version> ( https://github.com/wimvdon/player )` as User-Agent,
+  which both ask for. A repository link instead of an email, so no personal address is in the app.
+- Reading ListenBrainz needs only a username. A user token is optional (higher rate limits).
+- ListenBrainz works with MusicBrainz IDs, not names, so names go through MusicBrainz first.
+- Done in steps: first the clients with tests (not used yet), then the engine switch that removes
+  Last.fm, then importing Spotify's extended streaming history on the phone.
+- Rejected: keeping Last.fm for history (the ListenBrainz importer covers it) or as a fallback
+  for genres (more code and settings; can be added later if MusicBrainz tags prove too thin).
 
 ## 2026-11-22: Player fills a Spotify playlist instead of the play queue
 

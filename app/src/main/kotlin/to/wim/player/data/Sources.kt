@@ -1,5 +1,10 @@
 package to.wim.player.data
 
+import to.wim.player.data.brainz.BrainzRecording
+import to.wim.player.data.brainz.BrainzTopArtist
+import to.wim.player.data.brainz.MbArtist
+import to.wim.player.data.brainz.Recommendation
+import to.wim.player.data.brainz.SimilarArtist
 import to.wim.player.data.model.AudioFeatures
 import to.wim.player.data.model.LfmArtist
 import to.wim.player.data.model.LfmTrack
@@ -26,6 +31,36 @@ interface LastFmSource {
     suspend fun userTopTrackKeys(username: String): Set<String>
 
     suspend fun userTopArtists(username: String, limit: Int = 20): List<LfmArtist>
+}
+
+/** What the app reads from MusicBrainz: artist IDs, genres and tags. */
+interface MusicBrainzSource {
+    /** Artists matching a name, best match first. */
+    suspend fun searchArtists(name: String, limit: Int = 5): List<MbArtist>
+
+    /** An artist's genres and tags with their vote counts, most votes first. */
+    suspend fun artistTags(mbid: String): List<WeightedTag>
+
+    /** The MusicBrainz artists linked to a Spotify artist ID (usually one). */
+    suspend fun artistsForSpotify(spotifyArtistId: String): List<MbArtist>
+}
+
+/** What the app reads from ListenBrainz. Everything here is public: only a username is needed. */
+interface ListenBrainzSource {
+    /** Artists listened to in the same sessions as [mbid], most similar first. */
+    suspend fun similarArtists(mbid: String, limit: Int = 30): List<SimilarArtist>
+
+    /** An artist's most listened recordings, with listen and listener counts. */
+    suspend fun topRecordings(artistMbid: String, limit: Int = 20): List<BrainzRecording>
+
+    /** The user's top artists over the past year. Empty while stats aren't calculated. */
+    suspend fun userTopArtists(username: String, limit: Int = 20): List<BrainzTopArtist>
+
+    /** The user's most listened recordings of all time (up to 1 000). */
+    suspend fun userTopRecordings(username: String): List<BrainzRecording>
+
+    /** Collaborative-filtering recommendations for the user. Empty until ListenBrainz has made some. */
+    suspend fun recommendations(username: String, limit: Int = 100): List<Recommendation>
 }
 
 /** What the app reads from the Spotify Web API (searches and the user's library). */

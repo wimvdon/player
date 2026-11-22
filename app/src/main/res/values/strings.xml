@@ -4,6 +4,8 @@
     <string name="service_spotify" translatable="false">Spotify</string>
     <string name="service_lastfm" translatable="false">Last.fm</string>
     <string name="service_reccobeats" translatable="false">ReccoBeats</string>
+    <string name="service_musicbrainz" translatable="false">MusicBrainz</string>
+    <string name="service_listenbrainz" translatable="false">ListenBrainz</string>
     <string name="problem_playlist_rejected">Spotify didn\'t accept the playlist change. Try again.</string>
     <string name="playlist_press_play">Open it in Spotify and press play.</string>
     <string name="playlist_playing">Playing on Spotify.</string>

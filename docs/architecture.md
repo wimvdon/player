@@ -34,7 +34,12 @@ and the date), and every match goes in straight away, in calls of 100 (Spotify's
 After a problem, Continue picks up where it stopped without making a second playlist. See
 `docs/decisions.md` for why.
 
-**Services** sit behind interfaces in `data/Sources.kt` (`LastFmSource`, `SpotifyCatalog`,
+**Moving off Last.fm** (see `docs/decisions.md`): `data/brainz/` holds MusicBrainz and
+ListenBrainz clients (`MusicBrainzSource`, `ListenBrainzSource`), one call a second each through
+`BrainzHttp`. They are tested but not used by the engine yet.
+
+**Services** sit behind interfaces in `data/Sources.kt` (`LastFmSource`, `MusicBrainzSource`,
+`ListenBrainzSource`, `SpotifyCatalog`,
 `PlaylistTarget`, `AudioFeatureSource`) so the engine is tested with fakes.
 
 **Spotify's quota:** Development Mode apps have a small, unpublished quota. Every call is logged
