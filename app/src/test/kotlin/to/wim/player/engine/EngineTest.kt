@@ -303,10 +303,14 @@ class QueueControllerTest {
         runBlocking {
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
             var paused = false
+            var pauseAt = 20
             val catalog =
                 object : FakeCatalog() {
                     override suspend fun searchTrack(artist: String, title: String): List<SpotifyTrack> {
-                        if (searches == 20) paused = true
+                        if (searches == pauseAt) {
+                            paused = true
+                            pauseAt = -1
+                        }
                         if (paused) throw SpotifyPausedException(123)
                         return super.searchTrack(artist, title)
                     }
