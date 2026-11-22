@@ -8,6 +8,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
@@ -50,6 +51,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -67,12 +69,13 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
+import to.wim.player.R
 import to.wim.player.logic.Blob
 import to.wim.player.ui.theme.WordmarkFamily
 import to.wim.player.ui.theme.rememberReducedMotion
 
-// Player's expressive pieces (DESIGN.md, "This app"): the cookie shape, the wordmark, the morphing
-// loader, the wavy progress bar, the thick slider, the stepper, the mood line and the record.
+// Player's expressive pieces (DESIGN.md, "This app"): the cookie shape, the bars logo, the wordmark,
+// the morphing loader, the wavy progress bar, the thick slider, the stepper, the mood line and the record.
 // Decorative motion stops when the phone's animations are off (rememberReducedMotion).
 
 private const val SHAPE_STEPS = 180
@@ -108,26 +111,20 @@ class BlobShape(private val blob: Blob = Blob.Cookie) : Shape {
     ): Outline = Outline.Generic(Path().apply { blob(size, blob.depth) { blob.radius(it) } })
 }
 
-/** The cookie with a play triangle, as in the launcher icon. */
+/** The four uneven bars of the launcher icon, in its gradient: the wordmark's logo. */
 @Composable
-fun CookiePlay(
+fun BarsLogo(
     modifier: Modifier = Modifier,
     size: Dp = 32.dp,
 ) {
-    Box(
-        modifier.size(size).clip(BlobShape()).background(MaterialTheme.colorScheme.primary),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            Icons.Rounded.PlayArrow,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onPrimary,
-            modifier = Modifier.size(size * 0.62f),
-        )
-    }
+    Image(
+        painterResource(R.drawable.ic_logo_bars),
+        contentDescription = null,
+        modifier = modifier.size(size),
+    )
 }
 
-/** The "player" wordmark: the cookie and the name in the widest, boldest Roboto Flex. */
+/** The "player" wordmark: the bars logo and the name in the widest, boldest Roboto Flex. */
 @Composable
 fun Wordmark(
     name: String,
@@ -142,7 +139,7 @@ fun Wordmark(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy((fontSizeSp * 0.35f).dp),
     ) {
-        CookiePlay(size = (fontSizeSp * 1.2f).dp)
+        BarsLogo(size = (fontSizeSp * 1.1f).dp)
         Text(
             name.lowercase(),
             style = TextStyle(fontFamily = WordmarkFamily, fontSize = fontSizeSp.sp, letterSpacing = (-0.03f * fontSizeSp).sp),

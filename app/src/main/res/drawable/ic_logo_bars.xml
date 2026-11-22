@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The wordmark's logo: the launcher icon's four uneven bars and gradient
+     (ic_launcher_foreground), cropped to the bars themselves. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="49.5dp"
+    android:height="48dp"
+    android:viewportWidth="49.5"
+    android:viewportHeight="48">
+    <group
+        android:translateX="-29.25"
+        android:translateY="-30">
+        <path android:pathData="M34.00,30.00h18.00a4.75,4.75 0 0,1 0,9.5h-18.00a4.75,4.75 0 0,1 0,-9.5z M34.00,42.83h40.00a4.75,4.75 0 0,1 0,9.5h-40.00a4.75,4.75 0 0,1 0,-9.5z M34.00,55.67h10.00a4.75,4.75 0 0,1 0,9.5h-10.00a4.75,4.75 0 0,1 0,-9.5z M34.00,68.50h28.00a4.75,4.75 0 0,1 0,9.5h-28.00a4.75,4.75 0 0,1 0,-9.5z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="30"
+                    android:startY="30"
+                    android:endX="78"
+                    android:endY="78">
+                    <item android:offset="0" android:color="#FFFFA23A" />
+                    <item android:offset="0.5" android:color="#FFF0243A" />
+                    <item android:offset="1" android:color="#FFA0105E" />
+                </gradient>
+            </aapt:attr>
+        </path>
+    </group>
+</vector>
