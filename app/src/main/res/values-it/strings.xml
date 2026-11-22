@@ -136,7 +136,7 @@
     <string name="cache_top_tracks">Brani più ascoltati</string>
     <string name="settings_listenbrainz_username">Nome utente</string>
     <string name="settings_listenbrainz_help">Facoltativo. I tuoi artisti preferiti avviano una selezione se non ne scegli nessuno, e i brani già ascoltati contano come conosciuti.</string>
-    <string name="settings_listenbrainz_import">Per usare la cronologia di Last.fm, importala su ListenBrainz (Impostazioni, Importa).</string>
+    <string name="settings_listenbrainz_import">Per usare la cronologia di Last.fm o Spotify (lo ZIP della cronologia di streaming estesa di Spotify), importala su ListenBrainz (Impostazioni, Importa).</string>
     <string name="action_open_listenbrainz">Apri ListenBrainz</string>
     <plurals name="preview_summary">
         <item quantity="one">%1$d brano di %2$d artisti</item>

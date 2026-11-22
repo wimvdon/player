@@ -21,8 +21,9 @@ app's settings walk you through it, with copy buttons for every value:
    Android and Web API. Paste its Client ID into the settings and tap **Connect Spotify**.
 2. **ListenBrainz (optional):** with an account at https://listenbrainz.org, enter your username
    in Settings → ListenBrainz so songs you've played count as known. To bring your history from
-   Last.fm, use listenbrainz.org → Settings → Import, and link Spotify there so new plays keep
-   arriving.
+   Last.fm or Spotify (the "Extended streaming history" ZIP you can request at
+   spotify.com/account/privacy), use listenbrainz.org → Settings → Import, and link Spotify there
+   so new plays keep arriving.
 
 Then pick a mood, genres and artists, tap **Generate**, check the preview and tap **Send to
 Spotify**. Player suggests a name (you can type your own) and makes a new private playlist with

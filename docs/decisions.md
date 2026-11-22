@@ -25,6 +25,16 @@ default like Spotify, from an approved mockup (wordmark option A, the cookie ico
   second value (energy or happiness) the generator doesn't have yet. It comes with the new tuning
   options; until then mood and familiarity use the new thick sliders. Order stays in Settings.
 
+## 2026-11-22: Spotify's streaming history is imported on ListenBrainz, not in the app
+
+The plan was to import Spotify's Extended Streaming History ZIP on the phone. ListenBrainz now
+imports that ZIP itself (listenbrainz.org → Settings → Import), and Player already reads the user's
+ListenBrainz top artists and top recordings, so the owner chose to use that instead. Settings and
+the README now point to the importer for both Last.fm and Spotify history.
+
+- Rejected: parsing the ZIP in the app (a second copy of the history on the phone, more code and
+  more stored personal data for the same result).
+
 ## 2026-11-22: Sets are built from ListenBrainz and MusicBrainz; Last.fm is removed
 
 The engine now reads all music data through `MusicSource` (`data/brainz/BrainzMusic.kt`), and
@@ -79,7 +89,7 @@ plays keep arriving), artist IDs and genres from **MusicBrainz**, and sound from
 - Reading ListenBrainz needs only a username. A user token is optional (higher rate limits).
 - ListenBrainz works with MusicBrainz IDs, not names, so names go through MusicBrainz first.
 - Done in steps: first the clients with tests, then the engine switch that removes Last.fm
-  (entry above), then importing Spotify's extended streaming history on the phone.
+  (entry above). Importing Spotify's extended streaming history moved to ListenBrainz (entry at the top).
 - Rejected: keeping Last.fm for history (the ListenBrainz importer covers it) or as a fallback
   for genres (more code and settings; can be added later if MusicBrainz tags prove too thin).
 

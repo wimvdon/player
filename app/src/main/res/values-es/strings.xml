@@ -136,7 +136,7 @@
     <string name="cache_top_tracks">Canciones más escuchadas</string>
     <string name="settings_listenbrainz_username">Nombre de usuario</string>
     <string name="settings_listenbrainz_help">Opcional. Tus artistas más escuchados inician una selección si no eliges ninguno, y las canciones que ya escuchaste cuentan como conocidas.</string>
-    <string name="settings_listenbrainz_import">Para usar tu historial de Last.fm, impórtalo en ListenBrainz (Ajustes, Importar).</string>
+    <string name="settings_listenbrainz_import">Para usar tu historial de Last.fm o Spotify (el ZIP del historial de reproducción ampliado de Spotify), impórtalo en ListenBrainz (Ajustes, Importar).</string>
     <string name="action_open_listenbrainz">Abrir ListenBrainz</string>
     <plurals name="preview_summary">
         <item quantity="one">%1$d canción de %2$d artistas</item>

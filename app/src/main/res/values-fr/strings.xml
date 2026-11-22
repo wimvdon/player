@@ -136,7 +136,7 @@
     <string name="cache_top_tracks">Titres les plus écoutés</string>
     <string name="settings_listenbrainz_username">Nom d’utilisateur</string>
     <string name="settings_listenbrainz_help">Facultatif. Vos artistes favoris lancent une sélection si vous n’en choisissez aucun, et les titres déjà écoutés comptent comme connus.</string>
-    <string name="settings_listenbrainz_import">Pour utiliser votre historique Last.fm, importez-le sur ListenBrainz (Paramètres, Importer).</string>
+    <string name="settings_listenbrainz_import">Pour utiliser votre historique Last.fm ou Spotify (le ZIP de l\'historique de streaming étendu de Spotify), importez-le sur ListenBrainz (Paramètres, Importer).</string>
     <string name="action_open_listenbrainz">Ouvrir ListenBrainz</string>
     <plurals name="preview_summary">
         <item quantity="one">%1$d titre de %2$d artistes</item>
