@@ -30,7 +30,7 @@ class TrackResolver(
                 results.map { SpotifyCandidate(it.uri, it.name, it.artists) },
             )
         val track = match?.let { found -> results.first { it.uri == found.uri } }
-        val resolution = Resolution(uri = track?.uri, imageUrl = track?.imageUrl)
+        val resolution = Resolution(uri = track?.uri, imageUrl = track?.imageUrl, durationMs = track?.durationMs ?: 0)
         cache.put(key, resolution)
         return resolution
     }

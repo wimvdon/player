@@ -26,7 +26,6 @@ import to.wim.player.data.model.LfmArtist
 import to.wim.player.data.model.LfmTrack
 import to.wim.player.data.model.Resolution
 import to.wim.player.data.reccobeats.ReccoBeatsClient
-import to.wim.player.data.spotify.AppRemotePlayer
 import to.wim.player.data.spotify.CachedSpotify
 import to.wim.player.data.spotify.SpotifyWebApi
 import to.wim.player.data.store.SecretStore
@@ -122,8 +121,7 @@ class AppGraph(app: Application) {
     val resolver = TrackResolver(catalog, resolutionCache)
     val features =
         ReccoBeatsClient(http, featureCache, featureMissCache, enabled = { settings.current().useReccoBeats }, log = callLog)
-    val player = AppRemotePlayer(app, { secrets.current().spotifyClientId }, redirectUri, webApi, callLog)
-    val queue = QueueController(player, resolver, features, scope)
+    val queue = QueueController(webApi, secrets, resolver, features, scope)
 
     /** The last generated set, shown on the preview screen. */
     val preview = MutableStateFlow<GenerationResult?>(null)

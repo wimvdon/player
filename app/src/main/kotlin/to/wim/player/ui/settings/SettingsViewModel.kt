@@ -79,6 +79,7 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
                 _signInProblem.value = null
                 viewModelScope.launch {
                     graph.secrets.saveGrant(TokenGrant(access, response.refreshToken, response.expiresIn.toLong()), System.currentTimeMillis())
+                    graph.secrets.setSpotifyScopes(Setup.scopeString)
                     graph.secrets.clearPause()
                     val name = runCatching { graph.webApi.displayName() }.getOrNull()
                     graph.secrets.setSpotifyUserName(name.orEmpty())

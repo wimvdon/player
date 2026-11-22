@@ -56,25 +56,13 @@ class RateLimitsTest {
     }
 }
 
-class RollingQueueTest {
+class PlaylistPlanTest {
     @Test
-    fun `queues enough to keep fifteen ahead`() {
-        // Nothing played yet, 16 queued (one to play plus 15 ahead): nothing more needed.
-        assertEquals(0, RollingQueue.toQueue(queuedCount = 16, playedIndex = 0, remaining = 100))
-        // The second track started: one more.
-        assertEquals(1, RollingQueue.toQueue(queuedCount = 16, playedIndex = 1, remaining = 100))
-        // Fewer left than needed.
-        assertEquals(2, RollingQueue.toQueue(queuedCount = 16, playedIndex = 10, remaining = 2))
-        assertEquals(0, RollingQueue.toQueue(queuedCount = 16, playedIndex = 10, remaining = 0))
-    }
-
-    @Test
-    fun `finds the playing track from where it was`() {
-        val uris = listOf("a", "b", "a", "c")
-        assertEquals(0, RollingQueue.playingIndex(uris, "a", 0))
-        assertEquals(2, RollingQueue.playingIndex(uris, "a", 1))
-        assertEquals(-1, RollingQueue.playingIndex(uris, "x", 0))
-        assertEquals(-1, RollingQueue.playingIndex(uris, null, 0))
+    fun `tops up when less than forty minutes are ahead`() {
+        assertTrue(PlaylistPlan.needsMore(0))
+        assertTrue(PlaylistPlan.needsMore(39L * 60_000))
+        assertEquals(false, PlaylistPlan.needsMore(40L * 60_000))
+        assertEquals(false, PlaylistPlan.needsMore(2L * 60 * 60_000))
     }
 
     @Test

@@ -36,6 +36,8 @@ data class SpotifyTrack(
 data class Resolution(
     val uri: String? = null,
     val imageUrl: String? = null,
+    /** Length in milliseconds (0 when not known, as in matches saved by version 0.1.0). */
+    val durationMs: Long = 0,
 )
 
 /** ReccoBeats audio features for one Spotify track. */
@@ -47,12 +49,12 @@ data class AudioFeatures(
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
-/** How the queue is filled. */
+/** How the playlist is filled. */
 enum class QueueMode {
-    /** Keeps [to.wim.player.logic.RollingQueue.AHEAD] tracks queued while you listen. */
+    /** Adds tracks a few at a time, about 40 minutes ahead of the listening time. */
     ROLLING,
 
-    /** Adds every track now, in batches. */
+    /** Adds every track now. */
     ALL_NOW,
 }
 
@@ -82,6 +84,10 @@ data class Secrets(
     val spotifyUserName: String = "",
     /** All Spotify Web API calls wait until this time after QUOTA_EXCEEDED (0 = not paused). */
     val spotifyPausedUntilMillis: Long = 0,
+    /** The scopes the saved sign-in was granted (space separated). */
+    val spotifyScopes: String = "",
 ) {
-    val spotifySignedIn: Boolean get() = spotifyRefreshToken.isNotEmpty() || spotifyAccessToken.isNotEmpty()
+    /** Signed in with the scopes this version needs (version 0.1.0 didn't ask for playlists). */
+    val spotifySignedIn: Boolean
+        get() = (spotifyRefreshToken.isNotEmpty() || spotifyAccessToken.isNotEmpty()) && spotifyScopes == to.wim.player.logic.Setup.scopeString
 }

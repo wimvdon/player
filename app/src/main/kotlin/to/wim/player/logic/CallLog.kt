@@ -30,28 +30,26 @@ class CallLog(private val capacity: Int = 300) {
     }
 }
 
-/**
- * The rolling queue's arithmetic: which of the planned tracks is playing and how many more to
- * add so [ahead] tracks stay queued after it.
- */
-object RollingQueue {
-    const val AHEAD = 15
-    const val BATCH_SIZE = 25
+/** How the playlist is filled while you listen. */
+object PlaylistPlan {
+    /** Tracks in the playlist when it starts. */
+    const val FIRST_BATCH = 15
+
+    /** Tracks added each time the rolling fill tops up. */
+    const val ROLLING_BATCH = 10
+
+    /** Spotify takes at most 100 tracks per call. */
+    const val MAX_PER_CALL = 100
+
+    /** Rolling mode keeps about this much unheard music in the playlist. */
+    const val AHEAD_MILLIS = 40L * 60 * 1000
+
+    /** Used for a track whose length Spotify didn't give. */
+    const val TYPICAL_TRACK_MILLIS = 3L * 60 * 1000 + 30 * 1000
 
     /**
-     * The index in [queuedUris] of the track now playing, searching from [fromIndex] so a song
-     * planned twice is found in order. -1 when the playing track isn't one of ours.
+     * True when more tracks should go in: [aheadMillis] is the playlist's total length minus the
+     * time since it started, so what's left to hear if the user has been listening all along.
      */
-    fun playingIndex(queuedUris: List<String>, playingUri: String?, fromIndex: Int): Int {
-        if (playingUri == null) return -1
-        val start = fromIndex.coerceAtLeast(0)
-        for (i in start until queuedUris.size) if (queuedUris[i] == playingUri) return i
-        return -1
-    }
-
-    /** How many tracks to queue now. [playedIndex] is the last of ours that started (-1: none yet). */
-    fun toQueue(queuedCount: Int, playedIndex: Int, remaining: Int, ahead: Int = AHEAD): Int {
-        val queuedAhead = queuedCount - (playedIndex + 1)
-        return (ahead - queuedAhead).coerceIn(0, remaining.coerceAtLeast(0))
-    }
+    fun needsMore(aheadMillis: Long): Boolean = aheadMillis < AHEAD_MILLIS
 }

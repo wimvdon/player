@@ -44,6 +44,9 @@ object SpotifyJson {
     /** Names from /me/top/artists. */
     fun artistNames(root: JsonObject): List<String> = root.items().mapNotNull { (it as? JsonObject)?.get("name").string() }
 
+    /** `id` of a created playlist. */
+    fun playlistId(root: JsonObject): String? = root["id"].string()?.takeIf(String::isNotBlank)
+
     /** `display_name` (or `id`) from /me. */
     fun displayName(root: JsonObject): String? = root["display_name"].string()?.takeIf(String::isNotBlank) ?: root["id"].string()
 

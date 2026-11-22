@@ -1,8 +1,8 @@
 # Player
 
-An Android app that builds a play queue from a few controls (mood, familiarity, genres, seed
-artists) using Last.fm data, and plays it through Spotify by adding the tracks to the Spotify
-queue. It never creates or changes Spotify playlists. Each user enters their own (free) Spotify
+An Android app that builds a set of tracks from a few controls (mood, familiarity, genres, seed
+artists) using Last.fm data, and plays it through Spotify in one private playlist ("Player")
+that each new set replaces. Each user enters their own (free) Spotify
 and Last.fm developer keys in the app's settings.
 
 Built from the Android app template: Kotlin, Jetpack Compose, Material 3, Android 12+, with CI
@@ -23,7 +23,8 @@ settings walk you through it, with copy buttons for every value:
    the Android package name and the SHA-1 fingerprint shown in Settings → Spotify, and tick
    Android and Web API. Paste its Client ID into the settings and tap **Connect Spotify**.
 
-Then pick a mood, genres and artists, tap **Generate**, check the preview and tap **Start queue**.
+Then pick a mood, genres and artists, tap **Generate**, check the preview and tap **Send to
+Spotify**. The tracks go into a private playlist called "Player" in your Spotify account.
 
 ## Installing the app on your phone
 

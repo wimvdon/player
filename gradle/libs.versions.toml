@@ -14,8 +14,6 @@ okhttp = "5.5.0"
 serialization = "1.11.0"
 coil = "3.6.3"
 spotifyAuth = "5.0.0"
-# The Spotify App Remote AAR (app/libs) reads its messages with Gson.
-gson = "2.15.0"
 junit = "4.13.2"
 
 [libraries]
@@ -37,7 +35,6 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
 spotify-auth = { group = "com.spotify.android", name = "auth", version.ref = "spotifyAuth" }
-gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 
 [plugins]

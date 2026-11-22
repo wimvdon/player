@@ -6,32 +6,29 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
 import to.wim.player.data.AudioFeatureSource
-import to.wim.player.data.PlayerException
-import to.wim.player.data.PlayerProblem
-import to.wim.player.data.PlayerSnapshot
-import to.wim.player.data.SpotifyPlayer
+import to.wim.player.data.PlaylistMemory
+import to.wim.player.data.PlaylistTarget
 import to.wim.player.data.model.QueueMode
+import to.wim.player.data.spotify.SpotifyHttpException
 import to.wim.player.data.spotify.SpotifyPausedException
 import to.wim.player.data.spotify.SpotifySignedOutException
-import to.wim.player.logic.Backoff
 import to.wim.player.logic.Candidate
-import to.wim.player.logic.RollingQueue
+import to.wim.player.logic.PlaylistPlan
 import kotlin.coroutines.cancellation.CancellationException
 
 enum class QueueStatus { IDLE, CONNECTING, RUNNING, FINISHED, STOPPED, FAILED }
 
-/** Why the queue stopped early. */
+/** Why filling the playlist stopped early. */
 sealed interface QueueProblem {
-    data class Player(val problem: PlayerProblem) : QueueProblem
-
     data class SpotifyPaused(val untilMillis: Long) : QueueProblem
 
     data object SignedOut : QueueProblem
+
+    /** Spotify refused a playlist change. */
+    data object Rejected : QueueProblem
 
     data object Network : QueueProblem
 }
@@ -40,72 +37,84 @@ data class QueueState(
     val status: QueueStatus = QueueStatus.IDLE,
     val mode: QueueMode = QueueMode.ROLLING,
     val total: Int = 0,
-    /** Tracks handed to Spotify so far. */
+    /** Tracks added to the playlist so far. */
     val queued: Int = 0,
-    /** Tracks looked at (queued or skipped). */
+    /** Tracks looked at (added or skipped). */
     val processed: Int = 0,
     /** Tracks not found on Spotify, so left out. */
     val skipped: Int = 0,
-    /** Index (in the queued list) of the last of our tracks that started playing; -1 before. */
-    val playedIndex: Int = -1,
-    val nowPlaying: PlayerSnapshot? = null,
+    /** The playlist being filled, once it exists. */
+    val playlistId: String? = null,
+    /** True when Spotify started playing it; false when the user has to press play in Spotify. */
+    val playbackStarted: Boolean? = null,
+    /** Estimated music in the playlist not listened to yet (rolling mode), in minutes. */
+    val minutesAhead: Int = 0,
     val problem: QueueProblem? = null,
 ) {
     val active: Boolean get() = status == QueueStatus.CONNECTING || status == QueueStatus.RUNNING
-
-    /** Queued tracks still waiting to play. */
-    val ahead: Int get() = (queued - (playedIndex + 1)).coerceAtLeast(0)
 }
 
 /**
- * Hands the generated tracks to Spotify. Rolling mode keeps [RollingQueue.AHEAD] tracks queued
- * ahead of the one playing and searches Spotify only as they are needed, spreading the calls
- * over the listening session. "All now" queues everything in batches.
+ * Puts the generated tracks in one private Spotify playlist ("Player", reused for every set).
+ * Rolling mode adds tracks a few at a time, staying about [PlaylistPlan.AHEAD_MILLIS] ahead of
+ * the time since the playlist started, so Spotify searches are spread over the listening session.
+ * "All now" adds everything at once. Each track is matched on Spotify just before it's added.
  */
 class QueueController(
-    private val player: SpotifyPlayer,
+    private val target: PlaylistTarget,
+    private val memory: PlaylistMemory,
     private val resolver: TrackResolver,
     private val features: AudioFeatureSource?,
     private val scope: CoroutineScope,
-    private val spacingMillis: Long = 350,
-    private val batchPauseMillis: Long = 3_000,
+    private val now: () -> Long = System::currentTimeMillis,
+    private val checkEveryMillis: Long = 60_000,
 ) {
     private val _state = MutableStateFlow(QueueState())
     val state: StateFlow<QueueState> = _state.asStateFlow()
 
     private var job: Job? = null
-
-    init {
-        // What Spotify plays, for the queue screen and the notification, in both modes.
-        scope.launch { player.state.collect { now -> _state.update { it.copy(nowPlaying = now) } } }
-    }
-
     private var tracks: List<Candidate> = emptyList()
-    private val queuedUris = ArrayList<String>()
-    private var next = 0
 
-    fun start(list: List<Candidate>, mode: QueueMode) {
+    /** The first track not in the playlist yet. Moves on only once Spotify took a batch. */
+    private var next = 0
+    private var startedAt = 0L
+    private var addedMillis = 0L
+    private var playlistName = ""
+    private var playlistDescription = ""
+
+    /** Starts a new set: the playlist is emptied and filled with [list]. */
+    fun start(list: List<Candidate>, mode: QueueMode, name: String, description: String) {
         job?.cancel()
         tracks = list
-        queuedUris.clear()
         next = 0
-        _state.value = QueueState(status = QueueStatus.CONNECTING, mode = mode, total = list.size, nowPlaying = player.state.value)
+        addedMillis = 0
+        startedAt = now()
+        playlistName = name
+        playlistDescription = description
+        _state.value = QueueState(status = QueueStatus.CONNECTING, mode = mode, total = list.size)
         launchRun(mode)
     }
 
-    /** Carries on after a problem, from the first track that wasn't handled yet. */
+    /** Carries on after a problem, from the first track that wasn't added yet. */
     fun resume() {
         val current = _state.value
         if (current.active || next >= tracks.size) return
-        _state.update { it.copy(status = QueueStatus.CONNECTING, problem = null) }
+        _state.update { it.copy(status = if (it.playlistId == null) QueueStatus.CONNECTING else QueueStatus.RUNNING, problem = null) }
         launchRun(current.mode)
+    }
+
+    /** Stops adding tracks. The playlist keeps what was added. */
+    fun stop() {
+        job?.cancel()
+        job = null
+        if (_state.value.active) _state.update { it.copy(status = QueueStatus.STOPPED) }
     }
 
     private fun launchRun(mode: QueueMode) {
         job =
             scope.launch {
                 try {
-                    connect()
+                    if (_state.value.playlistId == null) startPlaylist()
                     _state.update { it.copy(status = QueueStatus.RUNNING) }
                     when (mode) {
                         QueueMode.ROLLING -> rolling()
@@ -120,116 +129,101 @@ class QueueController(
             }
     }
 
-    /** True when [resume] has tracks left to hand over. */
-    val canResume: Boolean get() = !_state.value.active && next < tracks.size
-
-    /** Stops adding tracks. What's already in Spotify's queue stays there (apps can't clear it). */
-    fun stop() {
-        job?.cancel()
-        job = null
-        if (_state.value.active) _state.update { it.copy(status = QueueStatus.STOPPED) }
-        player.disconnect()
-    }
-
-    private suspend fun connect() {
-        var attempt = 0
-        while (true) {
+    /** Empties the reused playlist (or makes one) with the first tracks, then tries to play it. */
+    private suspend fun startPlaylist() {
+        val first = resolveBatch(PlaylistPlan.FIRST_BATCH)
+        var id = memory.playlistId()
+        if (id.isNotEmpty()) {
             try {
-                player.connect()
-                // The first player state arrives just after connecting; wait for it briefly.
-                withTimeoutOrNull(STATE_WAIT_MILLIS) { player.state.first { it != null } }
-                return
-            } catch (e: PlayerException) {
-                val retryable = e.problem == PlayerProblem.DISCONNECTED || e.problem == PlayerProblem.OFFLINE
-                if (!retryable || attempt >= MAX_CONNECT_ATTEMPTS) throw e
-                delay(Backoff.delayMillis(attempt++, baseMillis = 2_000))
+                target.replaceItems(id, first.uris)
+            } catch (e: SpotifyHttpException) {
+                // The playlist is gone or no longer editable: make a new one.
+                id = ""
             }
         }
+        if (id.isEmpty()) {
+            id = target.createPlaylist(playlistName, playlistDescription)
+            memory.savePlaylistId(id)
+            if (first.uris.isNotEmpty()) target.addItems(id, first.uris)
+        }
+        commit(first)
+        startedAt = now()
+        val playing = target.play(id)
+        _state.update { it.copy(playlistId = id, playbackStarted = playing) }
     }
 
     private suspend fun rolling() {
-        // First fill: the playing track plus the ones ahead of it.
-        val snapshot = player.state.value
-        val idle = snapshot == null || snapshot.trackUri == null || snapshot.isPaused
-        if (queuedUris.isEmpty()) addTracks(RollingQueue.AHEAD + 1, playFirst = idle)
         while (next < tracks.size) {
-            val current = player.state.value
-            if (current == null) {
-                // App Remote dropped the connection: connect again, then carry on.
-                connect()
-                if (player.state.value == null) delay(STATE_WAIT_MILLIS)
-                continue
-            }
-            val index = RollingQueue.playingIndex(queuedUris, current.trackUri, _state.value.playedIndex.coerceAtLeast(0))
-            if (index > _state.value.playedIndex) _state.update { it.copy(playedIndex = index) }
-            val wanted = RollingQueue.toQueue(queuedUris.size, _state.value.playedIndex, tracks.size - next)
-            if (wanted > 0) {
-                addTracks(wanted, playFirst = false)
-            } else {
-                // Wait for the next change in what Spotify plays.
-                player.state.first { it != current }
-            }
+            val ahead = addedMillis - (now() - startedAt)
+            _state.update { it.copy(minutesAhead = (ahead / 60_000).toInt().coerceAtLeast(0)) }
+            if (PlaylistPlan.needsMore(ahead)) add(PlaylistPlan.ROLLING_BATCH) else delay(checkEveryMillis)
         }
     }
 
     private suspend fun allNow() {
-        var first = queuedUris.isEmpty()
-        while (next < tracks.size) {
-            val snapshot = player.state.value
-            val idle = snapshot == null || snapshot.trackUri == null || snapshot.isPaused
-            addTracks(RollingQueue.BATCH_SIZE, playFirst = first && idle)
-            first = false
-            if (next < tracks.size) delay(batchPauseMillis)
-        }
+        while (next < tracks.size) add(PlaylistPlan.MAX_PER_CALL)
     }
 
-    /** Resolves and queues up to [count] tracks; tracks not on Spotify are skipped. */
-    private suspend fun addTracks(count: Int, playFirst: Boolean) {
-        var added = 0
-        var play = playFirst
-        val newIds = ArrayList<String>()
-        while (added < count && next < tracks.size) {
-            // The index only moves on once a track is handled, so after a problem it's tried again.
-            val track = tracks[next]
-            val uri = resolver.resolve(track.artist, track.title).uri
+    private suspend fun add(count: Int) {
+        val id = _state.value.playlistId ?: return
+        val batch = resolveBatch(count)
+        if (batch.uris.isNotEmpty()) target.addItems(id, batch.uris)
+        commit(batch)
+    }
+
+    /** Tracks matched on Spotify, ready to go into the playlist. */
+    private class Batch(
+        val uris: List<String>,
+        val added: List<Candidate>,
+        val skipped: Int,
+        val millis: Long,
+        val nextIndex: Int,
+    )
+
+    /** Matches up to [count] tracks on Spotify, from [next] on. Tracks not on Spotify are skipped. */
+    private suspend fun resolveBatch(count: Int): Batch {
+        val uris = ArrayList<String>()
+        val added = ArrayList<Candidate>()
+        var index = next
+        var skipped = 0
+        var millis = 0L
+        while (uris.size < count && index < tracks.size) {
+            val track = tracks[index]
+            val resolution = resolver.resolve(track.artist, track.title)
+            val uri = resolution.uri
             if (uri == null) {
-                next++
-                _state.update { it.copy(skipped = it.skipped + 1, processed = it.processed + 1) }
-                continue
+                skipped++
+            } else {
+                uris += uri
+                added += track
+                millis += resolution.durationMs.takeIf { it > 0 } ?: PlaylistPlan.TYPICAL_TRACK_MILLIS
             }
-            hand(uri, play)
-            next++
-            if (play) _state.update { it.copy(playedIndex = 0) }
-            play = false
-            queuedUris += uri
-            newIds += uri.substringAfterLast(':')
-            added++
-            _state.update { it.copy(queued = queuedUris.size, processed = it.processed + 1) }
-            if (spacingMillis > 0) delay(spacingMillis)
+            index++
         }
-        if (newIds.isNotEmpty()) features?.let { source -> scope.launch { runCatching { source.fetch(newIds) } } }
+        return Batch(uris, added, skipped, millis, index)
     }
 
-    private suspend fun hand(uri: String, play: Boolean) {
-        try {
-            if (play) player.play(uri) else player.queue(uri)
-        } catch (e: PlayerException) {
-            if (e.problem != PlayerProblem.DISCONNECTED) throw e
-            connect()
-            if (play) player.play(uri) else player.queue(uri)
+    /** Counts a batch as done once Spotify took it. */
+    private fun commit(batch: Batch) {
+        next = batch.nextIndex
+        addedMillis += batch.millis
+        _state.update {
+            it.copy(
+                queued = it.queued + batch.uris.size,
+                skipped = it.skipped + batch.skipped,
+                processed = it.processed + batch.uris.size + batch.skipped,
+            )
         }
+        val source = features ?: return
+        val ids = batch.uris.map { it.substringAfterLast(':') }
+        if (ids.isNotEmpty()) scope.launch { runCatching { source.fetch(ids) } }
     }
 
     private fun problemOf(e: Exception): QueueProblem =
         when (e) {
-            is PlayerException -> QueueProblem.Player(e.problem)
             is SpotifyPausedException -> QueueProblem.SpotifyPaused(e.untilMillis)
             is SpotifySignedOutException -> QueueProblem.SignedOut
+            is SpotifyHttpException -> QueueProblem.Rejected
             else -> QueueProblem.Network
         }
-
-    companion object {
-        private const val MAX_CONNECT_ATTEMPTS = 5
-        private const val STATE_WAIT_MILLIS = 3_000L
-    }
 }

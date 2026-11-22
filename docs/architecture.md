@@ -3,12 +3,12 @@
 ## This app
 
 Player builds a set of tracks from a few controls (mood, familiarity, genres, seed artists,
-length) using Last.fm, and plays it through Spotify by adding the tracks to Spotify's play queue.
-It never creates or changes playlists. Each user enters their own Spotify Client ID and Last.fm
+length) using Last.fm, and plays it through Spotify in one private playlist called "Player",
+whose contents each new set replaces. Each user enters their own Spotify Client ID and Last.fm
 API key (see `docs/decisions.md`, 2026-11-22).
 
-**Screens** (`ui/`): Generator (start), Preview (swipe to remove, Regenerate, Start queue), Queue
-(now playing, progress, Stop), Settings (keys and setup steps, queue options, appearance) and
+**Screens** (`ui/`): Generator (start), Preview (swipe to remove, Regenerate, Send to Spotify),
+Playlist (open in Spotify, progress, Stop), Settings (keys and setup steps, queue options, appearance) and
 "API calls and cache" (debug). `ui/AppNavigation.kt` keeps them as a small back stack.
 
 **How a set is made** (`engine/GenerationEngine.kt`, no Spotify searches):
@@ -25,14 +25,16 @@ API key (see `docs/decisions.md`, 2026-11-22).
    most 3 per artist, at least half from artists the user didn't pick (unless familiarity is fully
    "known"), orders them (mood curve, best match or shuffle) and keeps the same artist apart.
 
-**Queueing** (`engine/QueueController.kt`, while `service/QueueService.kt` shows a notification):
-a track is matched on Spotify (`engine/TrackResolver.kt`, one search, cached forever, misses too)
-only when it's about to be queued. *Rolling* keeps 15 queued ahead of the playing track, watching
-App Remote's player state; *all at once* queues in batches of 25. Queueing uses App Remote (the
-Spotify app, no Web API quota); the Web API queue endpoint is the fallback.
+**Filling the playlist** (`engine/QueueController.kt`, while `service/QueueService.kt` shows a
+notification): a track is matched on Spotify (`engine/TrackResolver.kt`, one search, cached
+forever, misses too) only when it's about to be added. The first 15 replace the playlist's
+contents (or go into a new playlist when the saved one is gone), then Player starts it on the
+active device or opens it in the Spotify app. *Rolling* adds 10 more whenever less than 40 minutes
+are left, counted from the start (`logic/PlaylistPlan`); *all at once* adds the rest in calls of
+100. See `docs/decisions.md` for why this replaced App Remote's play queue.
 
 **Services** sit behind interfaces in `data/Sources.kt` (`LastFmSource`, `SpotifyCatalog`,
-`SpotifyPlayer`, `AudioFeatureSource`) so the engine is tested with fakes.
+`PlaylistTarget`, `PlaylistMemory`, `AudioFeatureSource`) so the engine is tested with fakes.
 
 **Spotify's quota:** Development Mode apps have a small, unpublished quota. Every call is logged
 (`logic/CallLog.kt`, shown on the debug screen). A 429 with `QUOTA_EXCEEDED` pauses all Web API
@@ -43,8 +45,8 @@ browse, batch track lookups) and the `popularity` field are not used. Search use
 **Where data lives:**
 - `backed_up_settings` DataStore (`data/store/Stores.kt`, `SettingsStore`): theme, queue options,
   Last.fm username, the generator's last input.
-- `device_secrets` DataStore (`SecretStore`): Client ID, Last.fm key, Spotify tokens and the quota
-  pause, each value encrypted with an Android Keystore AES key. Not backed up.
+- `device_secrets` DataStore (`SecretStore`): Client ID, Last.fm key, Spotify tokens and their
+  scopes, the playlist's ID and the quota pause, each value encrypted with an Android Keystore AES key. Not backed up.
 - `noBackupFilesDir/cache/*.json` (`data/cache/Caches.kt`): Last.fm answers (30 days), the user's
   library and charts (1 day), Spotify matches and audio features (forever).
 
@@ -55,11 +57,10 @@ app/src/main/kotlin/<package>/
   MainActivity.kt          Entry point: theme and navigation.
   logic/                   Pure Kotlin rules (generator, scores, matching, rate limits) → unit tested.
   engine/                  Generation and queueing over the data interfaces → unit tested.
-  data/                    Last.fm, Spotify (Web API + App Remote), ReccoBeats, stores and caches.
+  data/                    Last.fm, Spotify Web API, ReccoBeats, stores and caches.
   service/QueueService.kt  Foreground service with the queue notification.
   ui/theme/                Material 3 theme and the shared design kit (see DESIGN.md).
   ui/<screen>/             Composables: display state, forward clicks. No logic.
-app/libs/                  Spotify App Remote AAR (only published on GitHub, not in Maven).
 app/src/main/res/
   values/strings.xml       All user-visible text (English, the default).
   values-xx/strings.xml    Dutch, French, German, Spanish and Italian. Every string must exist in every language.

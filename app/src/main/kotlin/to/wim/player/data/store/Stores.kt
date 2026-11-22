@@ -15,6 +15,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import to.wim.player.data.PlaylistMemory
 import to.wim.player.data.model.AppSettings
 import to.wim.player.data.model.QueueMode
 import to.wim.player.data.model.Secrets
@@ -106,7 +107,7 @@ class SettingsStore(context: Context) {
 }
 
 /** Keys, Spotify sign-in and the quota pause: encrypted, never backed up. */
-class SecretStore(context: Context) : SpotifyAccount {
+class SecretStore(context: Context) : SpotifyAccount, PlaylistMemory {
     private val store = context.applicationContext.secretStore
     private val crypto = SecretCrypto()
 
@@ -118,6 +119,8 @@ class SecretStore(context: Context) : SpotifyAccount {
         val expiresAt = stringPreferencesKey("spotify_expires_at")
         val userName = stringPreferencesKey("spotify_user")
         val pausedUntil = stringPreferencesKey("spotify_paused_until")
+        val scopes = stringPreferencesKey("spotify_scopes")
+        val playlist = stringPreferencesKey("spotify_playlist")
     }
 
     val secrets: Flow<Secrets> =
@@ -130,6 +133,7 @@ class SecretStore(context: Context) : SpotifyAccount {
                 spotifyExpiresAtMillis = read(prefs, Keys.expiresAt).toLongOrNull() ?: 0,
                 spotifyUserName = read(prefs, Keys.userName),
                 spotifyPausedUntilMillis = read(prefs, Keys.pausedUntil).toLongOrNull() ?: 0,
+                spotifyScopes = read(prefs, Keys.scopes),
             )
         }
 
@@ -145,12 +149,27 @@ class SecretStore(context: Context) : SpotifyAccount {
         val trimmed = id.trim()
         if (trimmed == current().spotifyClientId) return
         // Tokens belong to the old Client ID.
-        write(Keys.clientId gets trimmed, Keys.access gets "", Keys.refresh gets "", Keys.expiresAt gets "", Keys.userName gets "")
+        write(
+            Keys.clientId gets trimmed,
+            Keys.access gets "",
+            Keys.refresh gets "",
+            Keys.expiresAt gets "",
+            Keys.userName gets "",
+            Keys.scopes gets "",
+            Keys.playlist gets "",
+        )
     }
 
     suspend fun setLastFmKey(key: String) = write(Keys.lastFmKey gets key.trim())
 
     suspend fun setSpotifyUserName(name: String) = write(Keys.userName gets name)
+
+    /** Saved with a new sign-in: the scopes it was asked for. */
+    suspend fun setSpotifyScopes(scopes: String) = write(Keys.scopes gets scopes)
+
+    override suspend fun playlistId(): String = store.data.first()[Keys.playlist]?.let { crypto.decrypt(it) }.orEmpty()
+
+    override suspend fun savePlaylistId(id: String) = write(Keys.playlist gets id)
 
     suspend fun clearPause() = write(Keys.pausedUntil gets "")
 

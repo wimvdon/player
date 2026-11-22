@@ -82,11 +82,9 @@ class QueueService : LifecycleService() {
                 PendingIntent.FLAG_IMMUTABLE,
             )
         val title = getString(R.string.notification_queueing, state.processed, state.total)
-        val text = state.nowPlaying?.let { now -> listOfNotNull(now.trackName, now.artistName).joinToString(" · ") }
         return NotificationCompat.Builder(this, CHANNEL)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
-            .setContentText(text)
             .setProgress(state.total.coerceAtLeast(1), state.processed, false)
             .setOngoing(true)
             .setOnlyAlertOnce(true)

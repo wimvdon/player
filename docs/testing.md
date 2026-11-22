@@ -56,13 +56,14 @@ description. In addition, check every now and then (always before a release):
       cache the preview appears in under a minute, the second time (same input) in seconds.
 - [ ] **Preview:** swipe a track left, it disappears; Undo brings it back. Regenerate gives a
       different set.
-- [ ] **Queue:** Start queue → the warning → Start. Spotify starts playing (if it was idle) and its
-      queue shows the next 15 tracks. The notification reads "Queueing x / 250" with Stop.
-- [ ] **Rolling for an hour:** lock the phone and listen. Spotify's queue keeps about 15 tracks
-      ahead the whole time.
+- [ ] **Playlist:** Send to Spotify → Start. A private playlist "Player" appears in Spotify with
+      15 tracks and starts playing (or opens in Spotify to press play). The notification reads
+      "Adding to playlist x / 250" with Stop.
+- [ ] **Rolling for an hour:** lock the phone and listen. The playlist keeps growing, about 40
+      minutes ahead.
+- [ ] **A second set** replaces the playlist's tracks; no second playlist appears.
 - [ ] **Debug:** Settings → API calls and cache lists the calls; Spotify searches only appear as
-      tracks get queued.
-- [ ] **No Spotify app / not logged in:** the queue screen says so instead of hanging.
+      tracks get added.
 
 ## Reading a crash from a release build
 Release builds are minified, so stack traces show short names like `a.b.c`. Download

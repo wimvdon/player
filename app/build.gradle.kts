@@ -164,9 +164,6 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
     implementation(libs.spotify.auth)
-    // Spotify App Remote: only published as an AAR on GitHub (spotify/android-sdk, v0.8.0).
-    implementation(files("libs/spotify-app-remote-release-0.8.0.aar"))
-    implementation(libs.gson)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     testImplementation(libs.junit)
