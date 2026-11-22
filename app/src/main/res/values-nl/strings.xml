@@ -138,6 +138,14 @@
     <string name="settings_listenbrainz_help">Optioneel. Je topartiesten starten een set als je er geen kiest, en nummers die je speelde tellen als bekend.</string>
     <string name="settings_listenbrainz_import">Wil je je Last.fm- of Spotify-geschiedenis gebruiken (de ZIP met uitgebreide streaminggeschiedenis van Spotify)? Importeer die op ListenBrainz (Instellingen, Importeren).</string>
     <string name="action_open_listenbrainz">Open ListenBrainz</string>
+    <string name="settings_listenbrainz_token">Token</string>
+    <string name="settings_listenbrainz_token_help">Optioneel. Maakt sets sneller: hiermee geeft ListenBrainz de topnummers van een artiest in één verzoek. Blijft versleuteld op deze telefoon.</string>
+    <string name="settings_listenbrainz_token_checking">Token controleren…</string>
+    <string name="settings_listenbrainz_token_valid">De token werkt.</string>
+    <string name="settings_listenbrainz_token_valid_for">De token werkt (%1$s).</string>
+    <string name="settings_listenbrainz_token_invalid">ListenBrainz aanvaardt deze token niet. Kopieer hem opnieuw uit je ListenBrainz-instellingen.</string>
+    <string name="settings_listenbrainz_token_unchecked">ListenBrainz was niet bereikbaar om de token te controleren. Hij is bewaard en wordt toch gebruikt.</string>
+    <string name="action_open_listenbrainz_token">Haal je token op</string>
     <plurals name="settings_listenbrainz_history_reading">
         <item quantity="one">Je luistergeschiedenis wordt van ListenBrainz gelezen: tot nu toe %1$s nummer…</item>
         <item quantity="other">Je luistergeschiedenis wordt van ListenBrainz gelezen: tot nu toe %1$s nummers…</item>

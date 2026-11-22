@@ -119,6 +119,16 @@ object ListenBrainzJson {
             RadioRecording(item.string("recording_mbid") ?: return@mapNotNull null, item.long("total_listen_count") ?: 0)
         }.distinctBy { it.recordingMbid }.sortedByDescending { it.listens }
 
+    /**
+     * `GET /1/validate-token`: the token's user name when ListenBrainz accepts it, else null.
+     * ListenBrainz answers 200 with `"valid": false` for an unknown token.
+     */
+    fun tokenUser(text: String): String? {
+        val obj = parseJson(text) as? JsonObject ?: return null
+        val valid = (obj["valid"] as? JsonPrimitive)?.contentOrNull == "true"
+        return if (valid) obj.string("user_name") ?: "" else null
+    }
+
     /** `GET /1/lb-radio/tags`: a plain list, most tag votes first. Entries without an MBID are skipped. */
     fun tagRecordings(text: String): List<TagRecording> =
         parseJson(text).objects().mapNotNull { item ->

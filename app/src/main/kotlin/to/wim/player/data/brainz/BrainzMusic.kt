@@ -84,6 +84,11 @@ class BrainzMusic(
     @Volatile
     private var topNeedsToken = false
 
+    /** A ListenBrainz token was added or changed: try the top-recordings endpoint again. */
+    fun tokenChanged() {
+        topNeedsToken = false
+    }
+
     /**
      * The artist's most listened tracks. Every track carries the asked-for name: ListenBrainz
      * credits vary ("A feat. B", "Smashing Pumpkins" next to "The Smashing Pumpkins"), and one

@@ -144,6 +144,14 @@
     <string name="settings_listenbrainz_help">Optional. Your top artists start a set when you pick none, and tracks you\'ve played count as known.</string>
     <string name="settings_listenbrainz_import">To use your Last.fm or Spotify history (Spotify\'s extended streaming history ZIP), import it on ListenBrainz (Settings, Import).</string>
     <string name="action_open_listenbrainz">Open ListenBrainz</string>
+    <string name="settings_listenbrainz_token">Token</string>
+    <string name="settings_listenbrainz_token_help">Optional. Makes sets faster: with it, ListenBrainz gives each artist\'s top tracks in one request. Stays encrypted on this phone.</string>
+    <string name="settings_listenbrainz_token_checking">Checking the token…</string>
+    <string name="settings_listenbrainz_token_valid">The token works.</string>
+    <string name="settings_listenbrainz_token_valid_for">The token works (%1$s).</string>
+    <string name="settings_listenbrainz_token_invalid">ListenBrainz doesn\'t accept this token. Copy it again from your ListenBrainz settings.</string>
+    <string name="settings_listenbrainz_token_unchecked">ListenBrainz couldn\'t be reached to check the token. It is saved and used anyway.</string>
+    <string name="action_open_listenbrainz_token">Get your token</string>
     <plurals name="settings_listenbrainz_history_reading">
         <item quantity="one">Reading your play history from ListenBrainz: %1$s track so far…</item>
         <item quantity="other">Reading your play history from ListenBrainz: %1$s tracks so far…</item>

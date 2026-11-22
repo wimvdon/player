@@ -6,6 +6,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.spotify.sdk.android.auth.AuthorizationResponse
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +23,23 @@ import to.wim.player.data.spotify.TokenGrant
 import to.wim.player.logic.Ordering
 import to.wim.player.logic.Setup
 import java.security.MessageDigest
+import kotlin.coroutines.cancellation.CancellationException
+
+private const val TOKEN_TYPING_DELAY_MILLIS = 800L
+
+/** What ListenBrainz says about the token in Settings. */
+sealed interface TokenStatus {
+    data object None : TokenStatus
+
+    data object Checking : TokenStatus
+
+    data class Valid(val userName: String) : TokenStatus
+
+    data object Invalid : TokenStatus
+
+    /** ListenBrainz couldn't be reached; the token is saved and used anyway. */
+    data object Unchecked : TokenStatus
+}
 
 /** What happened with the last Spotify sign-in. */
 enum class SignInProblem { CANCELLED, REFUSED, FAILED }
@@ -47,6 +66,50 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
 
 
     fun setListenBrainzUsername(name: String) = viewModelScope.launch { graph.settings.setListenBrainzUsername(name) }
+
+    private val _tokenStatus = MutableStateFlow<TokenStatus>(TokenStatus.None)
+    val tokenStatus: StateFlow<TokenStatus> = _tokenStatus.asStateFlow()
+    private var tokenCheck: Job? = null
+
+    /** Saves the ListenBrainz token and asks ListenBrainz whether it works (after typing stops). */
+    fun setListenBrainzToken(token: String) {
+        val trimmed = token.trim()
+        tokenCheck?.cancel()
+        tokenCheck =
+            viewModelScope.launch {
+                graph.secrets.setListenBrainzToken(trimmed)
+                if (trimmed.isEmpty()) {
+                    _tokenStatus.value = TokenStatus.None
+                    return@launch
+                }
+                _tokenStatus.value = TokenStatus.Checking
+                delay(TOKEN_TYPING_DELAY_MILLIS)
+                check(trimmed)
+            }
+    }
+
+    /** Checks the saved token once when Settings opens. */
+    fun checkSavedToken() {
+        if (tokenCheck != null) return
+        tokenCheck =
+            viewModelScope.launch {
+                val saved = graph.secrets.current().listenBrainzToken
+                if (saved.isEmpty()) return@launch
+                _tokenStatus.value = TokenStatus.Checking
+                check(saved)
+            }
+    }
+
+    private suspend fun check(token: String) {
+        _tokenStatus.value =
+            try {
+                graph.checkListenBrainzToken(token)?.let { TokenStatus.Valid(it) } ?: TokenStatus.Invalid
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                TokenStatus.Unchecked
+            }
+    }
 
 
     fun setOrdering(ordering: Ordering) = viewModelScope.launch { graph.settings.setOrdering(ordering) }

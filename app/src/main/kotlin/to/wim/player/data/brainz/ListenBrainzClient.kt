@@ -93,6 +93,11 @@ class ListenBrainzClient(private val http: BrainzHttp) : ListenBrainzSource {
         return if (answer.hasData) ListenBrainzJson.artistRadio(answer.body, artistMbid) else emptyList()
     }
 
+    override suspend fun validateToken(token: String): String? {
+        val answer = http.get("$API/validate-token".toHttpUrl(), "GET /1/validate-token", withToken = token)
+        return if (answer.hasData) ListenBrainzJson.tokenUser(answer.body) else null
+    }
+
     override suspend fun recordingMetadata(recordingMbids: List<String>): List<BrainzRecording> {
         if (recordingMbids.isEmpty()) return emptyList()
         val url = "$API/metadata/recording/".toHttpUrl().newBuilder()

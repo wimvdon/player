@@ -186,6 +186,22 @@ class BrainzMusicTokenTest {
             assertEquals(1, listenBrainz.calls.count { it.startsWith("top:") })
             assertEquals(2, listenBrainz.calls.count { it.startsWith("radio:") })
         }
+
+    @Test
+    fun `after a token is added, the top-recordings call is tried again`() =
+        runBlocking {
+            val listenBrainz = TokenOnlyTopListenBrainz()
+            val music =
+                BrainzMusic(
+                    CountingMusicBrainz(),
+                    listenBrainz,
+                    BrainzCaches(MemoryCache(), MemoryCache(), MemoryCache<List<PoolTrack>>(), MemoryCache<List<WeightedTag>>(), MemoryCache()),
+                )
+            music.artistTopTracks("Bonobo", 15)
+            music.tokenChanged()
+            music.artistTopTracks("Tycho", 15)
+            assertEquals(2, listenBrainz.calls.count { it.startsWith("top:") })
+        }
 }
 
 class BrainzMusicTest {
