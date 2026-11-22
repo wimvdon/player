@@ -56,15 +56,7 @@ class RateLimitsTest {
     }
 }
 
-class PlaylistPlanTest {
-    @Test
-    fun `tops up when less than forty minutes are ahead`() {
-        assertTrue(PlaylistPlan.needsMore(0))
-        assertTrue(PlaylistPlan.needsMore(39L * 60_000))
-        assertEquals(false, PlaylistPlan.needsMore(40L * 60_000))
-        assertEquals(false, PlaylistPlan.needsMore(2L * 60 * 60_000))
-    }
-
+class CallLogTest {
     @Test
     fun `call log keeps the newest first and counts per service`() {
         val log = CallLog(capacity = 2)

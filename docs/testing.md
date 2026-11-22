@@ -56,12 +56,12 @@ description. In addition, check every now and then (always before a release):
       cache the preview appears in under a minute, the second time (same input) in seconds.
 - [ ] **Preview:** swipe a track left, it disappears; Undo brings it back. Regenerate gives a
       different set.
-- [ ] **Playlist:** Send to Spotify → Start. A private playlist "Player" appears in Spotify with
-      15 tracks and starts playing (or opens in Spotify to press play). The notification reads
-      "Adding to playlist x / 250" with Stop.
-- [ ] **Rolling for an hour:** lock the phone and listen. The playlist keeps growing, about 40
-      minutes ahead.
-- [ ] **A second set** replaces the playlist's tracks; no second playlist appears.
+- [ ] **Playlist:** Send to Spotify. The dialog suggests a name such as "Upbeat Indie & Jazz · 22 Nov";
+      change it. Start. The notification reads "Finding tracks on Spotify: x of 250", then a new
+      private playlist with your name appears in Spotify with every track at once and starts
+      playing (or opens in Spotify to press play).
+- [ ] **Empty name:** clear the name field. Start is greyed out until you type something.
+- [ ] **A second set** makes a second playlist; the first one keeps its tracks.
 - [ ] **Debug:** Settings → API calls and cache lists the calls; Spotify searches only appear as
       tracks get added.
 

@@ -48,11 +48,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import to.wim.player.R
-import to.wim.player.data.model.QueueMode
 import to.wim.player.engine.QueueProblem
 import to.wim.player.engine.QueueState
 import to.wim.player.engine.QueueStatus
-import to.wim.player.logic.Setup
 import to.wim.player.ui.MainViewModel
 import to.wim.player.ui.theme.AppShapes
 import to.wim.player.ui.theme.EmptyState
@@ -123,11 +121,11 @@ private fun PlaylistCard(state: QueueState) {
     ) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.playlist_card_label), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-            Text(Setup.PLAYLIST_NAME, style = MaterialTheme.typography.headlineSmall)
+            Text(state.name, style = MaterialTheme.typography.headlineSmall)
             Text(
                 stringResource(
                     when {
-                        id == null -> R.string.playlist_preparing
+                        id == null -> R.string.playlist_waiting
                         state.playbackStarted == true -> R.string.playlist_playing
                         else -> R.string.playlist_press_play
                     },
@@ -161,19 +159,25 @@ private fun openPlaylist(
 @Composable
 private fun Progress(state: QueueState) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        val matching = state.playlistId == null
         Text(
-            stringResource(R.string.queue_progress, state.processed, state.total),
+            if (matching) {
+                stringResource(R.string.queue_progress_matching, state.processed, state.total)
+            } else {
+                stringResource(R.string.queue_progress_adding, state.queued, state.found)
+            },
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
         )
-        LinearProgressIndicator(progress = { if (state.total == 0) 0f else state.processed.toFloat() / state.total }, modifier = Modifier.fillMaxWidth())
-        if (state.mode == QueueMode.ROLLING && state.status == QueueStatus.RUNNING) {
-            Text(
-                pluralStringResource(R.plurals.playlist_minutes_ahead, state.minutesAhead, state.minutesAhead),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
+        LinearProgressIndicator(
+            progress = {
+                when {
+                    matching -> if (state.total == 0) 0f else state.processed.toFloat() / state.total
+                    else -> if (state.found == 0) 0f else state.queued.toFloat() / state.found
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+        )
         if (state.skipped > 0) {
             Text(
                 pluralStringResource(R.plurals.queue_skipped, state.skipped, state.skipped),
@@ -193,8 +197,8 @@ private fun Status(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         when (state.status) {
-            QueueStatus.CONNECTING -> StatusText(stringResource(R.string.queue_connecting))
-            QueueStatus.RUNNING -> Unit
+            QueueStatus.MATCHING -> StatusText(stringResource(R.string.queue_matching))
+            QueueStatus.SAVING -> StatusText(stringResource(R.string.queue_saving))
             QueueStatus.FINISHED -> StatusText(stringResource(R.string.queue_finished))
             QueueStatus.STOPPED -> StatusText(stringResource(R.string.queue_stopped))
             QueueStatus.FAILED -> StatusText(problemText(state.problem), error = true)
@@ -206,16 +210,16 @@ private fun Status(
                     Icon(Icons.Rounded.Stop, contentDescription = null)
                     Text(stringResource(R.string.action_stop), Modifier.padding(start = 8.dp))
                 }
-            } else if (state.processed < state.total) {
+            } else if (state.status == QueueStatus.STOPPED || state.status == QueueStatus.FAILED) {
                 val problem = state.problem
                 if (problem == QueueProblem.SignedOut) {
                     Button(onClick = onOpenSettings) { Text(stringResource(R.string.action_open_settings)) }
-                } else if (problem !is QueueProblem.SpotifyPaused) {
+                } else if (problem !is QueueProblem.SpotifyPaused && problem != QueueProblem.NothingFound) {
                     Button(onClick = onResume) { Text(stringResource(if (state.status == QueueStatus.FAILED) R.string.action_retry else R.string.action_continue)) }
                 }
             }
         }
-        if (state.active) {
+        if (state.status == QueueStatus.MATCHING) {
             Text(stringResource(R.string.queue_stop_note), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
@@ -241,6 +245,7 @@ private fun problemText(problem: QueueProblem?): String {
         is QueueProblem.SpotifyPaused -> stringResource(R.string.problem_quota, DateFormat.getTimeFormat(context).format(Date(problem.untilMillis)))
         QueueProblem.SignedOut -> stringResource(R.string.problem_signed_out)
         QueueProblem.Rejected -> stringResource(R.string.problem_playlist_rejected)
+        QueueProblem.NothingFound -> stringResource(R.string.problem_nothing_found)
         QueueProblem.Network, null -> stringResource(R.string.problem_network)
     }
 }

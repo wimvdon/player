@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import to.wim.player.PlayerApp
 import to.wim.player.data.model.AppSettings
-import to.wim.player.data.model.QueueMode
 import to.wim.player.data.model.Secrets
 import to.wim.player.data.model.ThemeMode
 import to.wim.player.data.spotify.TokenGrant
@@ -46,7 +45,6 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
 
     fun setLastFmUsername(name: String) = viewModelScope.launch { graph.settings.setLastFmUsername(name) }
 
-    fun setQueueMode(mode: QueueMode) = viewModelScope.launch { graph.settings.setQueueMode(mode) }
 
     fun setOrdering(ordering: Ordering) = viewModelScope.launch { graph.settings.setOrdering(ordering) }
 

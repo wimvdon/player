@@ -3,10 +3,8 @@
     <string name="problem_playlist_rejected">Spotify non ha accettato la modifica alla playlist. Riprova.</string>
     <string name="playlist_press_play">Aprila in Spotify e premi play.</string>
     <string name="playlist_playing">In riproduzione su Spotify.</string>
-    <string name="playlist_preparing">Creazione della playlist…</string>
     <string name="playlist_card_label">Playlist Spotify</string>
     <string name="playlist_description">Creata con Player</string>
-    <string name="start_dialog_playlist">I brani vanno nella tua playlist privata di Spotify «%1$s». Ciò che Player ci aveva messo prima viene sostituito.</string>
     <string name="action_open_in_spotify">Apri in Spotify</string>
     <string name="app_name">Player</string>
     <string name="loading">Caricamento…</string>
@@ -86,7 +84,6 @@
     <string name="mood_low">Rilassata</string>
     <string name="mood_high">Energica</string>
     <string name="notification_channel">Playlist</string>
-    <string name="notification_queueing">Aggiunta alla playlist %1$d / %2$d</string>
     <string name="order_best">Migliori</string>
     <string name="order_curve">Curva</string>
     <string name="order_shuffle">Casuale</string>
@@ -102,18 +99,9 @@
     <string name="problem_network">Impossibile raggiungere Spotify. Controlla la connessione.</string>
     <string name="problem_quota">Il limite di Spotify per questa app è esaurito. Player non chiamerà Spotify fino alle %1$s.</string>
     <string name="problem_signed_out">Spotify chiede di ricollegarti. Apri le impostazioni e tocca Collega Spotify.</string>
-    <string name="queue_banner_title">Riempimento della playlist</string>
-    <string name="queue_connecting">Creazione della playlist…</string>
     <string name="queue_empty_title">Ancora nessuna playlist</string>
     <string name="queue_empty_body">Genera una selezione e inviala a Spotify dalla sua anteprima.</string>
     <string name="queue_finished">Tutti i brani sono nella playlist.</string>
-    <string name="queue_mode_all">Tutti insieme</string>
-    <string name="queue_mode_rolling">Continua</string>
-    <string name="queue_mode_all_help">Aggiunge subito tutti i brani. Usa più ricerche Spotify insieme.</string>
-    <string name="queue_mode_rolling_help">Aggiunge pochi brani alla volta, circa 40 minuti in anticipo, così le ricerche Spotify sono distribuite.</string>
-    <string name="queue_progress">%1$d di %2$d brani fatti</string>
-    <string name="queue_stop_note">I brani già aggiunti restano nella playlist.</string>
-    <string name="queue_stopped">Fermato. La playlist tiene i brani aggiunti finora.</string>
     <string name="queue_title">Playlist</string>
     <string name="settings_appearance">Aspetto</string>
     <string name="settings_client_id">Client ID</string>
@@ -129,7 +117,6 @@
     <string name="settings_lastfm_username_help">Facoltativo. I brani che hai scrobblato contano come noti.</string>
     <string name="settings_order">Ordine</string>
     <string name="settings_queue">Playlist</string>
-    <string name="settings_queue_mode">Riempi la playlist</string>
     <string name="settings_reccobeats">Tempo ed energia da ReccoBeats</string>
     <string name="settings_reccobeats_help">Invia gli ID dei brani Spotify a ReccoBeats per un’atmosfera più precisa.</string>
     <string name="settings_signed_in_as">Accesso come %1$s</string>
@@ -151,7 +138,6 @@
     <string name="spotify_step_android">4. Aggiungi un pacchetto Android con questo nome di pacchetto e questa impronta SHA-1:</string>
     <string name="spotify_step_client_id">5. Copia il Client ID nel campo qui sopra, poi tocca Collega Spotify.</string>
     <string name="start_dialog_title">Inviare a Spotify?</string>
-    <string name="start_dialog_rolling">Mentre ascolti vengono aggiunti pochi brani alla volta, circa 40 minuti in anticipo.</string>
     <string name="step_seeds">Lettura della tua libreria…</string>
     <string name="step_artists">Ricerca di artisti simili (%1$d di %2$d)</string>
     <string name="step_tracks">Raccolta dei brani (%1$d di %2$d)</string>
@@ -161,11 +147,6 @@
     <string name="theme_light">Chiaro</string>
     <string name="theme_dark">Scuro</string>
     <string name="track_description">%1$d. %2$s di %3$s. Atmosfera %4$d%%, nuovo %5$d%%</string>
-    <plurals name="playlist_minutes_ahead">
-        <item quantity="one">Circa %d minuto di musica pronto</item>
-        <item quantity="many">Circa %d minuti di musica pronti</item>
-        <item quantity="other">Circa %d minuti di musica pronti</item>
-    </plurals>
     <plurals name="listeners">
         <item quantity="one">%s ascoltatore</item>
         <item quantity="many">%s ascoltatori</item>
@@ -181,9 +162,23 @@
         <item quantity="many">%d brani non erano su Spotify e sono stati saltati</item>
         <item quantity="other">%d brani non erano su Spotify e sono stati saltati</item>
     </plurals>
-    <plurals name="start_dialog_all">
-        <item quantity="one">%d brano viene aggiunto ora.</item>
-        <item quantity="many">Tutti i %d brani vengono aggiunti ora.</item>
-        <item quantity="other">Tutti i %d brani vengono aggiunti ora.</item>
+    <string name="queue_banner_title">Creazione della tua playlist</string>
+    <string name="queue_stop_note">Se ti fermi ora, non viene creata nessuna playlist.</string>
+    <string name="queue_stopped">Fermato. Tocca Continua per completare la playlist.</string>
+    <string name="playlist_waiting">La playlist compare in Spotify quando ogni brano è stato cercato.</string>
+    <string name="queue_progress_matching">Ricerca dei brani su Spotify: %1$d di %2$d</string>
+    <string name="queue_progress_adding">Aggiunta alla playlist: %1$d di %2$d</string>
+    <string name="queue_matching">Ricerca di ogni brano su Spotify…</string>
+    <string name="queue_saving">Creazione della playlist…</string>
+    <string name="problem_nothing_found">Nessuno di questi brani è su Spotify, quindi non è stata creata nessuna playlist.</string>
+    <string name="start_dialog_name_label">Nome della playlist</string>
+    <string name="start_dialog_name_empty">Dai un nome alla playlist.</string>
+    <string name="playlist_name_calm">%1$s rilassante</string>
+    <string name="playlist_name_upbeat">%1$s con energia</string>
+    <string name="playlist_name_dated">%1$s · %2$s</string>
+    <plurals name="start_dialog_new_playlist">
+        <item quantity="one">Player crea una nuova playlist privata nel tuo account Spotify con questo brano.</item>
+        <item quantity="many">Player crea una nuova playlist privata nel tuo account Spotify con tutti i %d brani.</item>
+        <item quantity="other">Player crea una nuova playlist privata nel tuo account Spotify con tutti i %d brani.</item>
     </plurals>
 </resources>

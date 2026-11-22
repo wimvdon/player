@@ -15,9 +15,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import to.wim.player.data.PlaylistMemory
 import to.wim.player.data.model.AppSettings
-import to.wim.player.data.model.QueueMode
 import to.wim.player.data.model.Secrets
 import to.wim.player.data.model.ThemeMode
 import to.wim.player.data.spotify.SpotifyAccount
@@ -44,7 +42,6 @@ class SettingsStore(context: Context) {
         val theme = stringPreferencesKey("theme")
         val dynamicColor = booleanPreferencesKey("dynamic_color")
         val lastFmUser = stringPreferencesKey("lastfm_username")
-        val queueMode = stringPreferencesKey("queue_mode")
         val ordering = stringPreferencesKey("ordering")
         val reccoBeats = booleanPreferencesKey("reccobeats")
         val mood = floatPreferencesKey("mood")
@@ -61,7 +58,6 @@ class SettingsStore(context: Context) {
                 themeMode = enumOr(prefs[Keys.theme], ThemeMode.SYSTEM),
                 dynamicColor = prefs[Keys.dynamicColor] ?: false,
                 lastFmUsername = prefs[Keys.lastFmUser].orEmpty(),
-                queueMode = enumOr(prefs[Keys.queueMode], QueueMode.ROLLING),
                 ordering = enumOr(prefs[Keys.ordering], Ordering.MOOD_CURVE),
                 useReccoBeats = prefs[Keys.reccoBeats] ?: false,
                 mood = prefs[Keys.mood] ?: 0.5f,
@@ -81,7 +77,6 @@ class SettingsStore(context: Context) {
 
     suspend fun setLastFmUsername(name: String) = store.edit { it[Keys.lastFmUser] = name.trim() }
 
-    suspend fun setQueueMode(mode: QueueMode) = store.edit { it[Keys.queueMode] = mode.name }
 
     suspend fun setOrdering(ordering: Ordering) = store.edit { it[Keys.ordering] = ordering.name }
 
@@ -107,7 +102,7 @@ class SettingsStore(context: Context) {
 }
 
 /** Keys, Spotify sign-in and the quota pause: encrypted, never backed up. */
-class SecretStore(context: Context) : SpotifyAccount, PlaylistMemory {
+class SecretStore(context: Context) : SpotifyAccount {
     private val store = context.applicationContext.secretStore
     private val crypto = SecretCrypto()
 
@@ -120,7 +115,6 @@ class SecretStore(context: Context) : SpotifyAccount, PlaylistMemory {
         val userName = stringPreferencesKey("spotify_user")
         val pausedUntil = stringPreferencesKey("spotify_paused_until")
         val scopes = stringPreferencesKey("spotify_scopes")
-        val playlist = stringPreferencesKey("spotify_playlist")
     }
 
     val secrets: Flow<Secrets> =
@@ -156,7 +150,6 @@ class SecretStore(context: Context) : SpotifyAccount, PlaylistMemory {
             Keys.expiresAt gets "",
             Keys.userName gets "",
             Keys.scopes gets "",
-            Keys.playlist gets "",
         )
     }
 
@@ -166,10 +159,6 @@ class SecretStore(context: Context) : SpotifyAccount, PlaylistMemory {
 
     /** Saved with a new sign-in: the scopes it was asked for. */
     suspend fun setSpotifyScopes(scopes: String) = write(Keys.scopes gets scopes)
-
-    override suspend fun playlistId(): String = store.data.first()[Keys.playlist]?.let { crypto.decrypt(it) }.orEmpty()
-
-    override suspend fun savePlaylistId(id: String) = write(Keys.playlist gets id)
 
     suspend fun clearPause() = write(Keys.pausedUntil gets "")
 

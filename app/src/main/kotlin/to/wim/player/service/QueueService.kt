@@ -81,11 +81,18 @@ class QueueService : LifecycleService() {
                 Intent(this, QueueService::class.java).setAction(ACTION_STOP),
                 PendingIntent.FLAG_IMMUTABLE,
             )
-        val title = getString(R.string.notification_queueing, state.processed, state.total)
+        val matching = state.playlistId == null
+        val title =
+            if (matching) {
+                getString(R.string.queue_progress_matching, state.processed, state.total)
+            } else {
+                getString(R.string.queue_progress_adding, state.queued, state.found)
+            }
+        val max = (if (matching) state.total else state.found).coerceAtLeast(1)
         return NotificationCompat.Builder(this, CHANNEL)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
-            .setProgress(state.total.coerceAtLeast(1), state.processed, false)
+            .setProgress(max, if (matching) state.processed else state.queued, false)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setSilent(true)

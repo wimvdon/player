@@ -99,10 +99,6 @@ class SpotifyWebApi(
         return SpotifyJson.playlistId(root) ?: throw SpotifyHttpException(0, "No playlist ID in Spotify's answer")
     }
 
-    override suspend fun replaceItems(playlistId: String, uris: List<String>) {
-        playlistCall("PUT", "/playlists/$playlistId/items", uriBody(uris))
-    }
-
     override suspend fun addItems(playlistId: String, uris: List<String>) {
         playlistCall("POST", "/playlists/$playlistId/items", uriBody(uris))
     }

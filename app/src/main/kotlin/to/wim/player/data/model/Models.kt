@@ -49,21 +49,11 @@ data class AudioFeatures(
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
-/** How the playlist is filled. */
-enum class QueueMode {
-    /** Adds tracks a few at a time, about 40 minutes ahead of the listening time. */
-    ROLLING,
-
-    /** Adds every track now. */
-    ALL_NOW,
-}
-
 /** Settings Android backs up (they'd be wanted on a new phone). */
 data class AppSettings(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val dynamicColor: Boolean = false,
     val lastFmUsername: String = "",
-    val queueMode: QueueMode = QueueMode.ROLLING,
     val ordering: Ordering = Ordering.MOOD_CURVE,
     val useReccoBeats: Boolean = false,
     val mood: Float = 0.5f,

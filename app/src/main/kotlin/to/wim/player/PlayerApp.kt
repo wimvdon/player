@@ -121,7 +121,7 @@ class AppGraph(app: Application) {
     val resolver = TrackResolver(catalog, resolutionCache)
     val features =
         ReccoBeatsClient(http, featureCache, featureMissCache, enabled = { settings.current().useReccoBeats }, log = callLog)
-    val queue = QueueController(webApi, secrets, resolver, features, scope)
+    val queue = QueueController(webApi, resolver, features, scope)
 
     /** The last generated set, shown on the preview screen. */
     val preview = MutableStateFlow<GenerationResult?>(null)

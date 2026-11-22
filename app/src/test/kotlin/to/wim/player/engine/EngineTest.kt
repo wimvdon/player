@@ -13,17 +13,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import to.wim.player.data.FakeLastFm
 import to.wim.player.data.SpotifyCatalog
-import to.wim.player.data.PlaylistMemory
 import to.wim.player.data.PlaylistTarget
 import to.wim.player.data.cache.MemoryCache
 import to.wim.player.data.lastfm.LastFmErrors
 import to.wim.player.data.lastfm.LastFmException
 import to.wim.player.data.model.LfmArtist
 import to.wim.player.data.model.LfmTrack
-import to.wim.player.data.model.QueueMode
 import to.wim.player.data.model.Resolution
 import to.wim.player.data.model.SpotifyTrack
-import to.wim.player.data.spotify.SpotifyHttpException
 import to.wim.player.data.spotify.SpotifyPausedException
 import to.wim.player.data.spotify.SpotifySignedOutException
 import to.wim.player.logic.Candidate
@@ -197,39 +194,36 @@ class TrackResolverTest {
         }
 }
 
-private class FakePlaylists : PlaylistTarget, PlaylistMemory {
+private class FakePlaylists(private val catalog: FakeCatalog? = null) : PlaylistTarget {
     val playlists = mutableMapOf<String, MutableList<String>>()
-    var saved = ""
-    var created = 0
+    val names = mutableListOf<String>()
+    val addCalls = mutableListOf<Int>()
+
+    /** Spotify searches made before the playlist was created. */
+    var searchesBeforeCreate = -1
     var canPlay = true
     var failAdd: Exception? = null
 
+    /** Fails only this add call (counted from 1), then works again. */
+    var failOnAdd = 0
+
     override suspend fun createPlaylist(name: String, description: String): String {
-        created++
-        val id = "pl$created"
+        searchesBeforeCreate = catalog?.searches ?: -1
+        names += name
+        val id = "pl${names.size}"
         playlists[id] = mutableListOf()
         return id
     }
 
-    override suspend fun replaceItems(playlistId: String, uris: List<String>) {
-        val list = playlists[playlistId] ?: throw SpotifyHttpException(404, "Not found")
-        list.clear()
-        list += uris
-    }
-
     override suspend fun addItems(playlistId: String, uris: List<String>) {
         failAdd?.let { throw it }
+        addCalls += uris.size
+        if (addCalls.size == failOnAdd) throw java.io.IOException("Connection reset")
         require(uris.size <= 100)
         playlists.getValue(playlistId) += uris
     }
 
     override suspend fun play(playlistId: String): Boolean = canPlay
-
-    override suspend fun playlistId(): String = saved
-
-    override suspend fun savePlaylistId(id: String) {
-        saved = id
-    }
 }
 
 class QueueControllerTest {
@@ -251,76 +245,44 @@ class QueueControllerTest {
         playlists: FakePlaylists,
         catalog: FakeCatalog,
         scope: CoroutineScope,
-        clock: () -> Long = { 0L },
-    ) = QueueController(playlists, playlists, TrackResolver(catalog, MemoryCache()), null, scope, now = clock, checkEveryMillis = 10)
+    ) = QueueController(playlists, TrackResolver(catalog, MemoryCache()), null, scope)
 
     @Test
-    fun `all at once makes a playlist with every track found`() =
+    fun `every track found goes into the new playlist in one go`() =
         runBlocking {
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-            val playlists = FakePlaylists()
-            val c = controller(playlists, FakeCatalog(), scope)
-            c.start(tracks(250, missingEvery = 5), QueueMode.ALL_NOW, "Player", "Made by Player")
+            val catalog = FakeCatalog()
+            val playlists = FakePlaylists(catalog)
+            val c = controller(playlists, catalog, scope)
+            c.start(tracks(250, missingEvery = 5), "Upbeat Indie · 22 Nov", "Made by Player")
             waitFor { c.state.value.status == QueueStatus.FINISHED }
-            assertEquals(1, playlists.created)
-            assertEquals("pl1", playlists.saved)
-            assertEquals(200, playlists.playlists.getValue("pl1").size)
+            assertEquals(listOf("Upbeat Indie · 22 Nov"), playlists.names)
+            // The playlist is made only after every track was looked up, then filled straight away.
+            assertEquals(250, playlists.searchesBeforeCreate)
+            assertEquals(listOf(100, 100), playlists.addCalls)
+            val expected = tracks(250, missingEvery = 5).filterNot { it.title.startsWith("Missing") }.map(::uriOf)
+            assertEquals(expected, playlists.playlists.getValue("pl1"))
             assertEquals(50, c.state.value.skipped)
             assertEquals(250, c.state.value.processed)
+            assertEquals(200, c.state.value.queued)
             assertEquals(true, c.state.value.playbackStarted)
             scope.cancel()
         }
 
     @Test
-    fun `the saved playlist is reused and emptied`() =
-        runBlocking {
-            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-            val playlists =
-                FakePlaylists().apply {
-                    playlists["old"] = mutableListOf("spotify:track:stale")
-                    saved = "old"
-                }
-            val c = controller(playlists, FakeCatalog(), scope)
-            c.start(tracks(20), QueueMode.ALL_NOW, "Player", "")
-            waitFor { c.state.value.status == QueueStatus.FINISHED }
-            assertEquals(0, playlists.created)
-            assertEquals(tracks(20).map(::uriOf), playlists.playlists.getValue("old"))
-            scope.cancel()
-        }
-
-    @Test
-    fun `a deleted playlist is made again`() =
-        runBlocking {
-            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-            val playlists = FakePlaylists().apply { saved = "gone" }
-            val c = controller(playlists, FakeCatalog(), scope)
-            c.start(tracks(5), QueueMode.ALL_NOW, "Player", "")
-            waitFor { c.state.value.status == QueueStatus.FINISHED }
-            assertEquals("pl1", playlists.saved)
-            assertEquals(5, playlists.playlists.getValue("pl1").size)
-            scope.cancel()
-        }
-
-    @Test
-    fun `rolling adds as listening time passes`() =
+    fun `each set makes a new playlist`() =
         runBlocking {
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
             val playlists = FakePlaylists()
-            var clock = 0L
-            val catalog = FakeCatalog()
-            val c = controller(playlists, catalog, scope) { clock }
-            c.start(tracks(100), QueueMode.ROLLING, "Player", "")
-            // 3.5 minutes a track (search gave no length): the first 15 are 52 minutes, past the 40 ahead.
-            waitFor { c.state.value.queued == 15 && c.state.value.status == QueueStatus.RUNNING }
-            delay(50)
-            assertEquals(15, playlists.playlists.getValue("pl1").size)
-            assertEquals(15, catalog.searches)
-            // Half an hour later the playlist is topped up.
-            clock += 30 * 60_000
-            waitFor { c.state.value.queued == 25 }
-            assertEquals(tracks(25).map(::uriOf), playlists.playlists.getValue("pl1"))
-            c.stop()
-            assertEquals(QueueStatus.STOPPED, c.state.value.status)
+            val c = controller(playlists, FakeCatalog(), scope)
+            c.start(tracks(20), "First", "")
+            waitFor { c.state.value.status == QueueStatus.FINISHED }
+            c.start(tracks(5), "Second", "")
+            waitFor { c.state.value.status == QueueStatus.FINISHED && c.state.value.name == "Second" }
+            assertEquals(listOf("First", "Second"), playlists.names)
+            assertEquals(tracks(20).map(::uriOf), playlists.playlists.getValue("pl1"))
+            assertEquals(tracks(5).map(::uriOf), playlists.playlists.getValue("pl2"))
+            assertEquals("pl2", c.state.value.playlistId)
             scope.cancel()
         }
 
@@ -330,39 +292,67 @@ class QueueControllerTest {
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
             val playlists = FakePlaylists().apply { canPlay = false }
             val c = controller(playlists, FakeCatalog(), scope)
-            c.start(tracks(3), QueueMode.ALL_NOW, "Player", "")
+            c.start(tracks(3), "Player", "")
             waitFor { c.state.value.status == QueueStatus.FINISHED }
             assertEquals(false, c.state.value.playbackStarted)
             scope.cancel()
         }
 
     @Test
-    fun `quota pause stops and resume loses nothing`() =
+    fun `quota pause while looking up makes no playlist and resume loses nothing`() =
         runBlocking {
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
             var paused = false
             val catalog =
                 object : FakeCatalog() {
                     override suspend fun searchTrack(artist: String, title: String): List<SpotifyTrack> {
+                        if (searches == 20) paused = true
                         if (paused) throw SpotifyPausedException(123)
                         return super.searchTrack(artist, title)
                     }
                 }
             val playlists = FakePlaylists()
-            var clock = 0L
-            val c = controller(playlists, catalog, scope) { clock }
-            c.start(tracks(40), QueueMode.ROLLING, "Player", "")
-            waitFor { c.state.value.queued == 15 && c.state.value.status == QueueStatus.RUNNING }
-            paused = true
-            clock += 60 * 60_000
+            val c = controller(playlists, catalog, scope)
+            c.start(tracks(40), "Player", "")
             waitFor { c.state.value.status == QueueStatus.FAILED }
             assertEquals(QueueProblem.SpotifyPaused(123), c.state.value.problem)
+            assertEquals(20, c.state.value.processed)
+            assertTrue(playlists.names.isEmpty())
             paused = false
             c.resume()
-            waitFor { c.state.value.queued > 15 }
-            val list = playlists.playlists.getValue("pl1")
-            assertEquals(tracks(40).take(list.size).map(::uriOf), list)
-            c.stop()
+            waitFor { c.state.value.status == QueueStatus.FINISHED }
+            assertEquals(1, playlists.names.size)
+            assertEquals(tracks(40).map(::uriOf), playlists.playlists.getValue("pl1"))
+            scope.cancel()
+        }
+
+    @Test
+    fun `a failed add is retried without doubles or a second playlist`() =
+        runBlocking {
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+            val playlists = FakePlaylists().apply { failOnAdd = 2 }
+            val c = controller(playlists, FakeCatalog(), scope)
+            c.start(tracks(150), "Player", "")
+            waitFor { c.state.value.status == QueueStatus.FAILED }
+            assertEquals(QueueProblem.Network, c.state.value.problem)
+            assertEquals(100, c.state.value.queued)
+            c.resume()
+            waitFor { c.state.value.status == QueueStatus.FINISHED }
+            assertEquals(1, playlists.names.size)
+            assertEquals(tracks(150).map(::uriOf), playlists.playlists.getValue("pl1"))
+            scope.cancel()
+        }
+
+    @Test
+    fun `nothing on Spotify makes no playlist`() =
+        runBlocking {
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+            val playlists = FakePlaylists()
+            val c = controller(playlists, FakeCatalog(), scope)
+            c.start(tracks(4, missingEvery = 1), "Player", "")
+            waitFor { c.state.value.status == QueueStatus.FAILED }
+            assertEquals(QueueProblem.NothingFound, c.state.value.problem)
+            assertTrue(playlists.names.isEmpty())
             scope.cancel()
         }
 
@@ -372,7 +362,7 @@ class QueueControllerTest {
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
             val playlists = FakePlaylists().apply { failAdd = SpotifySignedOutException() }
             val c = controller(playlists, FakeCatalog(), scope)
-            c.start(tracks(3), QueueMode.ALL_NOW, "Player", "")
+            c.start(tracks(3), "Player", "")
             waitFor { c.state.value.status == QueueStatus.FAILED }
             assertEquals(QueueProblem.SignedOut, c.state.value.problem)
             scope.cancel()

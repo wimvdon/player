@@ -46,7 +46,6 @@ import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
 import to.wim.player.R
-import to.wim.player.data.model.QueueMode
 import to.wim.player.data.model.ThemeMode
 import to.wim.player.logic.Ordering
 import to.wim.player.logic.Setup
@@ -207,24 +206,6 @@ fun SettingsScreen(
         }
         item(key = "queue") {
             SettingsSection(stringResource(R.string.settings_queue)) {
-                SettingsBlock {
-                    Text(stringResource(R.string.settings_queue_mode), style = MaterialTheme.typography.bodyLarge)
-                    val modes = listOf(QueueMode.ROLLING to R.string.queue_mode_rolling, QueueMode.ALL_NOW to R.string.queue_mode_all)
-                    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                        modes.forEachIndexed { index, (mode, label) ->
-                            SegmentedButton(
-                                selected = currentSettings.queueMode == mode,
-                                onClick = { viewModel.setQueueMode(mode) },
-                                shape = SegmentedButtonDefaults.itemShape(index, modes.size),
-                            ) { Text(stringResource(label)) }
-                        }
-                    }
-                    Text(
-                        stringResource(if (currentSettings.queueMode == QueueMode.ROLLING) R.string.queue_mode_rolling_help else R.string.queue_mode_all_help),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
                 SettingsBlock {
                     Text(stringResource(R.string.settings_order), style = MaterialTheme.typography.bodyLarge)
                     val orders =
