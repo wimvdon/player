@@ -1,5 +1,6 @@
 package to.wim.player.data
 
+import to.wim.player.data.brainz.BrainzListen
 import to.wim.player.data.brainz.BrainzRecording
 import to.wim.player.data.brainz.BrainzTopArtist
 import to.wim.player.data.brainz.MbArtist
@@ -38,8 +39,8 @@ interface MusicSource {
     /** Remembers which artist the user picked, so a name shared by several artists means this one. */
     fun pin(artist: ArtistHit) {}
 
-    /** Keys ([to.wim.player.logic.TrackText.key]) of the user's most played tracks. */
-    suspend fun userTopTrackKeys(username: String): Set<String>
+    /** Keys ([to.wim.player.logic.TrackText.key]) of tracks the user has played. */
+    suspend fun userKnownTrackKeys(username: String): Set<String>
 
     /** Names of the user's top artists. */
     suspend fun userTopArtists(username: String, limit: Int = 20): List<String>
@@ -60,6 +61,9 @@ interface MusicBrainzSource {
     suspend fun artistsForSpotify(spotifyArtistId: String): List<MbArtist>
 }
 
+/** The most plays ListenBrainz returns in one answer. */
+const val LISTENS_PAGE = 1_000
+
 /** What the app reads from ListenBrainz. Everything here is public: only a username is needed. */
 interface ListenBrainzSource {
     /** Artists listened to in the same sessions as [mbid], most similar first. */
@@ -73,6 +77,12 @@ interface ListenBrainzSource {
 
     /** The user's most listened recordings of all time (up to 1 000). */
     suspend fun userTopRecordings(username: String): List<BrainzRecording>
+
+    /**
+     * Up to [count] (at most 1 000) of the user's plays, newest first. With [maxTs], only plays
+     * before it; with [minTs], the oldest plays after it. Both in seconds; ListenBrainz takes one.
+     */
+    suspend fun listens(username: String, minTs: Long? = null, maxTs: Long? = null, count: Int = LISTENS_PAGE): List<BrainzListen>
 
     /** Collaborative-filtering recommendations for the user. Empty until ListenBrainz has made some. */
     suspend fun recommendations(username: String, limit: Int = 100): List<Recommendation>

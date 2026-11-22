@@ -26,6 +26,8 @@ python3 -m unittest discover -s scripts/tests
   tests), so generation and queueing run without network. MusicBrainz (`mb_*`) and ListenBrainz
   (`lb_*`) parsing reads answers shaped like the documented ones from
   `app/src/test/resources/fixtures/`. `BrainzMusicTest` checks caching and name-to-ID matching.
+  `ListenHistoryTest` pages through a made-up play history (first read, new plays only, resuming
+  after a network error, another username).
   Tests use made-up usernames only. `BrainzHttpTest` fakes HTTP with an OkHttp
   interceptor to check the User-Agent, the token and waiting on rate limits.
 - Test names describe behaviour in words: `` fun `tap stops at the maximum`() ``.

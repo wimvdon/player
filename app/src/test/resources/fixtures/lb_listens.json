@@ -1,0 +1,13 @@
+{
+  "payload": {
+    "count": 3,
+    "latest_listen_ts": 1700000300,
+    "oldest_listen_ts": 1600000000,
+    "user_id": "someone",
+    "listens": [
+      {"listened_at": 1700000300, "recording_msid": "x1", "track_metadata": {"artist_name": "Bonobo", "track_name": "Kerala", "release_name": "Migration"}},
+      {"listened_at": 1700000100, "track_metadata": {"artist_name": "Tycho", "track_name": ""}},
+      {"listened_at": 1700000000, "track_metadata": {"artist_name": "Emancipator", "track_name": "Anthem", "additional_info": {"duration_ms": 240000}}}
+    ]
+  }
+}

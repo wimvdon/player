@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import to.wim.player.PlayerApp
+import to.wim.player.data.brainz.ListenHistoryStatus
 import to.wim.player.data.model.AppSettings
 import to.wim.player.data.model.Secrets
 import to.wim.player.data.model.ThemeMode
@@ -29,6 +30,9 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
 
     val settings: StateFlow<AppSettings?> = graph.settings.settings.stateIn(viewModelScope, SharingStarted.Eagerly, null)
     val secrets: StateFlow<Secrets?> = graph.secrets.secrets.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    /** How far reading the ListenBrainz play history is. */
+    val history: StateFlow<ListenHistoryStatus> = graph.history.status
 
     private val _signInProblem = MutableStateFlow<SignInProblem?>(null)
     val signInProblem: StateFlow<SignInProblem?> = _signInProblem.asStateFlow()
@@ -88,10 +92,14 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Empties every cache (Spotify matches included); the next generation reads everything again. */
+    /**
+     * Empties every cache (Spotify matches included) and forgets the play history read from
+     * ListenBrainz; the next generation reads everything again.
+     */
     fun clearCaches() =
         viewModelScope.launch(Dispatchers.IO) {
             graph.caches.forEach { (_, cache) -> cache.clear() }
+            graph.history.clear()
         }
 
     private fun signingFingerprint(app: Application): String =

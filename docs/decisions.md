@@ -25,6 +25,18 @@ default like Spotify, from an approved mockup (wordmark option A, the cookie ico
   second value (energy or happiness) the generator doesn't have yet. It comes with the new tuning
   options; until then mood and familiarity use the new thick sliders. Order stays in Settings.
 
+## 2026-11-22: "Known" tracks come from the whole ListenBrainz play history
+
+ListenBrainz keeps only a user's top 1 000 recordings in its statistics, so tracks played a few
+times counted as new. The owner chose to read every play instead (`GET /1/user/{name}/listens`,
+1 000 a call) and keep the set of tracks on the phone (`noBackupFilesDir/listen_history.json`).
+
+- **Cost:** about 100 calls for 100 000 plays at one call a second, once; later reads fetch only
+  newer plays (usually one call) at most every 6 hours. The read runs in the background and a set
+  never waits for it; while the first read runs, other ListenBrainz calls share the same pace.
+- **Kept:** artist and title keys only, not when each play happened. Cleared by Clear cache.
+- Rejected: raising Player's 1 000 limit on the statistics (ListenBrainz itself stops there).
+
 ## 2026-11-22: Spotify's streaming history is imported on ListenBrainz, not in the app
 
 The plan was to import Spotify's Extended Streaming History ZIP on the phone. ListenBrainz now

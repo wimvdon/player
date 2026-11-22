@@ -31,6 +31,13 @@ data class BrainzRecording(
     val lengthMillis: Long? = null,
 )
 
+/** One play from the user's ListenBrainz history. [listenedAt] is in seconds since 1970. */
+data class BrainzListen(
+    val artist: String,
+    val title: String,
+    val listenedAt: Long,
+)
+
 /** One of the user's top artists on ListenBrainz. */
 @Serializable
 data class BrainzTopArtist(

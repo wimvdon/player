@@ -138,6 +138,18 @@
     <string name="settings_listenbrainz_help">Optioneel. Je topartiesten starten een set als je er geen kiest, en nummers die je speelde tellen als bekend.</string>
     <string name="settings_listenbrainz_import">Wil je je Last.fm- of Spotify-geschiedenis gebruiken (de ZIP met uitgebreide streaminggeschiedenis van Spotify)? Importeer die op ListenBrainz (Instellingen, Importeren).</string>
     <string name="action_open_listenbrainz">Open ListenBrainz</string>
+    <plurals name="settings_listenbrainz_history_reading">
+        <item quantity="one">Je luistergeschiedenis wordt van ListenBrainz gelezen: tot nu toe %1$s nummer…</item>
+        <item quantity="other">Je luistergeschiedenis wordt van ListenBrainz gelezen: tot nu toe %1$s nummers…</item>
+    </plurals>
+    <plurals name="settings_listenbrainz_history_done">
+        <item quantity="one">%1$s nummer uit je luistergeschiedenis telt als bekend.</item>
+        <item quantity="other">%1$s nummers uit je luistergeschiedenis tellen als bekend.</item>
+    </plurals>
+    <plurals name="settings_listenbrainz_history_partial">
+        <item quantity="one">Tot nu toe %1$s nummer uit je luistergeschiedenis gelezen. Player leest de rest later.</item>
+        <item quantity="other">Tot nu toe %1$s nummers uit je luistergeschiedenis gelezen. Player leest de rest later.</item>
+    </plurals>
     <plurals name="preview_summary">
         <item quantity="one">%1$d nummer van %2$d artiesten</item>
         <item quantity="other">%1$d nummers van %2$d artiesten</item>

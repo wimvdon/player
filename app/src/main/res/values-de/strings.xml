@@ -138,6 +138,18 @@
     <string name="settings_listenbrainz_help">Optional. Deine Top-Künstler starten ein Set, wenn du keine auswählst, und gehörte Titel zählen als bekannt.</string>
     <string name="settings_listenbrainz_import">Um deinen Last.fm- oder Spotify-Verlauf zu nutzen (Spotifys ZIP mit dem erweiterten Streamingverlauf), importiere ihn bei ListenBrainz (Einstellungen, Import).</string>
     <string name="action_open_listenbrainz">ListenBrainz öffnen</string>
+    <plurals name="settings_listenbrainz_history_reading">
+        <item quantity="one">Dein Hörverlauf wird von ListenBrainz gelesen: bisher %1$s Titel…</item>
+        <item quantity="other">Dein Hörverlauf wird von ListenBrainz gelesen: bisher %1$s Titel…</item>
+    </plurals>
+    <plurals name="settings_listenbrainz_history_done">
+        <item quantity="one">%1$s Titel aus deinem Hörverlauf gilt als bekannt.</item>
+        <item quantity="other">%1$s Titel aus deinem Hörverlauf gelten als bekannt.</item>
+    </plurals>
+    <plurals name="settings_listenbrainz_history_partial">
+        <item quantity="one">Bisher %1$s Titel aus deinem Hörverlauf gelesen. Player liest den Rest später.</item>
+        <item quantity="other">Bisher %1$s Titel aus deinem Hörverlauf gelesen. Player liest den Rest später.</item>
+    </plurals>
     <plurals name="preview_summary">
         <item quantity="one">%1$d Titel von %2$d Künstlern</item>
         <item quantity="other">%1$d Titel von %2$d Künstlern</item>
