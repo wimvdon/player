@@ -140,7 +140,7 @@
     <string name="cache_top_tracks">Toptitel</string>
     <string name="settings_listenbrainz_username">Benutzername</string>
     <string name="settings_listenbrainz_help">Optional. Deine Top-Künstler starten ein Set, wenn du keine auswählst, und gehörte Titel zählen als bekannt.</string>
-    <string name="settings_listenbrainz_import">Um deinen Last.fm-Verlauf zu nutzen, importiere ihn bei ListenBrainz (Einstellungen, Import).</string>
+    <string name="settings_listenbrainz_import">Um deinen Last.fm- oder Spotify-Verlauf zu nutzen (Spotifys ZIP mit dem erweiterten Streamingverlauf), importiere ihn bei ListenBrainz (Einstellungen, Import).</string>
     <string name="action_open_listenbrainz">ListenBrainz öffnen</string>
     <plurals name="preview_summary">
         <item quantity="one">%1$d Titel von %2$d Künstlern</item>

@@ -140,7 +140,7 @@
     <string name="cache_top_tracks">Topnummers</string>
     <string name="settings_listenbrainz_username">Gebruikersnaam</string>
     <string name="settings_listenbrainz_help">Optioneel. Je topartiesten starten een set als je er geen kiest, en nummers die je speelde tellen als bekend.</string>
-    <string name="settings_listenbrainz_import">Wil je je Last.fm-geschiedenis gebruiken? Importeer die op ListenBrainz (Instellingen, Importeren).</string>
+    <string name="settings_listenbrainz_import">Wil je je Last.fm- of Spotify-geschiedenis gebruiken (de ZIP met uitgebreide streaminggeschiedenis van Spotify)? Importeer die op ListenBrainz (Instellingen, Importeren).</string>
     <string name="action_open_listenbrainz">Open ListenBrainz</string>
     <plurals name="preview_summary">
         <item quantity="one">%1$d nummer van %2$d artiesten</item>
