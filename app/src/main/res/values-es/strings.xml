@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- The name shown under the launcher icon. Rename per app (also in every values-xx folder). -->
-    <string name="app_name">Template</string>
+    <string name="app_name">Player</string>
     <string name="home_title">¡Hola!</string>
     <string name="home_body">Esta es la pantalla de ejemplo de la plantilla de app.</string>
     <plurals name="home_tap_count">

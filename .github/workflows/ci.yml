@@ -45,6 +45,19 @@ jobs:
       - name: Test release scripts
         run: python3 -m unittest discover -s scripts/tests -v
 
+      - name: Prepare shared debug signing key
+        # Spotify sign-in only works when the APK's signing fingerprint is registered, so every
+        # debug APK must use the same key (see docs/decisions.md). Without the secret (e.g. a
+        # fork), the build falls back to a random debug key and Spotify sign-in will fail.
+        env:
+          DEBUG_KEYSTORE_BASE64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$DEBUG_KEYSTORE_BASE64" ]; then
+            echo "::warning title=Debug key missing::DEBUG_KEYSTORE_BASE64 is not set. This debug APK cannot sign in to Spotify."
+          else
+            python3 scripts/decode_keystore.py debug.keystore DEBUG_KEYSTORE_BASE64
+          fi
+
       - name: Unit tests
         run: ./gradlew testDebugUnitTest
 

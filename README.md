@@ -1,14 +1,13 @@
-# Android app template
+# Player
 
-A starting point for Android apps built with Claude Code and GitHub. Out of the box it
-**builds, tests and releases**. The only app content is a placeholder screen with a tap
-counter.
+An Android app that builds a play queue from a few controls (mood, familiarity, genres, seed
+artists) using Last.fm data, and plays it through Spotify by adding the tracks to the Spotify
+queue. It never creates or changes Spotify playlists. Each user enters their own (free) Spotify
+and Last.fm developer keys in the app's settings.
 
-- Kotlin, Jetpack Compose, Material 3 (light/dark, wallpaper colours), Android 12+.
-- CI on every pull request: unit tests, lint, debug and release builds, and an installable APK.
-- One-click signed releases on GitHub, with automatic version numbers.
-- Weekly dependency updates (Dependabot).
-- Rules for Claude Code sessions in [`CLAUDE.md`](CLAUDE.md).
+Built from the Android app template: Kotlin, Jetpack Compose, Material 3, Android 12+, with CI
+on every pull request and one-click signed releases. Rules for Claude Code sessions are in
+[`CLAUDE.md`](CLAUDE.md).
 
 > **New app from this template?** Start with [Using this template](#using-this-template).
 

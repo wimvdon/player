@@ -1,4 +1,4 @@
-package com.example.template.ui.home
+package to.wim.player.ui.home
 
 /**
  * Placeholder logic for the home screen: counts taps.

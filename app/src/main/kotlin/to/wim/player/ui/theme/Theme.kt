@@ -1,4 +1,4 @@
-package com.example.template.ui.theme
+package to.wim.player.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
