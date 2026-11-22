@@ -84,8 +84,7 @@ fun SettingsScreen(
         }
 
     var clientId by rememberSaveable { mutableStateOf(currentSecrets.spotifyClientId) }
-    var lastFmKey by rememberSaveable { mutableStateOf(currentSecrets.lastFmApiKey) }
-    var username by rememberSaveable { mutableStateOf(currentSettings.lastFmUsername) }
+    var username by rememberSaveable { mutableStateOf(currentSettings.listenBrainzUsername) }
     LaunchedEffect(Unit) { viewModel.clearSignInProblem() }
 
     SettingsScaffold(
@@ -165,40 +164,24 @@ fun SettingsScreen(
                 }
             }
         }
-        item(key = "lastfm") {
-            SettingsSection(stringResource(R.string.settings_lastfm)) {
+        item(key = "listenbrainz") {
+            SettingsSection(stringResource(R.string.settings_listenbrainz)) {
                 SettingsBlock {
-                    KeyField(
-                        value = lastFmKey,
-                        onChange = {
-                            lastFmKey = it
-                            if (it.isBlank() || Setup.isValidKey(it)) viewModel.setLastFmKey(it)
-                        },
-                        label = stringResource(R.string.settings_lastfm_key),
-                        invalidText = stringResource(R.string.settings_key_invalid),
-                    )
                     OutlinedTextField(
                         value = username,
                         onValueChange = {
                             username = it
-                            viewModel.setLastFmUsername(it)
+                            viewModel.setListenBrainzUsername(it)
                         },
-                        label = { Text(stringResource(R.string.settings_lastfm_username)) },
-                        supportingText = { Text(stringResource(R.string.settings_lastfm_username_help)) },
+                        label = { Text(stringResource(R.string.settings_listenbrainz_username)) },
+                        supportingText = { Text(stringResource(R.string.settings_listenbrainz_help)) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None, autoCorrectEnabled = false, imeAction = ImeAction.Done),
                         modifier = Modifier.fillMaxWidth(),
                     )
-                }
-                ExpandableSetting(
-                    key = "lastfm_steps",
-                    title = stringResource(R.string.settings_lastfm_steps_title),
-                    initiallyExpanded = currentSecrets.lastFmApiKey.isBlank(),
-                ) {
-                    Step(stringResource(R.string.lastfm_step_create))
-                    Step(stringResource(R.string.lastfm_step_copy))
-                    OutlinedButton(onClick = { uriHandler.openUri(LASTFM_API_ACCOUNT) }) {
-                        Text(stringResource(R.string.action_open_lastfm))
+                    Step(stringResource(R.string.settings_listenbrainz_import))
+                    OutlinedButton(onClick = { uriHandler.openUri(LISTENBRAINZ) }) {
+                        Text(stringResource(R.string.action_open_listenbrainz))
                         Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null, modifier = Modifier.padding(start = 8.dp))
                     }
                 }
@@ -316,4 +299,4 @@ private fun CopyValue(
 }
 
 private const val SPOTIFY_DASHBOARD = "https://developer.spotify.com/dashboard"
-private const val LASTFM_API_ACCOUNT = "https://www.last.fm/api/account/create"
+private const val LISTENBRAINZ = "https://listenbrainz.org/"

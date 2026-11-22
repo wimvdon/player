@@ -8,7 +8,7 @@ data class SpotifyCandidate(
 )
 
 /**
- * Picks the Spotify track that is the song Last.fm named, or none. A wrong song in the queue is
+ * Picks the Spotify track that is the song ListenBrainz named, or none. A wrong song in the queue is
  * worse than a missing one, so anything uncertain is skipped.
  */
 object TrackMatcher {

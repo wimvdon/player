@@ -3,24 +3,26 @@
 ## This app
 
 Player builds a set of tracks from a few controls (mood, familiarity, genres, seed artists,
-length) using Last.fm, and plays it through Spotify in a new private playlist for each set,
-with a name Player suggests and the user can change. Each user enters their own Spotify Client ID and Last.fm
-API key (see `docs/decisions.md`, 2026-11-22).
+length) using MusicBrainz and ListenBrainz, and plays it through Spotify in a new private playlist
+for each set, with a name Player suggests and the user can change. Each user enters their own
+Spotify Client ID and, optionally, their ListenBrainz username (see `docs/decisions.md`, 2026-11-22).
 
 **Screens** (`ui/`): Generator (start), Preview (swipe to remove, Regenerate, Send to Spotify),
 Playlist (open in Spotify, progress, Stop), Settings (keys and setup steps, playlist order, appearance) and
 "API calls and cache" (debug). `ui/AppNavigation.kt` keeps them as a small back stack.
 
-**How a set is made** (`engine/GenerationEngine.kt`, no Spotify searches):
-1. Seeds: the picked artists and genres, or the user's top artists (Spotify, then Last.fm).
-2. Candidate artists: `artist.getSimilar` per seed and `tag.getTopArtists` per genre, shared out
-   round-robin, at most 100.
-3. Tracks: `artist.getTopTracks` per artist (15, or 20 with fewer than 50 artists) and
-   `tag.getTopTracks` per genre.
+**How a set is made** (`engine/GenerationEngine.kt`, no Spotify searches; music data comes from
+`data/brainz/BrainzMusic.kt`, which turns names into MusicBrainz IDs and caches every answer):
+1. Seeds: the picked artists and genres, or the user's top artists (Spotify, then ListenBrainz).
+2. Candidate artists: ListenBrainz similar artists (Labs) per seed and MusicBrainz artists with
+   the genre's tag, shared out round-robin, as many as the length needs (`artistBudget`: 100 for 250 tracks,
+   40 to 170; both services allow one call a second).
+3. Tracks: ListenBrainz's most listened recordings per artist (15, or 20 with fewer than 50
+   artists).
 4. Mood (0 calm … 1 upbeat): cached ReccoBeats tempo and energy when known, otherwise the artist's
-   Last.fm tags weighted by `MoodModel.TagWeights` (`logic/Scores.kt`, one editable map).
-5. Familiarity (0 known … 1 new): known when in the user's Spotify top or saved tracks or Last.fm
-   top tracks; otherwise from the Last.fm listener count on a log scale.
+   MusicBrainz genres and tags weighted by `MoodModel.TagWeights` (`logic/Scores.kt`, one editable map).
+5. Familiarity (0 known … 1 new): known when in the user's Spotify top or saved tracks or
+   ListenBrainz top recordings; otherwise from the ListenBrainz listener count on a log scale.
 6. `logic/Generator.kt` picks the closest tracks to both sliders (with a little randomness), at
    most 3 per artist, at least half from artists the user didn't pick (unless familiarity is fully
    "known"), orders them (mood curve, best match or shuffle) and keeps the same artist apart.
@@ -34,11 +36,12 @@ and the date), and every match goes in straight away, in calls of 100 (Spotify's
 After a problem, Continue picks up where it stopped without making a second playlist. See
 `docs/decisions.md` for why.
 
-**Moving off Last.fm** (see `docs/decisions.md`): `data/brainz/` holds MusicBrainz and
-ListenBrainz clients (`MusicBrainzSource`, `ListenBrainzSource`), one call a second each through
-`BrainzHttp`. They are tested but not used by the engine yet.
+**MusicBrainz and ListenBrainz** (`data/brainz/`): two clients (`MusicBrainzSource`,
+`ListenBrainzSource`), one call a second each through `BrainzHttp`, combined into the engine's
+`MusicSource` by `BrainzMusic`. An artist picked from the search keeps its MusicBrainz ID, so
+artists with the same name don't mix. The genre picker offers a fixed list (`logic/Genres.kt`).
 
-**Services** sit behind interfaces in `data/Sources.kt` (`LastFmSource`, `MusicBrainzSource`,
+**Services** sit behind interfaces in `data/Sources.kt` (`MusicSource`, `MusicBrainzSource`,
 `ListenBrainzSource`, `SpotifyCatalog`,
 `PlaylistTarget`, `AudioFeatureSource`) so the engine is tested with fakes.
 
@@ -50,10 +53,10 @@ browse, batch track lookups) and the `popularity` field are not used. Search use
 
 **Where data lives:**
 - `backed_up_settings` DataStore (`data/store/Stores.kt`, `SettingsStore`): theme, playlist order,
-  Last.fm username, the generator's last input.
-- `device_secrets` DataStore (`SecretStore`): Client ID, Last.fm key, Spotify tokens and their
+  ListenBrainz username, the generator's last input.
+- `device_secrets` DataStore (`SecretStore`): Client ID, Spotify tokens and their
   scopes and the quota pause, each value encrypted with an Android Keystore AES key. Not backed up.
-- `noBackupFilesDir/cache/*.json` (`data/cache/Caches.kt`): Last.fm answers (30 days), the user's
+- `noBackupFilesDir/cache/*.json` (`data/cache/Caches.kt`): MusicBrainz and ListenBrainz answers (artist IDs 180 days, the rest 30 days), the user's
   library and charts (1 day), Spotify matches and audio features (forever).
 
 ## Structure
@@ -63,7 +66,7 @@ app/src/main/kotlin/<package>/
   MainActivity.kt          Entry point: theme and navigation.
   logic/                   Pure Kotlin rules (generator, scores, matching, rate limits) → unit tested.
   engine/                  Generation and queueing over the data interfaces → unit tested.
-  data/                    Last.fm, Spotify Web API, ReccoBeats, stores and caches.
+  data/                    MusicBrainz, ListenBrainz, Spotify Web API, ReccoBeats, stores and caches.
   service/QueueService.kt  Foreground service with the queue notification.
   ui/theme/                Material 3 theme and the shared design kit (see DESIGN.md).
   ui/<screen>/             Composables: display state, forward clicks. No logic.

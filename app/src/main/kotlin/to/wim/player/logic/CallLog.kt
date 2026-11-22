@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-enum class Service { SPOTIFY, LAST_FM, RECCOBEATS, MUSICBRAINZ, LISTENBRAINZ }
+enum class Service { SPOTIFY, MUSICBRAINZ, LISTENBRAINZ, RECCOBEATS }
 
 /** One API call, for the debug screen. [status] is the HTTP status, or 0 when no answer came. */
 data class ApiCall(

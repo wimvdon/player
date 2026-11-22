@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 
 /**
- * A short horizontal bar for a 0..1 value, like the listener bars on Last.fm's charts. The value
+ * A short horizontal bar for a 0..1 value. The value
  * is also in [label] for screen readers, so the bar never carries meaning on its own.
  */
 @Composable

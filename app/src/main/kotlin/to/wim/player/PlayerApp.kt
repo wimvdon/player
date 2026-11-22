@@ -18,12 +18,13 @@ import kotlinx.serialization.builtins.serializer
 import okhttp3.OkHttpClient
 import okio.Path.Companion.toOkioPath
 import to.wim.player.data.cache.JsonFileCache
-import to.wim.player.data.lastfm.CachedLastFm
-import to.wim.player.data.lastfm.LastFmCaches
-import to.wim.player.data.lastfm.LastFmClient
+import to.wim.player.data.brainz.BrainzCaches
+import to.wim.player.data.brainz.BrainzHttp
+import to.wim.player.data.brainz.BrainzMusic
+import to.wim.player.data.brainz.ListenBrainzClient
+import to.wim.player.data.brainz.MusicBrainzClient
 import to.wim.player.data.model.AudioFeatures
-import to.wim.player.data.model.LfmArtist
-import to.wim.player.data.model.LfmTrack
+import to.wim.player.data.model.PoolTrack
 import to.wim.player.data.model.Resolution
 import to.wim.player.data.reccobeats.ReccoBeatsClient
 import to.wim.player.data.spotify.CachedSpotify
@@ -34,7 +35,9 @@ import to.wim.player.engine.GenerationEngine
 import to.wim.player.engine.GenerationResult
 import to.wim.player.engine.QueueController
 import to.wim.player.engine.TrackResolver
+import to.wim.player.logic.BrainzLimits
 import to.wim.player.logic.CallLog
+import to.wim.player.logic.Service
 import to.wim.player.logic.Setup
 import to.wim.player.logic.TokenBucket
 import to.wim.player.logic.WeightedTag
@@ -78,11 +81,12 @@ class AppGraph(app: Application) {
     private fun <T> cache(name: String, serializer: kotlinx.serialization.KSerializer<T>, ttlDays: Long?) =
         JsonFileCache(File(cacheDir, "$name.json"), serializer, ttlDays?.let { TimeUnit.DAYS.toMillis(it) }, now)
 
-    // Tags and similarity change slowly: 30 days. The user's charts: a day. Spotify matches: forever.
-    val lastFmArtistCache = cache("lastfm_artists", ListSerializer(LfmArtist.serializer()), 30)
-    val lastFmTrackCache = cache("lastfm_tracks", ListSerializer(LfmTrack.serializer()), 30)
-    val lastFmTagCache = cache("lastfm_tags", ListSerializer(WeightedTag.serializer()), 30)
-    val lastFmNameCache = cache("lastfm_names", ListSerializer(String.serializer()), 30)
+    // Artist IDs: 180 days. Tags and similarity change slowly: 30 days. The user's charts: a day.
+    // Spotify matches: forever.
+    val artistIdCache = cache("artist_ids", String.serializer(), 180)
+    val artistListCache = cache("artist_lists", ListSerializer(String.serializer()), 30)
+    val trackCache = cache("top_tracks", ListSerializer(PoolTrack.serializer()), 30)
+    val tagCache = cache("artist_tags", ListSerializer(WeightedTag.serializer()), 30)
     val userChartCache = cache("user_charts", ListSerializer(String.serializer()), 1)
     val spotifyDailyCache = cache("spotify_library", ListSerializer(String.serializer()), 1)
     val resolutionCache = cache("spotify_matches", Resolution.serializer(), null)
@@ -92,10 +96,10 @@ class AppGraph(app: Application) {
     /** Every cache, for the debug screen and for saving. */
     val caches: List<Pair<String, JsonFileCache<*>>> =
         listOf(
-            "lastfm_artists" to lastFmArtistCache,
-            "lastfm_tracks" to lastFmTrackCache,
-            "lastfm_tags" to lastFmTagCache,
-            "lastfm_names" to lastFmNameCache,
+            "artist_ids" to artistIdCache,
+            "artist_lists" to artistListCache,
+            "top_tracks" to trackCache,
+            "artist_tags" to tagCache,
             "user_charts" to userChartCache,
             "spotify_library" to spotifyDailyCache,
             "spotify_matches" to resolutionCache,
@@ -105,15 +109,16 @@ class AppGraph(app: Application) {
 
     private suspend fun sleep(millis: Long) = delay(millis)
 
-    val lastFm =
-        CachedLastFm(
-            LastFmClient(
-                http = http,
-                apiKey = { secrets.current().lastFmApiKey },
-                log = callLog,
-                bucket = TokenBucket(LastFmClient.CALLS_PER_SECOND, LastFmClient.CALLS_PER_SECOND, now, ::sleep),
-            ),
-            LastFmCaches(lastFmArtistCache, lastFmTrackCache, lastFmTagCache, lastFmNameCache, userChartCache),
+    private val userAgent = BrainzHttp.userAgent(runCatching { app.packageManager.getPackageInfo(app.packageName, 0).versionName }.getOrNull() ?: "dev")
+
+    private fun brainzHttp(service: Service) =
+        BrainzHttp(http, service, userAgent, TokenBucket(BrainzLimits.CALLS_PER_SECOND, 1.0, now, ::sleep), callLog, now = now)
+
+    val music =
+        BrainzMusic(
+            MusicBrainzClient(brainzHttp(Service.MUSICBRAINZ)),
+            ListenBrainzClient(brainzHttp(Service.LISTENBRAINZ)),
+            BrainzCaches(artistIdCache, artistListCache, trackCache, tagCache, userChartCache),
         )
 
     val webApi = SpotifyWebApi(http, secrets, callLog, TokenBucket(SpotifyWebApi.CALLS_PER_SECOND, 1.0, now, ::sleep))
@@ -129,7 +134,7 @@ class AppGraph(app: Application) {
     /** A generator that reads Spotify only when the user is signed in. */
     suspend fun engine(): GenerationEngine {
         val signedIn = secrets.current().spotifySignedIn
-        return GenerationEngine(lastFm, if (signedIn) catalog else null, resolver, features)
+        return GenerationEngine(music, if (signedIn) catalog else null, resolver, features)
     }
 
     /** Saves changed caches to disk. */
@@ -140,6 +145,12 @@ class AppGraph(app: Application) {
     init {
         // Read the caches from disk now, off the main thread, so the screens never wait for them.
         scope.launch(Dispatchers.IO) { caches.forEach { (_, cache) -> runCatching { cache.size } } }
+        // Player no longer uses Last.fm: forget its key, username and cached answers.
+        scope.launch(Dispatchers.IO) {
+            runCatching { secrets.removeLastFm() }
+            runCatching { settings.removeLastFm() }
+            OLD_CACHES.forEach { runCatching { File(cacheDir, "$it.json").delete() } }
+        }
         // Save caches now and then while the app runs (queueing adds Spotify matches).
         scope.launch {
             while (true) {
@@ -147,5 +158,9 @@ class AppGraph(app: Application) {
                 flushCaches()
             }
         }
+    }
+
+    private companion object {
+        val OLD_CACHES = listOf("lastfm_artists", "lastfm_tracks", "lastfm_tags", "lastfm_names")
     }
 }

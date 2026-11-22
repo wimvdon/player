@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Approved by the owner (2026-11-22, see docs/decisions.md and PRIVACY.md):
-         internet for Last.fm, Spotify and ReccoBeats; a foreground service with a notification
+         internet for MusicBrainz, ListenBrainz, Spotify and ReccoBeats; a foreground service with a notification
          while the playlist is being filled. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />

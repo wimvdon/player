@@ -45,7 +45,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -58,7 +57,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -69,6 +67,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import to.wim.player.R
+import to.wim.player.data.model.ArtistHit
 import to.wim.player.engine.GenerationStep
 import to.wim.player.engine.QueueState
 import to.wim.player.logic.Generator
@@ -101,18 +100,12 @@ fun GeneratorScreen(
     val openSettingsLabel = stringResource(R.string.action_open_settings)
     LaunchedEffect(ui.error) {
         val error = ui.error ?: return@LaunchedEffect
-        val result =
-            snackbar.showSnackbar(
-                message = errorText.orEmpty(),
-                actionLabel = if (error == GenerateError.LASTFM_KEY) openSettingsLabel else null,
-                withDismissAction = error != GenerateError.LASTFM_KEY,
-            )
+        snackbar.showSnackbar(message = errorText.orEmpty(), withDismissAction = true)
         viewModel.dismissError()
-        if (result == SnackbarResult.ActionPerformed) onOpenSettings()
     }
 
     val current = secrets ?: return
-    val setupNeeded = current.lastFmApiKey.isBlank() || !current.spotifySignedIn
+    val setupNeeded = !current.spotifySignedIn
 
     Scaffold(
         topBar = {
@@ -160,7 +153,6 @@ fun GeneratorScreen(
 fun generateErrorText(error: GenerateError): String =
     stringResource(
         when (error) {
-            GenerateError.LASTFM_KEY -> R.string.error_lastfm_key
             GenerateError.NO_SEEDS -> R.string.error_no_seeds
             GenerateError.NOTHING_FOUND -> R.string.error_nothing_found
             GenerateError.NETWORK -> R.string.error_network
@@ -269,7 +261,7 @@ private fun GeneratorForm(
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(onSearch = { focus.clearFocus() }),
                 )
-                ArtistResults(ui = ui, onAdd = viewModel::addArtist)
+                ArtistResults(ui = ui, onAdd = { viewModel.addArtist(it) }, onPick = { viewModel.addArtist(it) })
             }
         }
         item(key = "length") {
@@ -375,6 +367,7 @@ private fun GenreChips(
 private fun ArtistResults(
     ui: GeneratorUi,
     onAdd: (String) -> Unit,
+    onPick: (ArtistHit) -> Unit,
 ) {
     when (val results = ui.artistResults) {
         null ->
@@ -412,24 +405,18 @@ private fun ArtistResults(
                         ListItem(
                             headlineContent = { Text(artist.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                             supportingContent =
-                                artist.listeners?.let { count ->
-                                    { Text(pluralStringResource(R.plurals.listeners, count.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(), formatCount(count))) }
+                                artist.disambiguation?.let { note ->
+                                    { Text(note, maxLines = 1, overflow = TextOverflow.Ellipsis) }
                                 },
                             trailingContent = { Icon(Icons.Rounded.Add, contentDescription = null) },
                             colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-                            modifier = Modifier.clickable { onAdd(artist.name) },
+                            modifier = Modifier.clickable { onPick(artist) },
                         )
                     }
                 }
             }
     }
 }
-
-/** A short, locale-aware count, like Last.fm's own ("2.1M", "2,1 mln."). */
-fun formatCount(count: Long): String =
-    android.icu.text.CompactDecimalFormat
-        .getInstance(java.util.Locale.getDefault(), android.icu.text.CompactDecimalFormat.CompactStyle.SHORT)
-        .format(count)
 
 @Composable
 private fun QueueBanner(

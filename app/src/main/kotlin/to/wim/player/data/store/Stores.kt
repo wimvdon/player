@@ -41,7 +41,10 @@ class SettingsStore(context: Context) {
     private object Keys {
         val theme = stringPreferencesKey("theme")
         val dynamicColor = booleanPreferencesKey("dynamic_color")
-        val lastFmUser = stringPreferencesKey("lastfm_username")
+        val listenBrainzUser = stringPreferencesKey("listenbrainz_username")
+
+        /** Version 0.2 and older: the Last.fm username, removed at start. */
+        val oldLastFmUser = stringPreferencesKey("lastfm_username")
         val ordering = stringPreferencesKey("ordering")
         val reccoBeats = booleanPreferencesKey("reccobeats")
         val mood = floatPreferencesKey("mood")
@@ -57,7 +60,7 @@ class SettingsStore(context: Context) {
             AppSettings(
                 themeMode = enumOr(prefs[Keys.theme], ThemeMode.SYSTEM),
                 dynamicColor = prefs[Keys.dynamicColor] ?: false,
-                lastFmUsername = prefs[Keys.lastFmUser].orEmpty(),
+                listenBrainzUsername = prefs[Keys.listenBrainzUser].orEmpty(),
                 ordering = enumOr(prefs[Keys.ordering], Ordering.MOOD_CURVE),
                 useReccoBeats = prefs[Keys.reccoBeats] ?: false,
                 mood = prefs[Keys.mood] ?: 0.5f,
@@ -75,7 +78,10 @@ class SettingsStore(context: Context) {
 
     suspend fun setDynamicColor(on: Boolean) = store.edit { it[Keys.dynamicColor] = on }
 
-    suspend fun setLastFmUsername(name: String) = store.edit { it[Keys.lastFmUser] = name.trim() }
+    suspend fun setListenBrainzUsername(name: String) = store.edit { it[Keys.listenBrainzUser] = name.trim() }
+
+    /** Forgets what older versions stored for Last.fm. */
+    suspend fun removeLastFm() = store.edit { it.remove(Keys.oldLastFmUser) }
 
 
     suspend fun setOrdering(ordering: Ordering) = store.edit { it[Keys.ordering] = ordering.name }
@@ -108,7 +114,9 @@ class SecretStore(context: Context) : SpotifyAccount {
 
     private object Keys {
         val clientId = stringPreferencesKey("spotify_client_id")
-        val lastFmKey = stringPreferencesKey("lastfm_api_key")
+
+        /** Version 0.2 and older: the Last.fm API key, removed at start. */
+        val oldLastFmKey = stringPreferencesKey("lastfm_api_key")
         val access = stringPreferencesKey("spotify_access")
         val refresh = stringPreferencesKey("spotify_refresh")
         val expiresAt = stringPreferencesKey("spotify_expires_at")
@@ -121,7 +129,6 @@ class SecretStore(context: Context) : SpotifyAccount {
         store.data.map { prefs ->
             Secrets(
                 spotifyClientId = read(prefs, Keys.clientId),
-                lastFmApiKey = read(prefs, Keys.lastFmKey),
                 spotifyAccessToken = read(prefs, Keys.access),
                 spotifyRefreshToken = read(prefs, Keys.refresh),
                 spotifyExpiresAtMillis = read(prefs, Keys.expiresAt).toLongOrNull() ?: 0,
@@ -153,7 +160,8 @@ class SecretStore(context: Context) : SpotifyAccount {
         )
     }
 
-    suspend fun setLastFmKey(key: String) = write(Keys.lastFmKey gets key.trim())
+    /** Forgets the Last.fm key older versions stored. */
+    suspend fun removeLastFm() = store.edit { it.remove(Keys.oldLastFmKey) }
 
     suspend fun setSpotifyUserName(name: String) = write(Keys.userName gets name)
 

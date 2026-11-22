@@ -3,7 +3,7 @@ package to.wim.player.logic
 import java.text.Normalizer
 
 /**
- * Text rules for comparing artist names and track titles from Last.fm and Spotify, which spell
+ * Text rules for comparing artist names and track titles from ListenBrainz and Spotify, which spell
  * the same song differently ("Kerala", "Kerala - Edit", "Kéràla (Remastered 2017)").
  */
 object TrackText {
@@ -19,7 +19,7 @@ object TrackText {
             "feat", "ft", "with", "from", "version", "mix", "anniversary",
         )
 
-    /** Words that mark a different recording than the one Last.fm means (unless its title has them too). */
+    /** Words that mark a different recording than the one ListenBrainz means (unless its title has them too). */
     private val UnwantedWords = listOf("live", "remix", "karaoke", "instrumental", "cover", "tribute", "acapella", "a cappella")
 
     private val Brackets = Regex("\\s*[(\\[]([^)\\]]*)[)\\]]")

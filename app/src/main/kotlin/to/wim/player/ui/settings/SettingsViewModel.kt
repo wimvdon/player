@@ -41,9 +41,8 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
 
     fun setClientId(id: String) = viewModelScope.launch { graph.secrets.setSpotifyClientId(id) }
 
-    fun setLastFmKey(key: String) = viewModelScope.launch { graph.secrets.setLastFmKey(key) }
 
-    fun setLastFmUsername(name: String) = viewModelScope.launch { graph.settings.setLastFmUsername(name) }
+    fun setListenBrainzUsername(name: String) = viewModelScope.launch { graph.settings.setListenBrainzUsername(name) }
 
 
     fun setOrdering(ordering: Ordering) = viewModelScope.launch { graph.settings.setOrdering(ordering) }

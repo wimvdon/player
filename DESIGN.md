@@ -226,7 +226,7 @@ app apart from their package (and `R` import) lines. Copy a change to the other 
 
 ## This app
 
-**Player**: builds a set of tracks from Last.fm data and plays it in a Spotify playlist.
+**Player**: builds a set of tracks from MusicBrainz and ListenBrainz data and plays it in a Spotify playlist.
 
 - **Icon:** a disc with a white play triangle. Gradient `#FF5A47` → `#D51007` → `#A3001F`.
   (Player isn't in the shared icon table above yet; adding it means copying the table to every
@@ -234,8 +234,8 @@ app apart from their package (and `R` import) lines. Copy a change to the other 
 - **Colour:** Last.fm's red (`#D51007`) as the seed. Unlike the other apps, the primary roles come
   from Material's *fidelity* scheme so the red stays vivid, and the surfaces and secondary roles
   from the *neutral* scheme of the same hue: near-white and near-black surfaces with one red
-  accent, like Last.fm itself.
-- **Signature element:** chart rows in the preview, as on Last.fm's charts: a rank number, the
+  accent (the colours started from Last.fm, which Player used at first).
+- **Signature element:** chart rows in the preview, like a music chart: a rank number, the
   cover (or the artist's first letter), title and artist, and two short bars on the right for
   mood and how new the track is (`ScoreMeter`). The bars always have a text label and the row a
   full screen-reader description, so the colour never carries meaning on its own.

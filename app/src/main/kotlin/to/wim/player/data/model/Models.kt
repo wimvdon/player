@@ -3,17 +3,17 @@ package to.wim.player.data.model
 import kotlinx.serialization.Serializable
 import to.wim.player.logic.Ordering
 
-/** An artist from Last.fm. [match] is the similarity (0..1) for similar artists. */
+/** An artist found by a search, with MusicBrainz's note that tells same-named artists apart. */
 @Serializable
-data class LfmArtist(
+data class ArtistHit(
     val name: String,
-    val match: Double? = null,
-    val listeners: Long? = null,
+    val mbid: String,
+    val disambiguation: String? = null,
 )
 
-/** A track from Last.fm. [listeners] is missing for tag charts. */
+/** A track a set can be made from. [listeners] is ListenBrainz's listener count, when known. */
 @Serializable
-data class LfmTrack(
+data class PoolTrack(
     val title: String,
     val artist: String,
     val listeners: Long? = null,
@@ -31,7 +31,7 @@ data class SpotifyTrack(
     val id: String get() = uri.substringAfterLast(':')
 }
 
-/** The Spotify track a Last.fm track resolved to, or a miss ([uri] null) so it isn't searched again. */
+/** The Spotify track a pool track resolved to, or a miss ([uri] null) so it isn't searched again. */
 @Serializable
 data class Resolution(
     val uri: String? = null,
@@ -53,7 +53,7 @@ enum class ThemeMode { SYSTEM, LIGHT, DARK }
 data class AppSettings(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val dynamicColor: Boolean = false,
-    val lastFmUsername: String = "",
+    val listenBrainzUsername: String = "",
     val ordering: Ordering = Ordering.MOOD_CURVE,
     val useReccoBeats: Boolean = false,
     val mood: Float = 0.5f,
@@ -67,7 +67,6 @@ data class AppSettings(
 /** Keys and sign-in, kept on this phone only (encrypted). */
 data class Secrets(
     val spotifyClientId: String = "",
-    val lastFmApiKey: String = "",
     val spotifyAccessToken: String = "",
     val spotifyRefreshToken: String = "",
     val spotifyExpiresAtMillis: Long = 0,

@@ -37,7 +37,7 @@ object ReccoBeatsJson {
 
 /**
  * Optional audio features from ReccoBeats (free, no key). Anything that goes wrong is ignored:
- * the mood then comes from Last.fm tags. Tracks it doesn't know are remembered as misses.
+ * the mood then comes from MusicBrainz tags. Tracks it doesn't know are remembered as misses.
  */
 class ReccoBeatsClient(
     private val http: OkHttpClient,

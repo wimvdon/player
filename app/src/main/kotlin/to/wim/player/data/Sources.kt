@@ -5,32 +5,44 @@ import to.wim.player.data.brainz.BrainzTopArtist
 import to.wim.player.data.brainz.MbArtist
 import to.wim.player.data.brainz.Recommendation
 import to.wim.player.data.brainz.SimilarArtist
+import to.wim.player.data.model.ArtistHit
 import to.wim.player.data.model.AudioFeatures
-import to.wim.player.data.model.LfmArtist
-import to.wim.player.data.model.LfmTrack
+import to.wim.player.data.model.PoolTrack
 import to.wim.player.data.model.SpotifyTrack
 import to.wim.player.logic.WeightedTag
 
-/** Everything the app reads from Last.fm. Kept behind an interface so tests use a fake. */
-interface LastFmSource {
-    suspend fun similarArtists(artist: String, limit: Int = 30): List<LfmArtist>
+/**
+ * The music data a set is made from, by artist name: similar artists, genre artists, top tracks,
+ * tags and the user's history. [to.wim.player.data.brainz.BrainzMusic] answers from MusicBrainz
+ * and ListenBrainz; tests use a fake.
+ */
+interface MusicSource {
+    /** Names of artists similar to [artist], most similar first. */
+    suspend fun similarArtists(artist: String, limit: Int = 30): List<String>
 
-    suspend fun tagTopArtists(tag: String, limit: Int = 50): List<LfmArtist>
+    /** Names of artists tagged with [genre]. */
+    suspend fun genreArtists(genre: String, limit: Int = 50): List<String>
 
-    suspend fun tagTopTracks(tag: String, limit: Int = 50): List<LfmTrack>
+    /** The artist's most listened tracks, with listener counts when known. */
+    suspend fun artistTopTracks(artist: String, limit: Int = 15): List<PoolTrack>
 
-    suspend fun topTags(): List<String>
+    /** The artist's genres and tags with their votes. */
+    suspend fun artistTags(artist: String): List<WeightedTag>
 
-    suspend fun artistTopTracks(artist: String, limit: Int = 15): List<LfmTrack>
+    /** Genres to offer in the picker. */
+    suspend fun genres(): List<String>
 
-    suspend fun artistTopTags(artist: String): List<WeightedTag>
+    /** Artists matching what the user typed. */
+    suspend fun searchArtists(query: String): List<ArtistHit>
 
-    suspend fun searchArtists(query: String): List<LfmArtist>
+    /** Remembers which artist the user picked, so a name shared by several artists means this one. */
+    fun pin(artist: ArtistHit) {}
 
-    /** Keys ([to.wim.player.logic.TrackText.key]) of the user's most scrobbled tracks. */
+    /** Keys ([to.wim.player.logic.TrackText.key]) of the user's most played tracks. */
     suspend fun userTopTrackKeys(username: String): Set<String>
 
-    suspend fun userTopArtists(username: String, limit: Int = 20): List<LfmArtist>
+    /** Names of the user's top artists. */
+    suspend fun userTopArtists(username: String, limit: Int = 20): List<String>
 }
 
 /** What the app reads from MusicBrainz: artist IDs, genres and tags. */
@@ -40,6 +52,9 @@ interface MusicBrainzSource {
 
     /** An artist's genres and tags with their vote counts, most votes first. */
     suspend fun artistTags(mbid: String): List<WeightedTag>
+
+    /** Artists tagged with [tag], best match first. */
+    suspend fun artistsByTag(tag: String, limit: Int = 50): List<MbArtist>
 
     /** The MusicBrainz artists linked to a Spotify artist ID (usually one). */
     suspend fun artistsForSpotify(spotifyArtistId: String): List<MbArtist>
