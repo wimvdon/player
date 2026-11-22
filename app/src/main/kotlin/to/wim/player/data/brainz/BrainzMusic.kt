@@ -1,6 +1,7 @@
 package to.wim.player.data.brainz
 
 import to.wim.player.data.ListenBrainzSource
+import to.wim.player.data.METADATA_BATCH
 import to.wim.player.data.MusicBrainzSource
 import to.wim.player.data.MusicSource
 import to.wim.player.data.cache.KeyValueCache
@@ -43,21 +44,45 @@ class BrainzMusic(
             listenBrainz.similarArtists(id, limit).onEach { remember(it.name, it.mbid) }.map { it.name }
         }
 
+    /**
+     * Artists for a genre, most typical first. ListenBrainz's tag radio comes first: its recordings
+     * carry the tag on themselves, their album or their artist, so they are artists people play in
+     * that genre. A MusicBrainz tag search tops up the list when that finds too few; on its own it
+     * mostly finds little-known artists with one vote, whose tracks ListenBrainz doesn't know.
+     */
     override suspend fun genreArtists(genre: String, limit: Int): List<String> =
-        cached(caches.artistLists, "genre:${TrackText.normalize(genre)}:$limit") {
-            musicBrainz.artistsByTag(genre, limit).onEach { remember(it.name, it.mbid) }.map { it.name }
+        cached(caches.artistLists, "genre2:${TrackText.normalize(genre)}:$limit") {
+            val fromRadio = radioArtists(genre)
+            val result = LinkedHashMap<String, String>()
+            for (artist in fromRadio) {
+                if (result.size >= limit) break
+                remember(artist.name, artist.mbid)
+                result.putIfAbsent(TrackText.artistKey(artist.name), artist.name)
+            }
+            if (result.size < limit) {
+                for (artist in musicBrainz.artistsByTag(genre, limit)) {
+                    if (result.size >= limit) break
+                    remember(artist.name, artist.mbid)
+                    result.putIfAbsent(TrackText.artistKey(artist.name), artist.name)
+                }
+            }
+            result.values.toList()
         }
+
+    private suspend fun radioArtists(genre: String): List<MbArtist> {
+        val tagged = listenBrainz.tagRecordings(genre.trim().lowercase(), RADIO_RECORDINGS)
+        if (tagged.isEmpty()) return emptyList()
+        val metadata = tagged.map { it.recordingMbid }.distinct().chunked(METADATA_BATCH).flatMap { listenBrainz.recordingMetadata(it) }
+        return rankGenreArtists(tagged, metadata)
+    }
 
     override suspend fun artistTopTracks(artist: String, limit: Int): List<PoolTrack> =
         cached(caches.tracks, "top:${TrackText.artistKey(artist)}:$limit") {
             val id = artistId(artist) ?: return@cached emptyList()
-            // Credits like "A feat. B" would count as another artist (more lookups, and the
-            // three-per-artist rule wouldn't see them), so those tracks carry the asked-for name.
-            val key = TrackText.artistKey(artist)
-            listenBrainz.topRecordings(id, limit).map { recording ->
-                val name = if (TrackText.artistKey(recording.artist) == key) recording.artist else artist
-                PoolTrack(recording.title, name, recording.listeners)
-            }
+            // Every track carries the asked-for name: ListenBrainz credits vary ("A feat. B",
+            // "Smashing Pumpkins" next to "The Smashing Pumpkins"), and one artist should show
+            // under one name and count once for the per-artist rule.
+            listenBrainz.topRecordings(id, limit).map { recording -> PoolTrack(recording.title, artist, recording.listeners) }
         }
 
     override suspend fun artistTags(artist: String): List<WeightedTag> =
@@ -110,6 +135,26 @@ class BrainzMusic(
     }
 
     companion object {
+        /** Tag radio recordings read per genre: four metadata lookups. */
+        const val RADIO_RECORDINGS = 200
+
+        /**
+         * Orders the main artists of tag-radio recordings by how strongly they carry the tag: the
+         * sum of the tag votes over their recordings. Ties keep the order ListenBrainz gave.
+         */
+        fun rankGenreArtists(tagged: List<TagRecording>, metadata: List<BrainzRecording>): List<MbArtist> {
+            val byRecording = metadata.associateBy { it.recordingMbid }
+            val scores = LinkedHashMap<String, Int>()
+            val names = HashMap<String, String>()
+            for (recording in tagged) {
+                val found = byRecording[recording.recordingMbid] ?: continue
+                val mbid = found.artistMbids.firstOrNull() ?: continue
+                names.putIfAbsent(mbid, found.artist)
+                scores[mbid] = (scores[mbid] ?: 0) + maxOf(recording.tagCount, 1)
+            }
+            return scores.entries.sortedByDescending { it.value }.map { MbArtist(it.key, names.getValue(it.key)) }
+        }
+
         private const val MAX_TAGS = 10
         private const val SEARCH_LIMIT = 8
         private const val MATCH_CANDIDATES = 5

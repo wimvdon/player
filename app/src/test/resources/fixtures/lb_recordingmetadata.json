@@ -1,0 +1,22 @@
+{
+  "rec-ride-1": {
+    "artist": {"artist_credit_id": 4644, "name": "Ride", "artists": [{"artist_mbid": "mb-ride", "name": "Ride", "join_phrase": ""}]},
+    "recording": {"length": 352000, "name": "Moonlight Medicine", "rels": []}
+  },
+  "rec-slowdive-1": {
+    "artist": {"artist_credit_id": 38744, "name": "Slowdive", "artists": [{"artist_mbid": "mb-slowdive", "name": "Slowdive", "join_phrase": ""}]},
+    "recording": {"length": 486053, "name": "In Mind", "rels": []}
+  },
+  "rec-slowdive-2": {
+    "artist": {"artist_credit_id": 38744, "name": "Slowdive", "artists": [{"artist_mbid": "mb-slowdive", "name": "Slowdive", "join_phrase": ""}]},
+    "recording": {"length": 300000, "name": "Alison", "rels": []}
+  },
+  "rec-pumpkins-1": {
+    "artist": {"artist_credit_id": 11650, "name": "The Smashing Pumpkins feat. Someone", "artists": [
+      {"artist_mbid": "mb-pumpkins", "name": "The Smashing Pumpkins", "join_phrase": " feat. "},
+      {"artist_mbid": "mb-someone", "name": "Someone", "join_phrase": ""}
+    ]},
+    "recording": {"length": 222000, "name": "Without You", "rels": []}
+  },
+  "rec-broken": {"artist": {"name": "No Recording"}}
+}

@@ -1,0 +1,8 @@
+[
+  {"percent": 100, "recording_mbid": "rec-ride-1", "source": "artist", "tag_count": 6},
+  {"percent": 74.9, "recording_mbid": "rec-slowdive-1", "source": "recording", "tag_count": 3},
+  {"percent": 100, "recording_mbid": "rec-slowdive-2", "source": "release-group", "tag_count": 5},
+  {"percent": 81.4, "recording_mbid": "rec-pumpkins-1", "source": "artist", "tag_count": 1},
+  {"percent": 100, "source": "artist", "tag_count": 4},
+  {"percent": 50, "recording_mbid": "rec-unknown", "source": "artist", "tag_count": 9}
+]

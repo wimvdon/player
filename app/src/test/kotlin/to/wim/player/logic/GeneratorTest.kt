@@ -35,11 +35,27 @@ class GeneratorTest {
     }
 
     @Test
-    fun `at most three tracks per artist`() {
-        val result = Generator.generate(pool(10, 20), request(length = 100), Random(3))
+    fun `at most three tracks per artist when there are enough artists`() {
+        val result = Generator.generate(pool(40, 20), request(length = 100), Random(3))
         val perArtist = result.groupingBy { it.artistKey }.eachCount()
         assertTrue(perArtist.values.all { it <= Generator.MAX_PER_ARTIST })
-        assertEquals(30, result.size)
+        assertEquals(100, result.size)
+    }
+
+    @Test
+    fun `with few artists each gives more tracks to reach the length`() {
+        val result = Generator.generate(pool(20, 20), request(length = 100), Random(3))
+        val perArtist = result.groupingBy { it.artistKey }.eachCount()
+        assertEquals(100, result.size)
+        assertTrue(perArtist.values.all { it <= Generator.RELAXED_MAX_PER_ARTIST })
+    }
+
+    @Test
+    fun `the relaxed cap still holds when the pool is too small`() {
+        val result = Generator.generate(pool(10, 20), request(length = 100), Random(3))
+        val perArtist = result.groupingBy { it.artistKey }.eachCount()
+        assertTrue(perArtist.values.all { it <= Generator.RELAXED_MAX_PER_ARTIST })
+        assertEquals(60, result.size)
     }
 
     @Test

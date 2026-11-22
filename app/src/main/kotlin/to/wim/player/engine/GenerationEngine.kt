@@ -104,20 +104,30 @@ class GenerationEngine(
                             }
                         }
                 ).awaitAll()
-            val artists = roundRobin(artistLists, artistBudget(input.length))
+            val budget = artistBudget(input.length)
+            val lists = widen(artistLists, budget, gate)
+            val lookups = roundRobin(lists, budget * LOOKUPS_PER_SLOT)
 
-            // Tracks: each artist's most listened tracks.
-            val perArtist = if (artists.size < 50) 20 else 15
+            // Tracks: each artist's most listened tracks. Artists ListenBrainz knows no tracks for
+            // are replaced by the next candidates, so the set still gets [budget] artists.
+            val perArtist = if (budget < 50) 20 else 15
             done.set(0)
-            progress(GenerationStep.Tracks(0, artists.size))
+            progress(GenerationStep.Tracks(0, minOf(budget, lookups.size)))
             val failures = AtomicInteger(0)
-            val trackLists =
-                artists.map { artist ->
-                    async {
-                        gate.withPermit { tolerant(failures) { music.artistTopTracks(artist, perArtist) }.orEmpty() }
-                            .also { progress(GenerationStep.Tracks(done.incrementAndGet(), artists.size)) }
-                    }
-                }.awaitAll()
+            val trackLists = ArrayList<List<PoolTrack>>()
+            var next = 0
+            while (trackLists.count { it.isNotEmpty() } < budget && next < lookups.size) {
+                val missing = budget - trackLists.count { it.isNotEmpty() }
+                val batch = lookups.subList(next, minOf(lookups.size, next + missing))
+                next += batch.size
+                trackLists +=
+                    batch.map { artist ->
+                        async {
+                            gate.withPermit { tolerant(failures) { music.artistTopTracks(artist, perArtist) }.orEmpty() }
+                                .also { progress(GenerationStep.Tracks(done.incrementAndGet(), next)) }
+                        }
+                    }.awaitAll()
+            }
             val pool: List<PoolTrack> = trackLists.flatten().distinctBy { TrackText.key(it.artist, it.title) }
             if (pool.isEmpty()) throw if (failures.get() > 0) java.io.IOException("Music data unavailable") else EmptyPoolException()
 
@@ -160,6 +170,29 @@ class GenerationEngine(
             )
         }
 
+    /**
+     * When the seeds and genres give fewer artists than [budget] (one seed has only 30 similar
+     * artists), adds the similar artists of their first few artists, so long sets still have
+     * enough artists to fill them.
+     */
+    private suspend fun widen(lists: List<List<String>>, budget: Int, gate: Semaphore): List<List<String>> =
+        coroutineScope {
+            val seen = lists.flatten().map(TrackText::artistKey).toHashSet()
+            if (seen.size >= budget) return@coroutineScope lists
+            val hops = roundRobin(lists.map { it.drop(1) }, MAX_WIDEN)
+            val result = lists.toMutableList()
+            for (group in hops.chunked(PARALLEL)) {
+                val found =
+                    group.map { artist ->
+                        async { gate.withPermit { tolerant { music.similarArtists(artist, SIMILAR_LIMIT) }.orEmpty() } }
+                    }.awaitAll()
+                result += found
+                found.flatten().forEach { seen += TrackText.artistKey(it) }
+                if (seen.size >= budget) break
+            }
+            result
+        }
+
     private fun featureMood(track: PoolTrack): Double? {
         val uri = resolver?.cached(track.artist, track.title)?.uri ?: return null
         val found = features?.cached(uri.substringAfterLast(':')) ?: return null
@@ -200,7 +233,13 @@ class GenerationEngine(
 
     companion object {
         const val SIMILAR_LIMIT = 30
-        const val TAG_ARTISTS_LIMIT = 50
+        const val TAG_ARTISTS_LIMIT = 100
+
+        /** At most this many artists are looked up per artist the set needs, to replace ones without tracks. */
+        const val LOOKUPS_PER_SLOT = 2
+
+        /** At most this many extra similar-artist lookups when the seeds and genres give too few artists. */
+        const val MAX_WIDEN = 12
         /**
          * MusicBrainz and ListenBrainz allow one call a second, and every artist costs about two
          * calls the first time, so a set uses only as many artists as its length needs.

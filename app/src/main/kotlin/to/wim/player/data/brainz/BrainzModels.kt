@@ -52,3 +52,13 @@ data class Recommendation(
     val recordingMbid: String,
     val score: Double,
 )
+
+/**
+ * A recording ListenBrainz's tag radio finds for a tag. [tagCount] is how many votes the tag has
+ * on the recording, its release group or its artist; [popularity] is ListenBrainz's percent.
+ */
+data class TagRecording(
+    val recordingMbid: String,
+    val tagCount: Int,
+    val popularity: Double,
+)
