@@ -9,7 +9,7 @@ plugins {
 // App identity: the ONE place to change the package / application ID.
 // (Also move the Kotlin sources in app/src/*/kotlin/ to the matching folder.)
 // ---------------------------------------------------------------------------
-val appId = "com.example.template"
+val appId = "to.wim.player"
 
 // ---------------------------------------------------------------------------
 // Versioning
@@ -56,6 +56,8 @@ val appVersion: AppVersion = if (releaseVersionName != null || releaseVersionCod
     AppVersion(gitDescribeVersion(), 1)
 }
 
+val debugKeystoreFile = rootProject.file("debug.keystore")
+
 // ---------------------------------------------------------------------------
 // Release signing: only when keystore.properties exists. The release workflow
 // writes it at build time and deletes it afterwards. Never commit it.
@@ -79,6 +81,18 @@ android {
     }
 
     signingConfigs {
+        // Debug builds: a fixed, shared debug key (debug.keystore in the project root, never
+        // committed; CI decodes it from the DEBUG_KEYSTORE_BASE64 secret). Spotify only lets an
+        // app sign in when its signing fingerprint is registered, so every test APK must be
+        // signed with the same key. Without the file, Android's default debug key is used.
+        if (debugKeystoreFile.exists()) {
+            getByName("debug") {
+                storeFile = debugKeystoreFile
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
+        }
         if (keystorePropertiesFile.exists()) {
             create("release") {
                 storeFile = file(keystoreProperties.getProperty("storeFile"))

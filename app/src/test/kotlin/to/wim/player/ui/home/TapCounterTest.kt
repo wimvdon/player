@@ -1,4 +1,4 @@
-package com.example.template.ui.home
+package to.wim.player.ui.home
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

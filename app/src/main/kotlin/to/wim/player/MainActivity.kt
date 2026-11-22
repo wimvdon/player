@@ -1,11 +1,11 @@
-package com.example.template
+package to.wim.player
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.example.template.ui.home.HomeScreen
-import com.example.template.ui.theme.AppTheme
+import to.wim.player.ui.home.HomeScreen
+import to.wim.player.ui.theme.AppTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

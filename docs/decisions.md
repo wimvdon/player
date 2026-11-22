@@ -2,6 +2,25 @@
 
 Newest first. Add an entry for every notable choice: what was decided, why, and what was rejected.
 
+## 2026-11-22: Player: app identity, shared debug key, bring-your-own API keys
+
+The app is **Player**, application ID `to.wim.player` (debug builds: `to.wim.player.debug`).
+It builds play queues from Last.fm data and plays them through Spotify.
+
+Spotify only lets an Android app sign in when its package name and signing fingerprint (SHA-1)
+are registered in the Spotify developer app. CI used to sign each debug APK with a new random
+key, so the fingerprint changed every build. Debug builds now use one fixed debug key: the file
+`debug.keystore` in the project root (never committed), which CI decodes from the
+`DEBUG_KEYSTORE_BASE64` secret. Its password is Android's standard `android`, because the key
+only signs test builds. Releases keep their own key. Rejected: signing debug builds with the
+release key (the release key would then be handed to every pull request's CI run).
+
+Users enter their own Spotify Client ID and Last.fm API key in the app's settings, with short
+instructions and links to both developer sites. Nothing is built into the APK. Spotify's
+Development Mode limits each developer app to a few users, so one shared key could never serve
+other people anyway; with their own keys anyone can use the app, and no key ends up in the
+public repository or its APKs. Rejected: keys from `local.properties` baked in at build time.
+
 ## 2026-11-01: Claude Code sessions don't build the APK before pushing
 
 Sessions ran `./gradlew testDebugUnitTest lintDebug assembleDebug` before every push, and CI then
