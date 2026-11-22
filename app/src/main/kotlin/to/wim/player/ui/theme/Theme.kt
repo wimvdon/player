@@ -11,20 +11,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import to.wim.player.data.model.ThemeMode
 
-// Fallback palette (dynamic color off), from the icon's middle gradient stop #FF5A47. Dark is the
-// default: warm near-black surfaces with one vivid coral red for what you press (like Spotify's
+// Fallback palette (dynamic color off), from the icon's middle gradient stop #F0243A. Dark is the
+// default: warm near-black surfaces with one vivid red for what you press (like Spotify's
 // one green), amber (tertiary) only where energy and mood are drawn. Light keeps the same roles
 // with a deeper red so text on white stays readable. See DESIGN.md, "This app".
 private val LightColors =
     lightColorScheme(
-        primary = Color(0xFFB02B1B),
+        primary = Color(0xFFBB1B28),
         onPrimary = Color(0xFFFFFFFF),
-        primaryContainer = Color(0xFFFFDAD4),
-        onPrimaryContainer = Color(0xFF410100),
-        secondary = Color(0xFF775651),
+        primaryContainer = Color(0xFFFFD6DA),
+        onPrimaryContainer = Color(0xFF3D0005),
+        secondary = Color(0xFF744E51),
         onSecondary = Color(0xFFFFFFFF),
-        secondaryContainer = Color(0xFFFFDAD4),
-        onSecondaryContainer = Color(0xFF2C1511),
+        secondaryContainer = Color(0xFFFFD6DA),
+        onSecondaryContainer = Color(0xFF281517),
         tertiary = Color(0xFF7D5700),
         onTertiary = Color(0xFFFFFFFF),
         tertiaryContainer = Color(0xFFFFDDB0),
@@ -43,7 +43,7 @@ private val LightColors =
         outlineVariant = Color(0xFFD8C2BD),
         inverseSurface = Color(0xFF392E2C),
         inverseOnSurface = Color(0xFFFFEDEA),
-        inversePrimary = Color(0xFFFF6B57),
+        inversePrimary = Color(0xFFFF5260),
         surfaceDim = Color(0xFFE8D6D3),
         surfaceBright = Color(0xFFFFF8F6),
         surfaceContainerLowest = Color(0xFFFFFFFF),
@@ -55,14 +55,14 @@ private val LightColors =
 
 private val DarkColors =
     darkColorScheme(
-        primary = Color(0xFFFF6B57),
-        onPrimary = Color(0xFF2B0600),
-        primaryContainer = Color(0xFF7A1A0E),
-        onPrimaryContainer = Color(0xFFFFDAD4),
-        secondary = Color(0xFFE7BDB6),
-        onSecondary = Color(0xFF442925),
-        secondaryContainer = Color(0xFF5D3F3A),
-        onSecondaryContainer = Color(0xFFFFDAD4),
+        primary = Color(0xFFFF5260),
+        onPrimary = Color(0xFF330004),
+        primaryContainer = Color(0xFF7C0E17),
+        onPrimaryContainer = Color(0xFFFFD6DA),
+        secondary = Color(0xFFF0C2C6),
+        onSecondary = Color(0xFF422426),
+        secondaryContainer = Color(0xFF56393B),
+        onSecondaryContainer = Color(0xFFFFD6DA),
         tertiary = Color(0xFFFFC05C),
         onTertiary = Color(0xFF422C00),
         tertiaryContainer = Color(0xFF5C3C00),
@@ -81,7 +81,7 @@ private val DarkColors =
         outlineVariant = Color(0xFF52423F),
         inverseSurface = Color(0xFFF5E3DF),
         inverseOnSurface = Color(0xFF392E2C),
-        inversePrimary = Color(0xFFB02B1B),
+        inversePrimary = Color(0xFFBB1B28),
         surfaceDim = Color(0xFF150F0E),
         surfaceBright = Color(0xFF3D3331),
         surfaceContainerLowest = Color(0xFF0F0A09),

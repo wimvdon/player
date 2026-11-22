@@ -1,26 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Three rounded bars lying on their side, of uneven length like a level meter (and a playlist's
-     rows). Gradient from top left to bottom right, #FFA23A → #F0243A → #A0105E, on the soft red
-     plate (ic_launcher_background). The bars span 48dp around 54,54 (30 to 78 both ways), inside the 66dp safe zone.
-     See DESIGN.md, "This app". -->
+     rows), close together. Gradient from top left to bottom right, #FFA23A → #F0243A → #A0105E,
+     on the white background (ic_launcher_background). The group scales the bars so their furthest
+     point is 26.3dp from the middle of the canvas. See DESIGN.md, "This app". -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path android:pathData="M36,30h18a6,6 0,0 1,0,12h-18a6,6 0,0 1,0,-12z M36,48h36a6,6 0,0 1,0,12h-36a6,6 0,0 1,0,-12z M36,66h10a6,6 0,0 1,0,12h-10a6,6 0,0 1,0,-12z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:type="linear"
-                android:startX="30"
-                android:startY="30"
-                android:endX="78"
-                android:endY="78">
-                <item android:offset="0" android:color="#FFFFA23A" />
-                <item android:offset="0.5" android:color="#FFF0243A" />
-                <item android:offset="1" android:color="#FFA0105E" />
-            </gradient>
-        </aapt:attr>
-    </path>
+    <group
+        android:pivotX="54"
+        android:pivotY="54"
+        android:scaleX="0.8857"
+        android:scaleY="0.8857">
+        <path android:pathData="M36,32.5h18a6,6 0,0 1,0,12h-18a6,6 0,0 1,0,-12z M36,48h36a6,6 0,0 1,0,12h-36a6,6 0,0 1,0,-12z M36,63.5h10a6,6 0,0 1,0,12h-10a6,6 0,0 1,0,-12z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="30"
+                    android:startY="30"
+                    android:endX="78"
+                    android:endY="78">
+                    <item android:offset="0" android:color="#FFFFA23A" />
+                    <item android:offset="0.5" android:color="#FFF0243A" />
+                    <item android:offset="1" android:color="#FFA0105E" />
+                </gradient>
+            </aapt:attr>
+        </path>
+    </group>
 </vector>

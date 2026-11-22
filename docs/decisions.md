@@ -2,6 +2,18 @@
 
 Newest first. Add an entry for every notable choice: what was decided, why, and what was rejected.
 
+## 2026-11-22: Icons: same padding in every app, white background, white details; colour scheme follows the icon
+
+Part of the owner's new icon family for all his apps (see `DESIGN.md`, "Icons"). For Player: the
+launcher and themed icon sit in a group that scales the bars so their furthest point is 26.3dp from
+the middle of the canvas (scale 0.8857). The adaptive-icon background is plain white instead of the
+soft red plate. The two outer bars moved closer to the middle one (gap 3.5 instead of 6) in the
+launcher, themed, wordmark logo and status bar icons. The logo and the status bar icon stay bare
+shapes with their tight fit; the app had no other plates (the wordmark logo is drawn without one).
+The colour scheme's seed is now the icon's middle stop `#F0243A` (it was the coral `#FF5A47`):
+primary, secondary and their containers moved to that hue; surfaces and the amber tertiary stay.
+Dynamic colour behaviour is unchanged.
+
 ## 2026-11-22: Three bars instead of four in the icon
 
 The owner asked for three bars. The launcher icon, the themed icon, the wordmark's logo and the
