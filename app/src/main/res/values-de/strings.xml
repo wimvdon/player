@@ -174,7 +174,7 @@
     <string name="playlist_name_upbeat">%1$s mit Energie</string>
     <string name="playlist_name_dated">%1$s · %2$s</string>
     <plurals name="start_dialog_new_playlist">
-        <item quantity="one">Player erstellt eine neue private Playlist in deinem Spotify-Konto mit diesem Titel.</item>
+        <item quantity="one">Player erstellt eine neue private Playlist in deinem Spotify-Konto mit %d Titel.</item>
         <item quantity="other">Player erstellt eine neue private Playlist in deinem Spotify-Konto mit allen %d Titeln.</item>
     </plurals>
 </resources>

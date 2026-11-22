@@ -174,7 +174,7 @@
     <string name="playlist_name_upbeat">Energieke %1$s</string>
     <string name="playlist_name_dated">%1$s · %2$s</string>
     <plurals name="start_dialog_new_playlist">
-        <item quantity="one">Player maakt een nieuwe privé-afspeellijst in je Spotify-account met dit nummer.</item>
+        <item quantity="one">Player maakt een nieuwe privé-afspeellijst in je Spotify-account met %d nummer.</item>
         <item quantity="other">Player maakt een nieuwe privé-afspeellijst in je Spotify-account met alle %d nummers.</item>
     </plurals>
 </resources>
