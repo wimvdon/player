@@ -15,7 +15,8 @@ Playlist (open in Spotify, progress, Stop), Settings (keys and setup steps, play
 `data/brainz/BrainzMusic.kt`, which turns names into MusicBrainz IDs and caches every answer):
 1. Seeds: the picked artists and genres, or the user's top artists (Spotify, then ListenBrainz).
 2. Candidate artists: ListenBrainz similar artists (Labs) per seed and MusicBrainz artists with
-   the genre's tag, shared out round-robin, at most 60 (both services allow one call a second).
+   the genre's tag, shared out round-robin, as many as the length needs (`artistBudget`: 100 for 250 tracks,
+   40 to 170; both services allow one call a second).
 3. Tracks: ListenBrainz's most listened recordings per artist (15, or 20 with fewer than 50
    artists).
 4. Mood (0 calm … 1 upbeat): cached ReccoBeats tempo and energy when known, otherwise the artist's

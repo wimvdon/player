@@ -104,7 +104,7 @@ class GenerationEngine(
                             }
                         }
                 ).awaitAll()
-            val artists = roundRobin(artistLists, MAX_ARTISTS)
+            val artists = roundRobin(artistLists, artistBudget(input.length))
 
             // Tracks: each artist's most listened tracks.
             val perArtist = if (artists.size < 50) 20 else 15
@@ -202,10 +202,20 @@ class GenerationEngine(
         const val SIMILAR_LIMIT = 30
         const val TAG_ARTISTS_LIMIT = 50
         /**
-         * MusicBrainz and ListenBrainz allow one call a second, so fewer artists than with Last.fm:
-         * a first set from new artists takes about a minute, later ones come from the cache.
+         * MusicBrainz and ListenBrainz allow one call a second, and every artist costs about two
+         * calls the first time, so a set uses only as many artists as its length needs.
          */
-        const val MAX_ARTISTS = 60
+        const val MIN_ARTISTS = 40
+        const val MAX_ARTISTS = 170
+
+        /**
+         * Enough artists to fill [length] at [Generator.MAX_PER_ARTIST] tracks each, with a fifth
+         * to spare for the sliders to choose from: 100 for 250 tracks.
+         */
+        fun artistBudget(length: Int): Int {
+            val needed = (length * 6 + 5 * Generator.MAX_PER_ARTIST - 1) / (5 * Generator.MAX_PER_ARTIST)
+            return needed.coerceIn(MIN_ARTISTS, MAX_ARTISTS)
+        }
         const val TOP_ARTIST_SEEDS = 5
         private const val PARALLEL = 6
 

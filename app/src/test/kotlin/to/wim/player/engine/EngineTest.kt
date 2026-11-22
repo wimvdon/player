@@ -21,6 +21,7 @@ import to.wim.player.data.model.SpotifyTrack
 import to.wim.player.data.spotify.SpotifyPausedException
 import to.wim.player.data.spotify.SpotifySignedOutException
 import to.wim.player.logic.Candidate
+import to.wim.player.logic.Generator
 import to.wim.player.logic.Ordering
 import to.wim.player.logic.TrackText
 import to.wim.player.logic.WeightedTag
@@ -158,6 +159,17 @@ class GenerationEngineTest {
     fun `round robin shares the artist slots`() {
         val lists = listOf(listOf("a1", "a2", "a3"), listOf("b1", "b2"), listOf("a1", "c1"))
         assertEquals(listOf("a1", "b1", "a2", "b2", "c1"), GenerationEngine.roundRobin(lists, 5))
+    }
+
+    @Test
+    fun `the number of artists follows the length`() {
+        assertEquals(100, GenerationEngine.artistBudget(250))
+        assertEquals(GenerationEngine.MIN_ARTISTS, GenerationEngine.artistBudget(20))
+        assertEquals(GenerationEngine.MAX_ARTISTS, GenerationEngine.artistBudget(Generator.MAX_LENGTH))
+        // Always enough artists to fill the set at the per-artist cap.
+        for (length in listOf(1, 100, 250, 400, Generator.MAX_LENGTH)) {
+            assertTrue(GenerationEngine.artistBudget(length) * Generator.MAX_PER_ARTIST >= length)
+        }
     }
 }
 

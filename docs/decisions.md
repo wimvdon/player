@@ -11,9 +11,11 @@ Last.fm's client, settings and texts are gone. Only a Spotify Client ID is neede
   40 genres (`logic/Genres.kt`); typing any other genre still works. Artists for a genre come from
   a MusicBrainz tag search. Last.fm's tag top tracks have no counterpart, so tracks come only from
   each artist's most listened recordings on ListenBrainz.
-- **At most 60 candidate artists** instead of 100, because of the one-call-a-second limit. Answers
-  are cached (artist IDs 180 days, the rest 30 days), and IDs found in similar-artist and genre
-  answers are kept, so later sets need few calls. A first set with new artists takes about a minute.
+- **Candidate artists follow the length** (`GenerationEngine.artistBudget`): enough to fill the set
+  at 3 tracks per artist with a fifth to spare, so 100 for the default 250 tracks, between 40 and
+  170. Each new artist costs about two calls at one a second, so a first 250-track set from new
+  artists takes a few minutes. Answers are cached (artist IDs 180 days, the rest 30 days), and IDs
+  found in similar-artist and genre answers are kept, so later sets need few calls.
 - **Name to ID:** an artist picked from the search keeps its MusicBrainz ID. Other names take the
   exact name match among MusicBrainz results with a score of at least 90, otherwise the top
   result; a miss is cached too.
